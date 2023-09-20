@@ -1,6 +1,6 @@
 // src/models/ConsensusState.js
 
-export class TendermintState {
+export class ConsensusState {
     constructor(data) {
         this.jsonrpc = data.jsonrpc;
         this.id = data.id;

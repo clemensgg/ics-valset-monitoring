@@ -1,16 +1,16 @@
 // src/tasks/tasks.js
 
 import { 
-    fetchConsensusState, 
-    fetchConsensusValidators, 
-    matchData 
-} from './utils';
+    getConsensusState, 
+    getConsensusValidators, 
+    matchValidators 
+} from '../utils/utils.js';
 
-import db from './database';
+import db from '../db/db.js';
 
 async function updateConsensusData(chainRpc) {
-    const consensusState = await fetchConsensusState(chainRpc);
-    const consensusValidators = await fetchConsensusValidators(chainRpc);
+    const consensusState = await getConsensusState(chainRpc);
+    const consensusValidators = await getConsensusValidators(chainRpc);
 
     // Save to database
     db.run(`INSERT INTO consensusState (
@@ -45,7 +45,7 @@ async function updateConsensusData(chainRpc) {
     ]);
 
     // Match data (if necessary)
-    matchData(consensusState, consensusValidators);
+    matchValidators(consensusState, consensusValidators);
 };
 
 export { 
