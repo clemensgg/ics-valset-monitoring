@@ -1,8 +1,8 @@
 // src/models/StakingValidator.js
 
 export class StakingValidators {
-    constructor(data) {
-        this.validators = data.validators.map(validator => new Validator(validator));
+    constructor(validators) {
+        this.validators = validators.map(validator => new Validator(validator));
     }
 }
 

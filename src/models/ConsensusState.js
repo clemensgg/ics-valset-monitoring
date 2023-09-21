@@ -4,14 +4,14 @@ export class ConsensusState {
     constructor(data) {
         this.jsonrpc = data.jsonrpc;
         this.id = data.id;
-        this.result = new Result(data.result);
+        this.result = data.result ? new Result(data.result) : null;
     }
 }
 
 class Result {
     constructor(data) {
-        this.round_state = new RoundState(data.round_state);
-        this.peers = data.peers.map(peer => new Peer(peer));
+        this.round_state = data.round_state ? new RoundState(data.round_state) : null;
+        this.peers = data.peers ? data.peers.map(peer => new Peer(peer)) : [];
     }
 }
 
@@ -22,21 +22,21 @@ class RoundState {
         this.step = data.step;
         this.start_time = data.start_time;
         this.commit_time = data.commit_time;
-        this.validators = new Validators(data.validators);
+        this.validators = data.validators ? new Validators(data.validators) : null;
         this.proposal = data.proposal;
         this.proposal_block_parts_header = data.proposal_block_parts_header;
         this.locked_block_parts_header = data.locked_block_parts_header;
         this.valid_block_parts_header = data.valid_block_parts_header;
         this.votes = data.votes;
         this.last_commit = data.last_commit;
-        this.last_validators = new Validators(data.last_validators);
+        this.last_validators = data.last_validators ? new Validators(data.last_validators) : null;
     }
 }
 
 class Validators {
     constructor(data) {
         this.validators = data.validators.map(validator => new Validator(validator));
-        this.proposer = new Validator(data.proposer);
+        this.proposer = data.proposer ? new Validator(data.proposer) : null;
     }
 }
 
@@ -62,3 +62,4 @@ class PeerState {
         this.stats = data.stats;
     }
 }
+
