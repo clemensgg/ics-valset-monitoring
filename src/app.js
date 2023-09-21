@@ -34,7 +34,7 @@ const CONSUMER_RPCS = ["http://148.251.183.254:2102", "http://148.251.183.254:22
 // const CONSUMER_RPCS = ["https://rpc-palvus.pion-1.ntrn.tech:443"];
 
 const RPC_DELAY = 40;
-const UPDATE_DATABASE_FREQUENCY = 600000;
+const UPDATE_DATABASE_FREQUENCY = 6000;
 
 async function updateDatabaseData() {
     console.log('Updating database data...');
@@ -86,15 +86,7 @@ async function main() {
         console.log(JSON.stringify(matchedValidators));
         console.log(JSON.stringify("-------------------------------------------------"));
     }
-
-    console.log('ics-valset-monitoring completed');
 }
-
-// Data Refresh Mechanism
-// setInterval(async () => {
-//     const stakingValidators = await getStakingValidators(PROVIDER_REST);
-//     insertStakingValidators(stakingValidators);
-// }, 10000);
 
 main().then(
    console.log('done')

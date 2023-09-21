@@ -1,4 +1,4 @@
-// src/models/MatchedValidator.js
+// src/models/MatchedValidators.js
 
 export class MatchedValidator {
     constructor(stakingValidator, consensusValidator) {
