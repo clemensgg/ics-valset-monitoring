@@ -1,54 +1,110 @@
-// src/main.js
-
-// import cron from 'node-cron';
-
-import { updateConsensusData } from './db/update.js';
 import { 
-    validateConsumerRpcs,
+    saveProviderChainInfos,
+    saveConsumerChainInfos,
+    saveStakingValidators,
+    getStakingValidatorsFromDB,
+    saveMatchedValidators,
+    getMatchedValidatorsFromDB,
+    getConsumerChainInfosFromDB,
+    getProviderChainInfosFromDB,
+ } from './db/update.js';
+import { 
+    fetchConsumerSigningKeys,
     getProviderChainInfos,
     getConsensusState,
     getConsensusValidators,
     getStakingValidators,
     matchValidators,
+    validateConsumerRpcs,
+    sleep
  } from './utils/utils.js';
 
 import app from './server.js';
 
-const PROVIDER_RPC = "http://148.251.183.254:2012";
+// Mainnet Endpoints
+//
+const PROVIDER_RPC = "http://5.9.72.212:2001";
 const PROVIDER_REST = "http://162.55.92.114:2011"
 const CONSUMER_RPCS = ["http://148.251.183.254:2102", "http://148.251.183.254:2202"];
+
+// RS Testnet Endpoints
+//
+// const PROVIDER_RPC = "http://65.108.127.249:2001";
+// const PROVIDER_REST = "http://65.108.127.249:2004"
+// const CONSUMER_RPCS = ["https://rpc-palvus.pion-1.ntrn.tech:443"];
+
+const RPC_DELAY = 40;
+const UPDATE_DATABASE_FREQUENCY = 600000;
+
+async function updateDatabaseData() {
+    console.log('Updating database data...');
+
+    let consumerChainInfos = await validateConsumerRpcs(PROVIDER_RPC, CONSUMER_RPCS);
+    let providerChainInfos = await getProviderChainInfos(PROVIDER_RPC);
+
+    await saveConsumerChainInfos(consumerChainInfos);
+    await saveProviderChainInfos(providerChainInfos);
+
+    let stakingValidators = await getStakingValidators(PROVIDER_REST);
+
+    let allChainIds = consumerChainInfos.map(chain => chain.chainId);
+    let stakingValidatorsWithSigningKeys = await fetchConsumerSigningKeys(stakingValidators, PROVIDER_RPC, allChainIds, 'cosmos', RPC_DELAY);
+
+    await saveStakingValidators(stakingValidatorsWithSigningKeys);
+
+    console.log('Database data updated.');
+}
+
 
 async function main() {
     console.log('starting ics-valset-monitoring');
 
-    let consumerChainInfos = await validateConsumerRpcs(PROVIDER_RPC, CONSUMER_RPCS);
-    let providerChainInfos = await getProviderChainInfos(PROVIDER_RPC);
-    let stakingValidators = await getStakingValidators(PROVIDER_REST);
+    // Load the necessary data from the database
+    let consumerChainInfos = await getConsumerChainInfosFromDB();
+    let providerChainInfos = await getProviderChainInfosFromDB();
+    let stakingValidators = await getStakingValidatorsFromDB();
 
-    console.log(JSON.stringify(consumerChainInfos));
-    console.log(JSON.stringify(providerChainInfos));
-    console.log(JSON.stringify(stakingValidators));
+    if (!consumerChainInfos || !providerChainInfos || !stakingValidators || consumerChainInfos.length == 0 || providerChainInfos.length == 0 || stakingValidators.length == 0) {
+        console.log('running STARTUP...')
+        await updateDatabaseData();
+        setInterval(updateDatabaseData, UPDATE_DATABASE_FREQUENCY);
+    } else {
+        sleep(UPDATE_DATABASE_FREQUENCY)
+        setInterval(updateDatabaseData, UPDATE_DATABASE_FREQUENCY);
+    }
 
-    let allChainIds = consumerChainInfos.map(chain => chain.chainId);
+
 
     for (let chain of consumerChainInfos) {
         console.log(`Processing consumer chain with ID: ${chain.chainId}`);
-
-        const consensusState = await getConsensusState(chain.rpcEndpoint);
         const consensusValidators = await getConsensusValidators(chain.rpcEndpoint);
-        const consensusData = await updateConsensusData(consensusState, consensusValidators);
-        const matchedValidators = await matchValidators(stakingValidators, consensusValidators, PROVIDER_RPC, allChainIds, 'cosmos');
+        const matchedValidators = await matchValidators(stakingValidators.stakingValidators, consensusValidators, 'cosmos');
+
+        await saveMatchedValidators(matchedValidators);
 
         console.log(`Matched ${matchedValidators.length} validators for chain ${chain.chainId}`);
         console.log(JSON.stringify(matchedValidators));
-        console.log(JSON.stringify(consensusData));
         console.log(JSON.stringify("-------------------------------------------------"));
     }
 
     console.log('ics-valset-monitoring completed');
 }
 
+// Data Refresh Mechanism
+// setInterval(async () => {
+//     const stakingValidators = await getStakingValidators(PROVIDER_REST);
+//     insertStakingValidators(stakingValidators);
+// }, 10000);
 
 main().then(
    console.log('done')
 );
+
+process.on('exit', (code) => {
+    db.close((err) => {
+        if (err) {
+            console.error(err.message);
+        }
+        console.log('Closed the database connection.');
+    });
+});
