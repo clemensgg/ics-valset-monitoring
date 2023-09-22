@@ -33,8 +33,8 @@ const CONSUMER_RPCS = ["http://148.251.183.254:2102", "http://148.251.183.254:22
 // const PROVIDER_REST = "http://65.108.127.249:2004"
 // const CONSUMER_RPCS = ["https://rpc-palvus.pion-1.ntrn.tech:443"];
 
-const RPC_DELAY = 40;
-const UPDATE_DATABASE_FREQUENCY = 6000;
+const RPC_DELAY = 45;
+const UPDATE_DATABASE_FREQUENCY = 600000;
 
 async function updateDatabaseData() {
     console.log('Updating database data...');
@@ -77,8 +77,8 @@ async function main() {
 
     for (let chain of consumerChainInfos) {
         console.log(`Processing consumer chain with ID: ${chain.chainId}`);
-        const consensusValidators = await getConsensusValidators(chain.rpcEndpoint);
-        const matchedValidators = await matchValidators(stakingValidators.stakingValidators, consensusValidators, 'cosmos');
+        const consensusState = await getConsensusState(chain.rpcEndpoint);
+        const matchedValidators = await matchValidators(stakingValidators, consensusState, 'cosmos');
 
         await saveMatchedValidators(matchedValidators);
 
