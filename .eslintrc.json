@@ -9,6 +9,19 @@
         "sourceType": "module"
     },
     "rules": {
-        "semi": ["error", "always"]
+        "semi": ["error", "always"],
+        "sort-imports": ["error", {
+            "ignoreCase": false,
+            "ignoreDeclarationSort": false,
+            "ignoreMemberSort": false,
+            "memberSyntaxSortOrder": ["none", "all", "multiple", "single"]
+        }],
+        "max-len": ["error", {
+            "code": 80, // or whatever maximum line length you prefer
+            "ignoreUrls": true,
+            "ignoreStrings": true,
+            "ignoreTemplateLiterals": false, // Ensure template literals are checked
+            "ignoreRegExpLiterals": true
+        }]
     }
 }

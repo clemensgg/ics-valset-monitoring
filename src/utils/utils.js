@@ -19,7 +19,7 @@ function sleep (ms) {
 async function getConsensusState (rpcUrl) {
   try {
     const response = await axios.get(`${rpcUrl}/dump_consensus_state`);
-    return new ConsensusState(response.data);
+    return new ConsensusState(response.data.result);
   } catch (error) {
     console.error(`Error fetching consensus state from ${rpcUrl}: ${error.message}`);
     return [];
@@ -189,7 +189,7 @@ async function matchConsensusValidators (stakingValidators, consensusState, chai
     const consensusValidatorValcons = pubKeyToValcons(consensusValidator.pub_key.value, prefix);
 
     console.log(`Processing consensusValidator ${j + 1}/${consensusState.round_state.validators.validators.length} with pubkey: ${consensusValidator.pub_key.value}`);
-    const matchingStakingValidator = stakingValidators.find(sv => Object.values(sv.consumerKeys[chainId]).includes(consensusValidatorValcons));
+    const matchingStakingValidator = stakingValidators.find(sv => Object.values(sv.consumer_signing_keys[chainId]).includes(consensusValidatorValcons));
 
     if (matchingStakingValidator) {
       matchedValidators.push({
@@ -216,7 +216,7 @@ async function matchConsensusLastValidators (stakingValidators, consensusState, 
     const consensusLastValidatorValcons = pubKeyToValcons(consensusLastValidator.pub_key.value, prefix);
 
     console.log(`Processing consensusLastValidator ${j + 1}/${consensusState.round_state.last_commit.last_validators.validators} with pubkey: ${consensusLastValidator.pub_key.value}`);
-    const matchingStakingLastValidator = stakingValidators.find(sv => Object.values(sv.consumerKeys[chainId]).includes(consensusLastValidatorValcons));
+    const matchingStakingLastValidator = stakingValidators.find(sv => Object.values(sv.consumer_signing_keys[chainId]).includes(consensusLastValidatorValcons));
 
     if (matchingStakingLastValidator) {
       matchedLastValidators.push({
@@ -284,7 +284,7 @@ async function fetchConsumerSigningKeys (stakingValidators, providerRpcEndpoint,
   };
 
   const fetchKeysForValidator = async (stakingValidator, validatorIndex) => {
-    stakingValidator.consumerKeys = {};
+    stakingValidator.consumer_signing_keys = {};
 
     for (const chainId of chainIds) {
       const delayTime = rpcCallCounter * rpcDelay + validatorIndex * rpcDelay * chainIds.length;
@@ -297,7 +297,7 @@ async function fetchConsumerSigningKeys (stakingValidators, providerRpcEndpoint,
       const consumerKey = await fetchWithRetry(() => getValconsForValidator(providerRpcEndpoint, chainId, valconsAddress), 3, rpcDelay);
       // console.log(`[DEBUG] Completed fetching for validator: ${valconsAddress} on chain: ${chainId} at ${new Date().toISOString()}`);
 
-      stakingValidator.consumerKeys[chainId] = consumerKey;
+      stakingValidator.consumer_signing_keys[chainId] = consumerKey;
 
       completedTasks++;
       logProgress();

@@ -41,7 +41,7 @@ async function updateDatabaseData () {
   const providerChainInfos = await getProviderChainInfos(PROVIDER_RPC);
 
   await saveChainInfos(consumerChainInfos, 'consumer');
-  await saveChainInfos(providerChainInfos, 'provider');
+  await saveChainInfos([providerChainInfos], 'provider');
 
   const stakingValidators = await getStakingValidators(PROVIDER_REST);
 

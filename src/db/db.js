@@ -11,11 +11,14 @@ const db = new sqlite.Database('./icsValsetMonitoring.db', (err) => {
 db.serialize(() => {
   // ChainInfo Table
   db.run(`
-        CREATE TABLE ChainInfo (
-            chainId TEXT PRIMARY KEY,
-            rpcEndpoint TEXT
-        );
-    `);
+    CREATE TABLE IF NOT EXISTS ChainInfo (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      chainId TEXT UNIQUE NOT NULL,
+      rpcEndpoint TEXT NOT NULL,
+      type TEXT CHECK(type IN ('provider', 'consumer', NULL)),
+      clientIds TEXT
+    );
+  `);
 
   // ConsensusState Table
   db.run(`

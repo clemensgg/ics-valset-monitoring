@@ -15,7 +15,13 @@ function saveStakingValidators (stakingValidators) {
       const metaId = this.lastID; // ID of the last inserted row
 
       // Now, insert each validator into StakingValidator table
-      const stmtValidator = db.prepare('INSERT INTO StakingValidator (stakingValidatorsMetaId, operator_address, consensus_pubkey_type, consensus_pubkey_key, jailed, status, tokens, delegator_shares, moniker, identity, website, security_contact, details, unbonding_height, unbonding_time, commission_rate, commission_max_rate, commission_max_change_rate, min_self_delegation) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)');
+      const stmtValidator = db.prepare(
+        `INSERT INTO StakingValidator (
+          stakingValidatorsMetaId, 
+          operator_address, 
+          consensus_pubkey_type, 
+          consensus_pubkey_key, 
+          jailed, status, tokens, delegator_shares, moniker, identity, website, security_contact, details, unbonding_height, unbonding_time, commission_rate, commission_max_rate, commission_max_change_rate, min_self_delegation) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`);
       stakingValidators.validators.forEach(validator => {
         stmtValidator.run(metaId, validator.operator_address, validator.consensus_pubkey.type, validator.consensus_pubkey.key, validator.jailed, validator.status, validator.tokens, validator.delegator_shares, validator.description.moniker, validator.description.identity, validator.description.website, validator.description.security_contact, validator.description.details, validator.unbonding_height, validator.unbonding_time, validator.commission.commission_rates.rate, validator.commission.commission_rates.max_rate, validator.commission.commission_rates.max_change_rate, validator.min_self_delegation, (err) => {
           if (err) {
@@ -126,26 +132,38 @@ function getMatchedValidatorsFromDB () {
   });
 }
 
-function saveChainInfos (chainInfos, type) {
+function saveChainInfos(chainInfos, type) {
   console.log(`Saving ${type}ChainInfos to DB:`, chainInfos);
   return new Promise((resolve, reject) => {
-    const stmt = db.prepare('INSERT INTO ChainInfo (chainId, rpcEndpoint, type) VALUES (?, ?, ?)');
+    const stmt = db.prepare('INSERT INTO ChainInfo (chainId, rpcEndpoint, type, clientIds) VALUES (?, ?, ?, ?)');
+    
     chainInfos.forEach(info => {
-      stmt.run(info.chainId, info.rpcEndpoint, type, (err) => {
+      // Convert clientIds array to a JSON string for storage
+      const clientIdsString = JSON.stringify(info.clientIds);
+      
+      stmt.run(info.chainId, info.rpcEndpoint, type, clientIdsString, (err) => {
         if (err) {
+          console.error(`Error inserting ${type}ChainInfo with chainId ${info.chainId}:`, err.message);
           reject(err);
+          return; // Exit the loop on encountering an error
+        } else {
+          console.log(`Successfully inserted ${type}ChainInfo with chainId ${info.chainId}`);
         }
       });
     });
+    
     stmt.finalize((finalizeErr) => {
       if (finalizeErr) {
+        console.error('Error finalizing statement:', finalizeErr.message);
         reject(finalizeErr);
-        return;
+      } else {
+        console.log('Statement finalized successfully.');
+        resolve();
       }
-      resolve();
     });
   });
 }
+
 
 function getChainInfosFromDB (type) {
   return new Promise((resolve, reject) => {
