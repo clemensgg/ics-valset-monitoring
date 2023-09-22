@@ -4,21 +4,6 @@ export class ConsensusState {
   constructor (data, chainId = null, timestamp = new Date().toISOString()) {
     this.chainId = chainId;
     this.timestamp = timestamp;
-    this.jsonrpc = data.jsonrpc;
-    this.result = data.result
-      ? new Result(data.result,
-        chainId,
-        timestamp)
-      : null;
-    this.created_at = timestamp;
-    this.updated_at = timestamp;
-  }
-}
-
-class Result {
-  constructor (data, chainId, timestamp) {
-    this.chainId = chainId;
-    this.timestamp = timestamp;
     this.round_state = data.round_state
       ? new RoundState(data.round_state,
         chainId,

@@ -2,67 +2,92 @@
 
 import db from './db.js';
 
-function saveStakingValidators (stakingValidators) {
-  console.log('Saving stakingValidators to DB:',
-    stakingValidators);
-  return new Promise((resolve, reject) => {
-    // First, insert into StakingValidatorsMeta table
-    const stmtMeta = db.prepare('INSERT INTO StakingValidatorsMeta (chainId, timestamp, created_at, updated_at) VALUES (?, ?, ?, ?)');
-    stmtMeta.run(stakingValidators.chainId,
-      stakingValidators.timestamp,
-      new Date().toISOString(),
-      new Date().toISOString(),
-      (err) => {
-        if (err) {
-          reject(err);
-          return;
-        }
-        const metaId = this.lastID; // ID of the last inserted row
+async function saveStakingValidators(stakingValidators) {
+  console.log('Saving stakingValidators to DB:', stakingValidators);
 
-        // Now, insert each validator into StakingValidator table
-        const stmtValidator = db.prepare(
-        `INSERT INTO StakingValidator (
-          stakingValidatorsMetaId, 
-          operator_address, 
-          consensus_pubkey_type, 
-          consensus_pubkey_key, 
-          jailed, status, tokens, delegator_shares, moniker, identity, website, security_contact, details, unbonding_height, unbonding_time, commission_rate, commission_max_rate, commission_max_change_rate, min_self_delegation) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`);
-        stakingValidators.validators.forEach(validator => {
-          stmtValidator.run(metaId,
-            validator.operator_address,
-            validator.consensus_pubkey.type,
-            validator.consensus_pubkey.key,
-            validator.jailed,
-            validator.status,
-            validator.tokens,
-            validator.delegator_shares,
-            validator.description.moniker,
-            validator.description.identity,
-            validator.description.website,
-            validator.description.security_contact,
-            validator.description.details,
-            validator.unbonding_height,
-            validator.unbonding_time,
-            validator.commission.commission_rates.rate,
-            validator.commission.commission_rates.max_rate,
-            validator.commission.commission_rates.max_change_rate,
-            validator.min_self_delegation,
-            (err) => {
-              if (err) {
-                reject(err);
-              }
-            });
-        });
-
-        stmtValidator.finalize((finalizeErr) => {
-          if (finalizeErr) {
-            reject(finalizeErr);
-            return;
-          }
-          resolve();
-        });
+  try {
+      // First, insert into StakingValidatorsMeta table
+      const stmtMeta = db.prepare('INSERT INTO StakingValidatorsMeta (timestamp, created_at, updated_at) VALUES (?, ?, ?)');
+      
+      const metaResult = await new Promise((resolve, reject) => {
+          stmtMeta.run(stakingValidators.timestamp, stakingValidators.created_at, stakingValidators.updated_at, function(err) {
+              if (err) reject(err);
+              else resolve(this.lastID);
+          });
       });
-  });
+
+      console.log('Inserted into StakingValidatorsMeta with ID:', metaResult);
+
+      await stmtMeta.finalize((finalizeErr) => {
+        if (finalizeErr) {
+            console.error('Error finalizing stmtMeta:', finalizeErr.message);
+        } else {
+            console.log('stmtMeta finalized successfully.');
+        }
+      });
+
+      // Now, insert each validator into StakingValidator table
+      const stmtValidator = db.prepare(`
+          INSERT INTO StakingValidator (
+              stakingValidatorsMetaId, 
+              operator_address, 
+              consensus_pubkey_type, 
+              consensus_pubkey_key, 
+              consumer_signing_keys,
+              jailed, status, tokens, delegator_shares, moniker, 
+              identity, website, security_contact, details, 
+              unbonding_height, unbonding_time, commission_rate, 
+              commission_max_rate, commission_max_change_rate, 
+              min_self_delegation
+          ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      `);
+
+      for (const validator of stakingValidators.validators) {
+          await new Promise((resolve, reject) => {
+              stmtValidator.run(
+                  metaResult,
+                  validator.operator_address,
+                  validator.consensus_pubkey.type,
+                  validator.consensus_pubkey.key,
+                  JSON.stringify(validator.consumer_signing_keys),
+                  validator.jailed,
+                  validator.status,
+                  validator.tokens,
+                  validator.delegator_shares,
+                  validator.description.moniker,
+                  validator.description.identity,
+                  validator.description.website,
+                  validator.description.security_contact,
+                  validator.description.details,
+                  validator.unbonding_height,
+                  validator.unbonding_time,
+                  validator.commission.commission_rates.rate,
+                  validator.commission.commission_rates.max_rate,
+                  validator.commission.commission_rates.max_change_rate,
+                  validator.min_self_delegation,
+                  (err) => {
+                      if (err) reject(err);
+                      else resolve();
+                  }
+              );
+          });
+      }
+
+      try {
+        stmtValidator.finalize((finalizeErr) => {
+            if (finalizeErr) {
+                console.error('Error finalizing statement:', finalizeErr.message);
+            } else {
+                console.log('Statement finalized successfully.');
+            }
+        });
+      } catch (error) {
+        console.error('Error finalizing VALIDATOR statement:', error);
+      } 
+
+  } catch (error) {
+      console.error('Error finalizing META statement:', error);
+  } 
 }
 
 function getStakingValidatorsFromDB () {
@@ -85,10 +110,30 @@ function getStakingValidatorsFromDB () {
                 return;
               }
               const result = {
-                chainId: metaRow.chainId,
                 timestamp: metaRow.timestamp,
                 validators: validatorRows
               };
+              result.validators.forEach((validator) => { 
+                validator.consensus_pubkey = {
+                  "@type": validator.consensus_pubkey_type,
+                  "key": validator.consensus_pubkey_key
+                }
+                validator.description = {
+                  moniker: validator.moniker,
+                  identity: validator.identity,
+                  website: validator.website,
+                  security_contact: validator.security_contact,
+                  details: validator.details
+                }
+                validator.commission = {
+                  commission_rates: {
+                    rate: validator.commission_rate,
+                    max_rate: validator.commission_max_rate,
+                    max_change_rate: validator.commission_max_change_rate
+                  },
+                  update_time: validator.commission_update_time || null,
+                }
+              });
               resolve(result);
             });
         } else {
@@ -211,17 +256,16 @@ function saveChainInfos (chainInfos, type) {
   });
 }
 
-function getChainInfosFromDB (type) {
+function getChainInfosFromDB(type) {
   return new Promise((resolve, reject) => {
-    db.all('SELECT * FROM ChainInfo WHERE type = ?',
-      [type],
-      (err, rows) => {
-        if (err) {
-          reject(err);
-          return;
-        }
-        resolve(rows);
-      });
+    db.all('SELECT * FROM ChainInfo WHERE type = ?', [type], (err, rows) => {
+      if (err) {
+        console.error("DB Error:", err);
+        reject(err);
+        return;
+      }
+      resolve(rows);
+    });
   });
 }
 

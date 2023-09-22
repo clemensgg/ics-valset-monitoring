@@ -9,6 +9,10 @@ const db = new sqlite.Database('./icsValsetMonitoring.db',
     console.log('Connected to the ics-valset-monitoring database.');
   });
 
+db.on('error', err => {
+  console.error('Database error:', err);
+});
+
 db.serialize(() => {
   // ChainInfo Table
   db.run(`
@@ -23,7 +27,7 @@ db.serialize(() => {
 
   // ConsensusState Table
   db.run(`
-        CREATE TABLE ConsensusState (
+        CREATE TABLE IF NOT EXISTS ConsensusState (
             chainId TEXT REFERENCES ChainInfo(chainId),
             timestamp TEXT,
             jsonrpc TEXT,
@@ -35,7 +39,7 @@ db.serialize(() => {
 
   // Result Table
   db.run(`
-        CREATE TABLE Result (
+        CREATE TABLE IF NOT EXISTS Result (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             chainId TEXT REFERENCES ChainInfo(chainId),
             timestamp TEXT,
@@ -46,7 +50,7 @@ db.serialize(() => {
 
   // RoundState Table
   db.run(`
-        CREATE TABLE RoundState (
+        CREATE TABLE IF NOT EXISTS RoundState (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             chainId TEXT REFERENCES ChainInfo(chainId),
             timestamp TEXT,
@@ -70,7 +74,7 @@ db.serialize(() => {
 
   // Validators Table
   db.run(`
-        CREATE TABLE Validators (
+        CREATE TABLE IF NOT EXISTS Validators (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             chainId TEXT REFERENCES ChainInfo(chainId),
             timestamp TEXT,
@@ -81,7 +85,7 @@ db.serialize(() => {
 
   // Validator Table
   db.run(`
-        CREATE TABLE Validator (
+        CREATE TABLE IF NOT EXISTS Validator (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             chainId TEXT REFERENCES ChainInfo(chainId),
             timestamp TEXT,
@@ -94,7 +98,7 @@ db.serialize(() => {
 
   // Peer Table
   db.run(`
-        CREATE TABLE Peer (
+        CREATE TABLE IF NOT EXISTS Peer (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             chainId TEXT REFERENCES ChainInfo(chainId),
             timestamp TEXT,
@@ -106,7 +110,7 @@ db.serialize(() => {
 
   // PeerState Table
   db.run(`
-        CREATE TABLE PeerState (
+        CREATE TABLE IF NOT EXISTS PeerState (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             chainId TEXT REFERENCES ChainInfo(chainId),
             timestamp TEXT,
@@ -118,9 +122,8 @@ db.serialize(() => {
 
   // StakingValidators Table
   db.run(`
-        CREATE TABLE StakingValidatorsMeta (
+        CREATE TABLE IF NOT EXISTS StakingValidatorsMeta (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
-            chainId TEXT REFERENCES ChainInfo(chainId),
             timestamp TEXT,
             created_at TEXT,
             updated_at TEXT
@@ -129,12 +132,13 @@ db.serialize(() => {
 
   // StakingValidator Table
   db.run(`
-        CREATE TABLE StakingValidator (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
+        CREATE TABLE IF NOT EXISTS StakingValidator (
+            id INTEGER PRIMARY KEY,
             stakingValidatorsMetaId INTEGER REFERENCES StakingValidatorsMeta(id),
             operator_address TEXT,
             consensus_pubkey_type TEXT,
             consensus_pubkey_key TEXT,
+            consumer_signing_keys TEXT,
             jailed BOOLEAN,
             status TEXT,
             tokens INTEGER,
@@ -155,7 +159,7 @@ db.serialize(() => {
 
   // ConsensusValidator Table
   db.run(`
-        CREATE TABLE ConsensusValidator (
+        CREATE TABLE IF NOT EXISTS ConsensusValidator (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             roundStateId INTEGER REFERENCES RoundState(id),
             address TEXT,
