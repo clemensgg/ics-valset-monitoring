@@ -1,19 +1,17 @@
 import {
-  saveProviderChainInfos,
-  saveConsumerChainInfos,
+  saveChainInfos,
   saveStakingValidators,
   getStakingValidatorsFromDB,
   saveMatchedValidators,
   getMatchedValidatorsFromDB,
-  getConsumerChainInfosFromDB,
-  getProviderChainInfosFromDB
+  getChainInfosFromDB
 } from './db/update.js';
 import {
   fetchConsumerSigningKeys,
   getProviderChainInfos,
   getConsensusState,
   getStakingValidators,
-  matchValidators,
+  matchConsensusValidators,
   validateConsumerRpcs,
   sleep
 } from './utils/utils.js';
@@ -42,8 +40,8 @@ async function updateDatabaseData () {
   const consumerChainInfos = await validateConsumerRpcs(PROVIDER_RPC, CONSUMER_RPCS);
   const providerChainInfos = await getProviderChainInfos(PROVIDER_RPC);
 
-  await saveConsumerChainInfos(consumerChainInfos);
-  await saveProviderChainInfos(providerChainInfos);
+  await saveChainInfos(consumerChainInfos, 'consumer');
+  await saveChainInfos(providerChainInfos, 'provider');
 
   const stakingValidators = await getStakingValidators(PROVIDER_REST);
 
@@ -59,9 +57,9 @@ async function main () {
   console.log('starting ics-valset-monitoring');
 
   // Load the necessary data from the database
-  const consumerChainInfos = await getConsumerChainInfosFromDB();
-  const providerChainInfos = await getProviderChainInfosFromDB();
-  const stakingValidators = await getStakingValidatorsFromDB();
+  const consumerChainInfos = await getChainInfosFromDB('consumer') || [];
+  const providerChainInfos = await getChainInfosFromDB('provider') || [];
+  const stakingValidators = await getStakingValidatorsFromDB() || [];
 
   if (!consumerChainInfos || !providerChainInfos || !stakingValidators || consumerChainInfos.length === 0 || providerChainInfos.length === 0 || stakingValidators.length === 0) {
     console.log('running STARTUP...');
@@ -75,7 +73,7 @@ async function main () {
   for (const chain of consumerChainInfos) {
     console.log(`Processing consumer chain with ID: ${chain.chainId}`);
     const consensusState = await getConsensusState(chain.rpcEndpoint);
-    const matchedValidators = await matchValidators(stakingValidators, consensusState, 'cosmos');
+    const matchedValidators = await matchConsensusValidators(stakingValidators, consensusState, 'cosmos');
 
     await saveMatchedValidators(matchedValidators);
 

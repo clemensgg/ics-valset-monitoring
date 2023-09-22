@@ -164,9 +164,4 @@ db.serialize(() => {
   console.log('All tables created successfully!');
 });
 
-db.close((err) => {
-  if (err) {
-    console.error(err.message);
-  }
-  console.log('Closed the database connection.');
-});
+export default db;
