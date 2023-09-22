@@ -9,7 +9,6 @@ import {
 } from 'interchain-security';
 
 import { ConsensusState } from '../models/ConsensusState.js';
-import { ConsensusValidators } from '../models/ConsensusValidators.js';
 import { ProviderChainInfo, ConsumerChainInfo } from '../models/ChainInfo.js';
 import { StakingValidators } from '../models/StakingValidators.js';
 
@@ -27,8 +26,8 @@ async function getConsensusState (rpcUrl) {
   }
 }
 
-function orderByVotingPower (consensusValidators) {
-  return consensusValidators.validators.sort((a, b) => parseInt(b.voting_power) - parseInt(a.voting_power));
+function orderByVotingPower (validators) {
+  return validators.sort((a, b) => parseInt(b.voting_power) - parseInt(a.voting_power));
 }
 
 function pubKeyToValcons (pubkey, prefix) {
@@ -39,6 +38,7 @@ function pubKeyToValcons (pubkey, prefix) {
   return valconsAddress;
 }
 
+/*
 async function getConsensusValidators (rpcUrl) {
   let validators = [];
   let fetchedCount = 0;
@@ -64,6 +64,7 @@ async function getConsensusValidators (rpcUrl) {
 
   return validators;
 }
+*/
 
 async function getStakingValidators (restUrl) {
   let validators = [];
@@ -134,19 +135,6 @@ async function validateConsumerRpcs (providerRpcEndpoint, consumerRpcEndpoints) 
   return consumerChainInfos;
 }
 
-function mergeValidatorData (consensusStateData, consensusValidatorsData) {
-  const consensusState = new ConsensusState(consensusStateData);
-  const consensusValidators = new ConsensusValidators(consensusValidatorsData);
-
-  return consensusValidators.validators.map(validator => {
-    const matchingValidator = consensusState.validators.find(v => v.address === validator.address);
-    return {
-      ...validator,
-      ...matchingValidator
-    };
-  });
-}
-
 /*
 
 async function matchValidators(stakingValidators, consensusValidators, providerRpcEndpoint, chainIds, prefix) {
@@ -190,19 +178,19 @@ async function matchValidators(stakingValidators, consensusValidators, providerR
     return matchedValidators;
 } */
 
-async function matchValidators (stakingValidators, consensusState, prefix) {
+async function matchConsensusValidators (stakingValidators, consensusState, chainId, prefix) {
   const matchedValidators = [];
 
   console.log(`Total stakingValidators: ${stakingValidators.length}`);
-  console.log(`Total lentgh consensusState: ${consensusState.length}`);
+  console.log(`Total consensusValidators: ${consensusState.round_state.validators.validators.length}`);
 
-  for (let j = 0; j < consensusState.length; j++) {
-    const consensusValidator = consensusState[j];
-    const valcons = pubKeyToValcons(consensusValidator.pub_key.value, prefix);
+  for (let j = 0; j < consensusState.round_state.validators.validators.length; j++) {
+    const consensusValidator = consensusState.round_state.validators.validators[j];
+    const consensusValidatorValcons = pubKeyToValcons(consensusValidator.pub_key.value, prefix);
 
-    console.log(`Processing consensusValidator ${j + 1}/${consensusState.length} with pubkey: ${consensusValidator.pub_key.value}`);
+    console.log(`Processing consensusValidator ${j + 1}/${consensusState.round_state.validators.validators.length} with pubkey: ${consensusValidator.pub_key.value}`);
+    const matchingStakingValidator = stakingValidators.find(sv => Object.values(sv.consumerKeys[chainId]).includes(consensusValidatorValcons));
 
-    const matchingStakingValidator = stakingValidators.find(sv => Object.values(sv.consumerKeys).includes(valcons));
     if (matchingStakingValidator) {
       matchedValidators.push({
         stakingValidator: matchingStakingValidator,
@@ -215,6 +203,33 @@ async function matchValidators (stakingValidators, consensusState, prefix) {
 
   console.log(`Total matched validators: ${matchedValidators.length}`);
   return matchedValidators;
+}
+
+async function matchConsensusLastValidators (stakingValidators, consensusState, chainId, prefix) {
+  const matchedLastValidators = [];
+
+  console.log(`Total stakingValidators: ${stakingValidators.length}`);
+  console.log(`Total consensusValidators: ${consensusState.round_state.last_commit.last_validators.validators}`);
+
+  for (let j = 0; j < consensusState.round_state.last_commit.last_validators.validators; j++) {
+    const consensusLastValidator = consensusState.round_state.last_commit.last_validators.validators[j];
+    const consensusLastValidatorValcons = pubKeyToValcons(consensusLastValidator.pub_key.value, prefix);
+
+    console.log(`Processing consensusLastValidator ${j + 1}/${consensusState.round_state.last_commit.last_validators.validators} with pubkey: ${consensusLastValidator.pub_key.value}`);
+    const matchingStakingLastValidator = stakingValidators.find(sv => Object.values(sv.consumerKeys[chainId]).includes(consensusLastValidatorValcons));
+
+    if (matchingStakingLastValidator) {
+      matchedLastValidators.push({
+        stakingValidator: matchingStakingLastValidator,
+        consensusLastValidator
+      });
+
+      console.log(`Matched stakingValidator with address ${matchingStakingLastValidator.operator_address} to consensusLastValidator with pubkey ${consensusLastValidator.pub_key.value}`);
+    }
+  }
+
+  console.log(`Total matched validators: ${matchedLastValidators.length}`);
+  return matchedLastValidators;
 }
 
 async function getChainIdFromRpc (rpcEndpoint) {
@@ -297,15 +312,14 @@ async function fetchConsumerSigningKeys (stakingValidators, providerRpcEndpoint,
 
 export {
   getConsensusState,
-  getConsensusValidators,
   getStakingValidators,
   orderByVotingPower,
   getProviderChainInfos,
   getConsumerChainInfos,
   fetchConsumerSigningKeys,
   validateConsumerRpcs,
-  mergeValidatorData,
   pubKeyToValcons,
-  matchValidators,
+  matchConsensusValidators,
+  matchConsensusLastValidators,
   sleep
 };

@@ -12,12 +12,12 @@ import {
   fetchConsumerSigningKeys,
   getProviderChainInfos,
   getConsensusState,
-  getConsensusValidators,
   getStakingValidators,
   matchValidators,
   validateConsumerRpcs,
   sleep
 } from './utils/utils.js';
+import db from './db/db.js';
 
 import app from './server.js';
 

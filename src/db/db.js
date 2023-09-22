@@ -2,23 +2,23 @@ import sqlite3 from 'sqlite3';
 
 const sqlite = sqlite3.verbose();
 const db = new sqlite.Database('./icsValsetMonitoring.db', (err) => {
-    if (err) {
-        console.error(err.message);
-    }
-    console.log('Connected to the ics-valset-monitoring database.');
+  if (err) {
+    console.error(err.message);
+  }
+  console.log('Connected to the ics-valset-monitoring database.');
 });
 
 db.serialize(() => {
-    // ChainInfo Table
-    db.run(`
+  // ChainInfo Table
+  db.run(`
         CREATE TABLE ChainInfo (
             chainId TEXT PRIMARY KEY,
             rpcEndpoint TEXT
         );
     `);
 
-    // ConsensusState Table
-    db.run(`
+  // ConsensusState Table
+  db.run(`
         CREATE TABLE ConsensusState (
             chainId TEXT REFERENCES ChainInfo(chainId),
             timestamp TEXT,
@@ -29,8 +29,8 @@ db.serialize(() => {
         );
     `);
 
-    // Result Table
-    db.run(`
+  // Result Table
+  db.run(`
         CREATE TABLE Result (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             chainId TEXT REFERENCES ChainInfo(chainId),
@@ -40,8 +40,8 @@ db.serialize(() => {
         );
     `);
 
-    // RoundState Table
-    db.run(`
+  // RoundState Table
+  db.run(`
         CREATE TABLE RoundState (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             chainId TEXT REFERENCES ChainInfo(chainId),
@@ -64,8 +64,8 @@ db.serialize(() => {
         );
     `);
 
-    // Validators Table
-    db.run(`
+  // Validators Table
+  db.run(`
         CREATE TABLE Validators (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             chainId TEXT REFERENCES ChainInfo(chainId),
@@ -75,8 +75,8 @@ db.serialize(() => {
         );
     `);
 
-    // Validator Table
-    db.run(`
+  // Validator Table
+  db.run(`
         CREATE TABLE Validator (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             chainId TEXT REFERENCES ChainInfo(chainId),
@@ -88,8 +88,8 @@ db.serialize(() => {
         );
     `);
 
-    // Peer Table
-    db.run(`
+  // Peer Table
+  db.run(`
         CREATE TABLE Peer (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             chainId TEXT REFERENCES ChainInfo(chainId),
@@ -100,8 +100,8 @@ db.serialize(() => {
         );
     `);
 
-    // PeerState Table
-    db.run(`
+  // PeerState Table
+  db.run(`
         CREATE TABLE PeerState (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             chainId TEXT REFERENCES ChainInfo(chainId),
@@ -112,8 +112,8 @@ db.serialize(() => {
         );
     `);
 
-    // StakingValidators Table
-    db.run(`
+  // StakingValidators Table
+  db.run(`
         CREATE TABLE StakingValidatorsMeta (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             chainId TEXT REFERENCES ChainInfo(chainId),
@@ -123,8 +123,8 @@ db.serialize(() => {
         );
     `);
 
-    // StakingValidator Table
-    db.run(`
+  // StakingValidator Table
+  db.run(`
         CREATE TABLE StakingValidator (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             stakingValidatorsMetaId INTEGER REFERENCES StakingValidatorsMeta(id),
@@ -149,8 +149,8 @@ db.serialize(() => {
         );
     `);
 
-    // ConsensusValidator Table
-    db.run(`
+  // ConsensusValidator Table
+  db.run(`
         CREATE TABLE ConsensusValidator (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             roundStateId INTEGER REFERENCES RoundState(id),
@@ -161,12 +161,12 @@ db.serialize(() => {
         );
     `);
 
-    console.log('All tables created successfully!');
+  console.log('All tables created successfully!');
 });
 
 db.close((err) => {
-    if (err) {
-        console.error(err.message);
-    }
-    console.log('Closed the database connection.');
+  if (err) {
+    console.error(err.message);
+  }
+  console.log('Closed the database connection.');
 });
