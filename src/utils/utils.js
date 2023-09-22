@@ -9,11 +9,12 @@ import {
 } from 'interchain-security';
 
 import { ConsensusState } from '../models/ConsensusState.js';
-import { ProviderChainInfo, ConsumerChainInfo } from '../models/ChainInfo.js';
+import { ConsumerChainInfo, ProviderChainInfo } from '../models/ChainInfo.js';
 import { StakingValidators } from '../models/StakingValidators.js';
 
 function sleep (ms) {
-  return new Promise(resolve => setTimeout(resolve, ms));
+  return new Promise(resolve => setTimeout(resolve,
+    ms));
 }
 
 async function getConsensusState (rpcUrl) {
@@ -31,10 +32,13 @@ function orderByVotingPower (validators) {
 }
 
 function pubKeyToValcons (pubkey, prefix) {
-  const consensusPubkeyBytes = Buffer.from(pubkey, 'base64');
+  const consensusPubkeyBytes = Buffer.from(pubkey,
+    'base64');
   const sha256Hash = crypto.createHash('sha256').update(consensusPubkeyBytes).digest();
-  const addressBytes = sha256Hash.slice(0, 20);
-  const valconsAddress = bech32.bech32.encode(prefix + 'valcons', bech32.bech32.toWords(addressBytes));
+  const addressBytes = sha256Hash.slice(0,
+    20);
+  const valconsAddress = bech32.bech32.encode(prefix + 'valcons',
+    bech32.bech32.toWords(addressBytes));
   return valconsAddress;
 }
 
@@ -186,7 +190,8 @@ async function matchConsensusValidators (stakingValidators, consensusState, chai
 
   for (let j = 0; j < consensusState.round_state.validators.validators.length; j++) {
     const consensusValidator = consensusState.round_state.validators.validators[j];
-    const consensusValidatorValcons = pubKeyToValcons(consensusValidator.pub_key.value, prefix);
+    const consensusValidatorValcons = pubKeyToValcons(consensusValidator.pub_key.value,
+      prefix);
 
     console.log(`Processing consensusValidator ${j + 1}/${consensusState.round_state.validators.validators.length} with pubkey: ${consensusValidator.pub_key.value}`);
     const matchingStakingValidator = stakingValidators.find(sv => Object.values(sv.consumer_signing_keys[chainId]).includes(consensusValidatorValcons));
@@ -213,7 +218,8 @@ async function matchConsensusLastValidators (stakingValidators, consensusState, 
 
   for (let j = 0; j < consensusState.round_state.last_commit.last_validators.validators; j++) {
     const consensusLastValidator = consensusState.round_state.last_commit.last_validators.validators[j];
-    const consensusLastValidatorValcons = pubKeyToValcons(consensusLastValidator.pub_key.value, prefix);
+    const consensusLastValidatorValcons = pubKeyToValcons(consensusLastValidator.pub_key.value,
+      prefix);
 
     console.log(`Processing consensusLastValidator ${j + 1}/${consensusState.round_state.last_commit.last_validators.validators} with pubkey: ${consensusLastValidator.pub_key.value}`);
     const matchingStakingLastValidator = stakingValidators.find(sv => Object.values(sv.consumer_signing_keys[chainId]).includes(consensusLastValidatorValcons));
@@ -291,10 +297,15 @@ async function fetchConsumerSigningKeys (stakingValidators, providerRpcEndpoint,
       await sleep(delayTime);
       rpcCallCounter++;
 
-      const valconsAddress = pubKeyToValcons(stakingValidator.consensus_pubkey.key, prefix);
+      const valconsAddress = pubKeyToValcons(stakingValidator.consensus_pubkey.key,
+        prefix);
 
       // console.log(`[DEBUG] Fetching valcons for validator: ${valconsAddress} on chain: ${chainId} at ${new Date().toISOString()}`);
-      const consumerKey = await fetchWithRetry(() => getValconsForValidator(providerRpcEndpoint, chainId, valconsAddress), 3, rpcDelay);
+      const consumerKey = await fetchWithRetry(() => getValconsForValidator(providerRpcEndpoint,
+        chainId,
+        valconsAddress),
+      3,
+      rpcDelay);
       // console.log(`[DEBUG] Completed fetching for validator: ${valconsAddress} on chain: ${chainId} at ${new Date().toISOString()}`);
 
       stakingValidator.consumer_signing_keys[chainId] = consumerKey;
@@ -304,7 +315,8 @@ async function fetchConsumerSigningKeys (stakingValidators, providerRpcEndpoint,
     }
   };
 
-  const promises = stakingValidators.map((validator, index) => fetchKeysForValidator(validator, index));
+  const promises = stakingValidators.map((validator, index) => fetchKeysForValidator(validator,
+    index));
   await Promise.all(promises);
 
   return stakingValidators;

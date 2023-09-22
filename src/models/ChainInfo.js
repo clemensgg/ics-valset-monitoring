@@ -11,7 +11,8 @@ class ChainInfo {
 
 export class ConsumerChainInfo extends ChainInfo {
   constructor (chain) {
-    super(chain, 'consumer'); // Set type as 'consumer'
+    super(chain,
+      'consumer'); // Set type as 'consumer'
     this.clientIds = [chain.clientId];
     this.rpcEndpoint = chain.rpcEndpoint;
   }
@@ -19,7 +20,8 @@ export class ConsumerChainInfo extends ChainInfo {
 
 export class ProviderChainInfo extends ChainInfo {
   constructor (chain) {
-    super(chain, 'provider'); // Set type as 'provider'
+    super(chain,
+      'provider'); // Set type as 'provider'
     this.clientIds = chain.clientIds || [];
     this.rpcEndpoint = chain.rpcEndpoint;
   }

@@ -1,19 +1,19 @@
 import {
-  saveChainInfos,
-  saveStakingValidators,
-  getStakingValidatorsFromDB,
-  saveMatchedValidators,
+  getChainInfosFromDB,
   getMatchedValidatorsFromDB,
-  getChainInfosFromDB
+  getStakingValidatorsFromDB,
+  saveChainInfos,
+  saveMatchedValidators,
+  saveStakingValidators
 } from './db/update.js';
 import {
   fetchConsumerSigningKeys,
-  getProviderChainInfos,
   getConsensusState,
+  getProviderChainInfos,
   getStakingValidators,
   matchConsensusValidators,
-  validateConsumerRpcs,
-  sleep
+  sleep,
+  validateConsumerRpcs
 } from './utils/utils.js';
 import db from './db/db.js';
 
@@ -37,16 +37,23 @@ const UPDATE_DATABASE_FREQUENCY = 600000;
 async function updateDatabaseData () {
   console.log('Updating database data...');
 
-  const consumerChainInfos = await validateConsumerRpcs(PROVIDER_RPC, CONSUMER_RPCS);
+  const consumerChainInfos = await validateConsumerRpcs(PROVIDER_RPC,
+    CONSUMER_RPCS);
   const providerChainInfos = await getProviderChainInfos(PROVIDER_RPC);
 
-  await saveChainInfos(consumerChainInfos, 'consumer');
-  await saveChainInfos([providerChainInfos], 'provider');
+  await saveChainInfos(consumerChainInfos,
+    'consumer');
+  await saveChainInfos([providerChainInfos],
+    'provider');
 
   const stakingValidators = await getStakingValidators(PROVIDER_REST);
 
   const allChainIds = consumerChainInfos.map(chain => chain.chainId);
-  const stakingValidatorsWithSigningKeys = await fetchConsumerSigningKeys(stakingValidators, PROVIDER_RPC, allChainIds, 'cosmos', RPC_DELAY);
+  const stakingValidatorsWithSigningKeys = await fetchConsumerSigningKeys(stakingValidators,
+    PROVIDER_RPC,
+    allChainIds,
+    'cosmos',
+    RPC_DELAY);
 
   await saveStakingValidators(stakingValidatorsWithSigningKeys);
 
@@ -64,16 +71,20 @@ async function main () {
   if (!consumerChainInfos || !providerChainInfos || !stakingValidators || consumerChainInfos.length === 0 || providerChainInfos.length === 0 || stakingValidators.length === 0) {
     console.log('running STARTUP...');
     await updateDatabaseData();
-    setInterval(updateDatabaseData, UPDATE_DATABASE_FREQUENCY);
+    setInterval(updateDatabaseData,
+      UPDATE_DATABASE_FREQUENCY);
   } else {
     sleep(UPDATE_DATABASE_FREQUENCY);
-    setInterval(updateDatabaseData, UPDATE_DATABASE_FREQUENCY);
+    setInterval(updateDatabaseData,
+      UPDATE_DATABASE_FREQUENCY);
   }
 
   for (const chain of consumerChainInfos) {
     console.log(`Processing consumer chain with ID: ${chain.chainId}`);
     const consensusState = await getConsensusState(chain.rpcEndpoint);
-    const matchedValidators = await matchConsensusValidators(stakingValidators, consensusState, 'cosmos');
+    const matchedValidators = await matchConsensusValidators(stakingValidators,
+      consensusState,
+      'cosmos');
 
     await saveMatchedValidators(matchedValidators);
 
@@ -87,11 +98,12 @@ main().then(
   console.log('done')
 );
 
-process.on('exit', (code) => {
-  db.close((err) => {
-    if (err) {
-      console.error(err.message);
-    }
-    console.log('Closed the database connection.');
+process.on('exit',
+  (code) => {
+    db.close((err) => {
+      if (err) {
+        console.error(err.message);
+      }
+      console.log('Closed the database connection.');
+    });
   });
-});

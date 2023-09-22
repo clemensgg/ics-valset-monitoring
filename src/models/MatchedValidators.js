@@ -15,7 +15,8 @@ export class matchedValidators {
 
   matchValidators () {
     return this.stakingValidators.validators.filter(stakingValidator => {
-      const valcons = pubKeyToValcons(stakingValidator.consensus_pubkey.key, 'cosmos'); // Assuming "cosmos" as prefix
+      const valcons = pubKeyToValcons(stakingValidator.consensus_pubkey.key,
+        'cosmos'); // Assuming "cosmos" as prefix
       return this.consensusState.result.round_state.validators.some(consensusValidator =>
         stakingValidator.consumer_signing_keys[this.chainId] === valcons
       );
@@ -24,7 +25,8 @@ export class matchedValidators {
 
   matchLastValidators () {
     return this.stakingValidators.validators.filter(stakingValidator => {
-      const valcons = pubKeyToValcons(stakingValidator.consensus_pubkey.key, 'cosmos'); // Assuming "cosmos" as prefix
+      const valcons = pubKeyToValcons(stakingValidator.consensus_pubkey.key,
+        'cosmos'); // Assuming "cosmos" as prefix
       return this.consensusState.result.round_state.last_validators.some(consensusLastValidator =>
         stakingValidator.consumer_signing_keys[this.chainId] === valcons
       );

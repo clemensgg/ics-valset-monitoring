@@ -1,12 +1,13 @@
 import sqlite3 from 'sqlite3';
 
 const sqlite = sqlite3.verbose();
-const db = new sqlite.Database('./icsValsetMonitoring.db', (err) => {
-  if (err) {
-    console.error(err.message);
-  }
-  console.log('Connected to the ics-valset-monitoring database.');
-});
+const db = new sqlite.Database('./icsValsetMonitoring.db',
+  (err) => {
+    if (err) {
+      console.error(err.message);
+    }
+    console.log('Connected to the ics-valset-monitoring database.');
+  });
 
 db.serialize(() => {
   // ChainInfo Table

@@ -4,7 +4,9 @@ export class StakingValidators {
   constructor (validators, chainId = null, timestamp = new Date().toISOString()) {
     this.chainId = chainId;
     this.timestamp = timestamp;
-    this.validators = validators.map(validator => new Validator(validator, chainId, timestamp));
+    this.validators = validators.map(validator => new Validator(validator,
+      chainId,
+      timestamp));
     this.created_at = timestamp;
     this.updated_at = timestamp;
   }

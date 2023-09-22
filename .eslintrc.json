@@ -10,18 +10,20 @@
     },
     "rules": {
         "semi": ["error", "always"],
+        "function-call-argument-newline": ["error", "always"],
         "sort-imports": ["error", {
             "ignoreCase": false,
             "ignoreDeclarationSort": false,
             "ignoreMemberSort": false,
             "memberSyntaxSortOrder": ["none", "all", "multiple", "single"]
-        }],
+        }]/*,
         "max-len": ["error", {
-            "code": 80, // or whatever maximum line length you prefer
+            "code": 80,
             "ignoreUrls": true,
             "ignoreStrings": true,
-            "ignoreTemplateLiterals": false, // Ensure template literals are checked
+            "ignoreTemplateLiterals": false,
             "ignoreRegExpLiterals": true
         }]
+        */
     }
 }
