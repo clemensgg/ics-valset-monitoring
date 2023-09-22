@@ -1,15 +1,22 @@
 // src/models/StakingValidator.js
 
 export class StakingValidators {
-    constructor(validators) {
-        this.validators = validators.map(validator => new Validator(validator));
+    constructor(validators, chainId = null, timestamp = new Date().toISOString()) {
+        this.chainId = chainId;
+        this.timestamp = timestamp;
+        this.validators = validators.map(validator => new Validator(validator, chainId, timestamp));
+        this.created_at = timestamp;
+        this.updated_at = timestamp;
     }
 }
 
 class Validator {
-    constructor(data) {
+    constructor(data, chainId, timestamp) {
+        this.chainId = chainId;
+        this.timestamp = timestamp;
         this.operator_address = data.operator_address;
         this.consensus_pubkey = new ConsensusPubKey(data.consensus_pubkey);
+        this.consumer_signing_keys = {};
         this.jailed = data.jailed;
         this.status = data.status;
         this.tokens = data.tokens;

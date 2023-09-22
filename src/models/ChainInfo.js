@@ -1,17 +1,25 @@
 // src/models/ChainInfo.js
 
-export class ConsumerChainInfo {
+class ChainInfo {
     constructor(chain) {
         this.chainId = chain.chainId;
-        this.clientId = chain.clientId;
+        this.clientIds = [];
         this.rpcEndpoint = "";
     }
 }
 
-export class ProviderChainInfo {
+export class ConsumerChainInfo extends ChainInfo {
     constructor(chain) {
-        this.chainId = chain.chainId;
-        this.clientIds = [];
+        super(chain);
+        this.clientIds = [chain.clientId];
+        this.rpcEndpoint = chain.rpcEndpoint;
+    }
+}
+
+export class ProviderChainInfo extends ChainInfo {
+    constructor(chain) {
+        super(chain);
+        this.clientIds = chain.clientIds || [];
         this.rpcEndpoint = chain.rpcEndpoint;
     }
 }

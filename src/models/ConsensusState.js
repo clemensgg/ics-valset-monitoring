@@ -1,47 +1,58 @@
 // src/models/ConsensusState.js
 
 export class ConsensusState {
-    constructor(data) {
+    constructor(data, chainId = null, timestamp = new Date().toISOString()) {
+        this.chainId = chainId;
+        this.timestamp = timestamp;
         this.jsonrpc = data.jsonrpc;
-        this.id = data.id;
-        this.result = data.result ? new Result(data.result) : null;
+        this.result = data.result ? new Result(data.result, chainId, timestamp) : null;
+        this.created_at = timestamp; 
+        this.updated_at = timestamp;
     }
 }
 
 class Result {
-    constructor(data) {
-        this.round_state = data.round_state ? new RoundState(data.round_state) : null;
-        this.peers = data.peers ? data.peers.map(peer => new Peer(peer)) : [];
+    constructor(data, chainId, timestamp) {
+        this.chainId = chainId;
+        this.timestamp = timestamp;
+        this.round_state = data.round_state ? new RoundState(data.round_state, chainId, timestamp) : null;
+        this.peers = data.peers ? data.peers.map(peer => new Peer(peer, chainId, timestamp)) : [];
     }
 }
 
 class RoundState {
-    constructor(data) {
+    constructor(data, chainId, timestamp) {
+        this.chainId = chainId;
+        this.timestamp = timestamp;
         this.height = data.height;
         this.round = data.round;
         this.step = data.step;
         this.start_time = data.start_time;
         this.commit_time = data.commit_time;
-        this.validators = data.validators ? new Validators(data.validators) : null;
+        this.validators = data.validators ? new Validators(data.validators, chainId, timestamp) : null;
         this.proposal = data.proposal;
         this.proposal_block_parts_header = data.proposal_block_parts_header;
         this.locked_block_parts_header = data.locked_block_parts_header;
         this.valid_block_parts_header = data.valid_block_parts_header;
         this.votes = data.votes;
         this.last_commit = data.last_commit;
-        this.last_validators = data.last_validators ? new Validators(data.last_validators) : null;
+        this.last_validators = data.last_validators ? new Validators(data.last_validators, chainId, timestamp) : null;
     }
 }
 
 class Validators {
-    constructor(data) {
-        this.validators = data.validators.map(validator => new Validator(validator));
-        this.proposer = data.proposer ? new Validator(data.proposer) : null;
+    constructor(data, chainId, timestamp) {
+        this.chainId = chainId;
+        this.timestamp = timestamp;
+        this.validators = data.validators.map(validator => new Validator(validator, chainId, timestamp));
+        this.proposer = data.proposer ? new Validator(data.proposer, chainId, timestamp) : null;
     }
 }
 
 class Validator {
-    constructor(data) {
+    constructor(data, chainId, timestamp) {
+        this.chainId = chainId;
+        this.timestamp = timestamp;
         this.address = data.address;
         this.pub_key = data.pub_key;
         this.voting_power = data.voting_power;
@@ -50,15 +61,19 @@ class Validator {
 }
 
 class Peer {
-    constructor(data) {
+    constructor(data, chainId, timestamp) {
+        this.chainId = chainId;
+        this.timestamp = timestamp;
         this.node_address = data.node_address;
-        this.peer_state = new PeerState(data.peer_state);
+        this.peer_state = new PeerState(data.peer_state, chainId, timestamp);
     }
 }
 
 class PeerState {
-    constructor(data) {
-        this.round_state = new RoundState(data.round_state);
+    constructor(data, chainId, timestamp) {
+        this.chainId = chainId;
+        this.timestamp = timestamp;
+        this.round_state = new RoundState(data.round_state, chainId, timestamp);
         this.stats = data.stats;
     }
 }
