@@ -396,7 +396,7 @@ function saveValidator (validator) {
     validator.chainId,
     validator.timestamp,
     validator.address,
-    validator.pub_key,
+    JSON.stringify(validator.pub_key),
     validator.voting_power,
     validator.proposer_priority
   ];
@@ -531,7 +531,7 @@ async function loadValidatorList (chainId) {
         } else {
           const validators = rows.map(row => new Validator({
             address: row.address,
-            pub_key: row.pub_key,
+            pub_key: JSON.parse(row.pub_key),
             voting_power: row.voting_power,
             proposer_priority: row.proposer_priority
           },
