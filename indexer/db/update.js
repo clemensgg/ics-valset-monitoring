@@ -1,33 +1,50 @@
 // src/db/update.js
 
+import { ConsumerChainInfo, ProviderChainInfo } from '../models/ChainInfo.js';
+import {
+  ConsensusState,
+  Peer,
+  PeerState,
+  RoundState,
+  Validator,
+  Validtors
+} from '../models/ConsensusState.js';
+import { StakingValidators } from '../models/StakingValidators.js';
+
 import db from './db.js';
 
-async function saveStakingValidators(stakingValidators) {
-  console.log('Saving stakingValidators to DB:', stakingValidators);
+async function saveStakingValidators (stakingValidators) {
+  console.log('Saving stakingValidators to DB:',
+    stakingValidators);
 
   try {
-      // First, insert into StakingValidatorsMeta table
-      const stmtMeta = db.prepare('INSERT INTO StakingValidatorsMeta (timestamp, created_at, updated_at) VALUES (?, ?, ?)');
-      
-      const metaResult = await new Promise((resolve, reject) => {
-          stmtMeta.run(stakingValidators.timestamp, stakingValidators.created_at, stakingValidators.updated_at, function(err) {
-              if (err) reject(err);
-              else resolve(this.lastID);
-          });
-      });
+    // First, insert into StakingValidatorsMeta table
+    const stmtMeta = db.prepare('INSERT INTO StakingValidatorsMeta (timestamp, created_at, updated_at) VALUES (?, ?, ?)');
 
-      console.log('Inserted into StakingValidatorsMeta with ID:', metaResult);
+    const metaResult = await new Promise((resolve, reject) => {
+      stmtMeta.run(stakingValidators.timestamp,
+        stakingValidators.created_at,
+        stakingValidators.updated_at,
+        function (err) {
+          if (err) reject(err);
+          else resolve(this.lastID);
+        });
+    });
 
-      await stmtMeta.finalize((finalizeErr) => {
-        if (finalizeErr) {
-            console.error('Error finalizing stmtMeta:', finalizeErr.message);
-        } else {
-            console.log('stmtMeta finalized successfully.');
-        }
-      });
+    console.log('Inserted into StakingValidatorsMeta with ID:',
+      metaResult);
 
-      // Now, insert each validator into StakingValidator table
-      const stmtValidator = db.prepare(`
+    await stmtMeta.finalize((finalizeErr) => {
+      if (finalizeErr) {
+        console.error('Error finalizing stmtMeta:',
+          finalizeErr.message);
+      } else {
+        console.log('stmtMeta finalized successfully.');
+      }
+    });
+
+    // Now, insert each validator into StakingValidator table
+    const stmtValidator = db.prepare(`
           INSERT INTO StakingValidator (
               stakingValidatorsMetaId, 
               operator_address, 
@@ -42,52 +59,54 @@ async function saveStakingValidators(stakingValidators) {
           ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       `);
 
-      for (const validator of stakingValidators.validators) {
-          await new Promise((resolve, reject) => {
-              stmtValidator.run(
-                  metaResult,
-                  validator.operator_address,
-                  validator.consensus_pubkey.type,
-                  validator.consensus_pubkey.key,
-                  JSON.stringify(validator.consumer_signing_keys),
-                  validator.jailed,
-                  validator.status,
-                  validator.tokens,
-                  validator.delegator_shares,
-                  validator.description.moniker,
-                  validator.description.identity,
-                  validator.description.website,
-                  validator.description.security_contact,
-                  validator.description.details,
-                  validator.unbonding_height,
-                  validator.unbonding_time,
-                  validator.commission.commission_rates.rate,
-                  validator.commission.commission_rates.max_rate,
-                  validator.commission.commission_rates.max_change_rate,
-                  validator.min_self_delegation,
-                  (err) => {
-                      if (err) reject(err);
-                      else resolve();
-                  }
-              );
-          });
-      }
+    for (const validator of stakingValidators.validators) {
+      await new Promise((resolve, reject) => {
+        stmtValidator.run(
+          metaResult,
+          validator.operator_address,
+          validator.consensus_pubkey.type,
+          validator.consensus_pubkey.key,
+          JSON.stringify(validator.consumer_signing_keys),
+          validator.jailed,
+          validator.status,
+          validator.tokens,
+          validator.delegator_shares,
+          validator.description.moniker,
+          validator.description.identity,
+          validator.description.website,
+          validator.description.security_contact,
+          validator.description.details,
+          validator.unbonding_height,
+          validator.unbonding_time,
+          validator.commission.commission_rates.rate,
+          validator.commission.commission_rates.max_rate,
+          validator.commission.commission_rates.max_change_rate,
+          validator.min_self_delegation,
+          (err) => {
+            if (err) reject(err);
+            else resolve();
+          }
+        );
+      });
+    }
 
-      try {
-        stmtValidator.finalize((finalizeErr) => {
-            if (finalizeErr) {
-                console.error('Error finalizing statement:', finalizeErr.message);
-            } else {
-                console.log('Statement finalized successfully.');
-            }
-        });
-      } catch (error) {
-        console.error('Error finalizing VALIDATOR statement:', error);
-      } 
-
+    try {
+      stmtValidator.finalize((finalizeErr) => {
+        if (finalizeErr) {
+          console.error('Error finalizing statement:',
+            finalizeErr.message);
+        } else {
+          console.log('Statement finalized successfully.');
+        }
+      });
+    } catch (error) {
+      console.error('Error finalizing VALIDATOR statement:',
+        error);
+    }
   } catch (error) {
-      console.error('Error finalizing META statement:', error);
-  } 
+    console.error('Error finalizing META statement:',
+      error);
+  }
 }
 
 function getStakingValidatorsFromDB () {
@@ -113,26 +132,26 @@ function getStakingValidatorsFromDB () {
                 timestamp: metaRow.timestamp,
                 validators: validatorRows
               };
-              result.validators.forEach((validator) => { 
+              result.validators.forEach((validator) => {
                 validator.consensus_pubkey = {
-                  "@type": validator.consensus_pubkey_type,
-                  "key": validator.consensus_pubkey_key
-                }
+                  '@type': validator.consensus_pubkey_type,
+                  key: validator.consensus_pubkey_key
+                };
                 validator.description = {
                   moniker: validator.moniker,
                   identity: validator.identity,
                   website: validator.website,
                   security_contact: validator.security_contact,
                   details: validator.details
-                }
+                };
                 validator.commission = {
                   commission_rates: {
                     rate: validator.commission_rate,
                     max_rate: validator.commission_max_rate,
                     max_change_rate: validator.commission_max_change_rate
                   },
-                  update_time: validator.commission_update_time || null,
-                }
+                  update_time: validator.commission_update_time || null
+                };
               });
               resolve(result);
             });
@@ -256,22 +275,25 @@ function saveChainInfos (chainInfos, type) {
   });
 }
 
-function getChainInfosFromDB(type) {
+function getChainInfosFromDB (type) {
   return new Promise((resolve, reject) => {
-    db.all('SELECT * FROM ChainInfo WHERE type = ?', [type], (err, rows) => {
-      if (err) {
-        console.error("DB Error:", err);
-        reject(err);
-        return;
-      }
-      resolve(rows);
-    });
+    db.all('SELECT * FROM ChainInfo WHERE type = ?',
+      [type],
+      (err, rows) => {
+        if (err) {
+          console.error('DB Error:',
+            err);
+          reject(err);
+          return;
+        }
+        resolve(rows);
+      });
   });
 }
 
-//////////////////////////////////////// TODO
+/// ///////////////////////////////////// TODO
 
-async function updateConsensusStateDB(consensusState) {
+async function updateConsensusStateDB (consensusState) {
   // Save RoundState
   const roundStateId = await saveRoundState(consensusState.round_state);
   return new Promise(async (resolve, reject) => {
@@ -294,30 +316,33 @@ async function updateConsensusStateDB(consensusState) {
         consensusState.timestamp,
         roundStateId
       ];
-      db.run(query, params, function(err) {
-        if (err) {
-          console.log(err)
-          db.run('ROLLBACK');
-          reject(err);
-        } else {
-          console.log('deleting old entries')
-          // Delete old entries except the most recent one
-          deleteOldEntries(consensusState.chainId, this.lastID)
-            .then(() => {
-              db.run('COMMIT');
-              resolve();
-            })
-            .catch(err => {
-              db.run('ROLLBACK');
-              reject(err);
-            });
-        }
-      });
+      db.run(query,
+        params,
+        function (err) {
+          if (err) {
+            console.log(err);
+            db.run('ROLLBACK');
+            reject(err);
+          } else {
+            console.log('deleting old entries');
+            // Delete old entries except the most recent one
+            deleteOldEntries(consensusState.chainId,
+              this.lastID)
+              .then(() => {
+                db.run('COMMIT');
+                resolve();
+              })
+              .catch(err => {
+                db.run('ROLLBACK');
+                reject(err);
+              });
+          }
+        });
     });
   });
 }
 
-async function saveRoundState(roundState) {
+async function saveRoundState (roundState) {
   const query = `
     INSERT INTO RoundState (chainId, timestamp, height, round, step, start_time, commit_time, validatorsId, proposal, proposal_block_parts_header, locked_block_parts_header, valid_block_parts_header, votes, last_commit, last_validatorsId)
     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
@@ -341,11 +366,12 @@ async function saveRoundState(roundState) {
     roundState.last_commit,
     lastValidatorsId
   ];
-  db.run(query, params);
+  db.run(query,
+    params);
   return db.lastID; // Return the ID of the inserted RoundState
 }
 
-function saveValidators(validators) {
+function saveValidators (validators) {
   const query = `
     INSERT INTO Validators (chainId, timestamp, proposerId)
     VALUES (?, ?, ?);
@@ -356,11 +382,12 @@ function saveValidators(validators) {
     validators.timestamp,
     proposerId
   ];
-  db.run(query, params);
+  db.run(query,
+    params);
   return db.lastID; // Return the ID of the inserted Validators
 }
 
-function saveValidator(validator) {
+function saveValidator (validator) {
   const query = `
     INSERT INTO Validator (chainId, timestamp, address, pub_key, voting_power, proposer_priority)
     VALUES (?, ?, ?, ?, ?, ?);
@@ -373,11 +400,12 @@ function saveValidator(validator) {
     validator.voting_power,
     validator.proposer_priority
   ];
-  db.run(query, params);
+  db.run(query,
+    params);
   return db.lastID; // Return the ID of the inserted Validator
 }
 
-function savePeer(peer) {
+function savePeer (peer) {
   const query = `
     INSERT INTO Peer (chainId, timestamp, node_address, peer_stateId)
     VALUES (?, ?, ?, ?);
@@ -389,10 +417,11 @@ function savePeer(peer) {
     peer.node_address,
     peerStateId
   ];
-  db.run(query, params);
+  db.run(query,
+    params);
 }
 
-function savePeerState(peerState) {
+function savePeerState (peerState) {
   const query = `
     INSERT INTO PeerState (chainId, timestamp, round_stateId, stats)
     VALUES (?, ?, ?, ?);
@@ -404,188 +433,216 @@ function savePeerState(peerState) {
     roundStateId,
     peerState.stats
   ];
-  db.run(query, params);
+  db.run(query,
+    params);
   return db.lastID; // Return the ID of the inserted PeerState
 }
 
-async function loadConsensusStateFromDB(chainId) {
+async function loadConsensusStateFromDB (chainId) {
   return new Promise((resolve, reject) => {
-    const query = `SELECT * FROM ConsensusState WHERE chainId = ?`;
-    db.get(query, [chainId], async (err, row) => {
-      if (err) {
-        reject(err);
-      } else if (row) {
-        const roundState = await loadRoundState(row.round_stateId);
-        const peers = await loadPeers(chainId);
-        const consensusStateData = {
-          round_state: roundState,
-          peers: peers
-        };
-        resolve(new ConsensusState(consensusStateData, chainId, row.timestamp));
-      } else {
-        resolve(null);
-      }
-    });
-  });
-}
-
-async function loadRoundState(id) {
-  return new Promise((resolve, reject) => {
-    const query = `SELECT * FROM RoundState WHERE id = ?`;
-    db.get(query, [id], async (err, row) => {
-      if (err) {
-        reject(err);
-      } else {
-        const validators = await loadValidators(row.validatorsId);
-        const lastValidators = await loadValidators(row.last_validatorsId);
-        const roundStateData = {
-          height: row.height,
-          round: row.round,
-          step: row.step,
-          start_time: row.start_time,
-          commit_time: row.commit_time,
-          validators: validators,
-          proposal: row.proposal,
-          proposal_block_parts_header: row.proposal_block_parts_header,
-          locked_block_parts_header: row.locked_block_parts_header,
-          valid_block_parts_header: row.valid_block_parts_header,
-          votes: row.votes,
-          last_commit: row.last_commit,
-          last_validators: lastValidators
-        };
-        resolve(new RoundState(roundStateData, row.chainId, row.timestamp));
-      }
-    });
-  });
-}
-
-async function loadValidators(id) {
-  return new Promise((resolve, reject) => {
-    const query = `SELECT * FROM Validators WHERE id = ?`;
-    db.get(query, [id], async (err, row) => {
-      if (err) {
-        reject(err);
-      } else {
-        const validatorsList = await loadValidatorList(row.chainId);
-        const proposer = validatorsList.find(validator => validator.id === row.proposerId);
-        const validatorsData = {
-          validators: validatorsList,
-          proposer: proposer
-        };
-        resolve(new Validators(validatorsData, row.chainId, row.timestamp));
-      }
-    });
-  });
-}
-
-async function loadValidatorList(chainId) {
-  return new Promise((resolve, reject) => {
-    const query = `SELECT * FROM Validator WHERE chainId = ?`;
-    db.all(query, [chainId], (err, rows) => {
-      if (err) {
-        reject(err);
-      } else {
-        const validators = rows.map(row => new Validator({
-          address: row.address,
-          pub_key: row.pub_key,
-          voting_power: row.voting_power,
-          proposer_priority: row.proposer_priority
-        }, row.chainId, row.timestamp));
-        resolve(validators);
-      }
-    });
-  });
-}
-
-async function loadPeers(chainId) {
-  return new Promise((resolve, reject) => {
-    const query = `SELECT * FROM Peer WHERE chainId = ?`;
-    db.all(query, [chainId], async (err, rows) => {
-      if (err) {
-        reject(err);
-      } else {
-        const peers = [];
-        for (const row of rows) {
-          const peerState = await loadPeerState(row.peer_stateId);
-          const peer = new Peer({
-            node_address: row.node_address,
-            peer_state: peerState
-          }, row.chainId, row.timestamp);
-          peers.push(peer);
+    const query = 'SELECT * FROM ConsensusState WHERE chainId = ?';
+    db.get(query,
+      [chainId],
+      async (err, row) => {
+        if (err) {
+          reject(err);
+        } else if (row) {
+          const roundState = await loadRoundState(row.round_stateId);
+          const peers = await loadPeers(chainId);
+          const consensusStateData = {
+            round_state: roundState,
+            peers: peers
+          };
+          resolve(new ConsensusState(consensusStateData,
+            chainId,
+            row.timestamp));
+        } else {
+          resolve(null);
         }
-        resolve(peers);
-      }
-    });
+      });
   });
 }
 
-async function loadPeerState(id) {
+async function loadRoundState (id) {
   return new Promise((resolve, reject) => {
-    const query = `SELECT * FROM PeerState WHERE id = ?`;
-    db.get(query, [id], async (err, row) => {
-      if (err) {
-        reject(err);
-      } else {
-        const roundState = await loadRoundState(row.round_stateId);
-        const peerStateData = {
-          round_state: roundState,
-          stats: row.stats
-        };
-        resolve(new PeerState(peerStateData, row.chainId, row.timestamp));
-      }
-    });
+    const query = 'SELECT * FROM RoundState WHERE id = ?';
+    db.get(query,
+      [id],
+      async (err, row) => {
+        if (err) {
+          reject(err);
+        } else {
+          const validators = await loadValidators(row.validatorsId);
+          const lastValidators = await loadValidators(row.last_validatorsId);
+          const roundStateData = {
+            height: row.height,
+            round: row.round,
+            step: row.step,
+            start_time: row.start_time,
+            commit_time: row.commit_time,
+            validators: validators,
+            proposal: row.proposal,
+            proposal_block_parts_header: row.proposal_block_parts_header,
+            locked_block_parts_header: row.locked_block_parts_header,
+            valid_block_parts_header: row.valid_block_parts_header,
+            votes: row.votes,
+            last_commit: row.last_commit,
+            last_validators: lastValidators
+          };
+          resolve(new RoundState(roundStateData,
+            row.chainId,
+            row.timestamp));
+        }
+      });
   });
 }
 
-function deleteOldEntries(chainId, currentId) {
+async function loadValidators (id) {
+  return new Promise((resolve, reject) => {
+    const query = 'SELECT * FROM Validators WHERE id = ?';
+    db.get(query,
+      [id],
+      async (err, row) => {
+        if (err) {
+          reject(err);
+        } else {
+          const validatorsList = await loadValidatorList(row.chainId);
+          const proposer = validatorsList.find(validator => validator.id === row.proposerId);
+          const validatorsData = {
+            validators: validatorsList,
+            proposer: proposer
+          };
+          resolve(new Validators(validatorsData,
+            row.chainId,
+            row.timestamp));
+        }
+      });
+  });
+}
+
+async function loadValidatorList (chainId) {
+  return new Promise((resolve, reject) => {
+    const query = 'SELECT * FROM Validator WHERE chainId = ?';
+    db.all(query,
+      [chainId],
+      (err, rows) => {
+        if (err) {
+          reject(err);
+        } else {
+          const validators = rows.map(row => new Validator({
+            address: row.address,
+            pub_key: row.pub_key,
+            voting_power: row.voting_power,
+            proposer_priority: row.proposer_priority
+          },
+          row.chainId,
+          row.timestamp));
+          resolve(validators);
+        }
+      });
+  });
+}
+
+async function loadPeers (chainId) {
+  return new Promise((resolve, reject) => {
+    const query = 'SELECT * FROM Peer WHERE chainId = ?';
+    db.all(query,
+      [chainId],
+      async (err, rows) => {
+        if (err) {
+          reject(err);
+        } else {
+          const peers = [];
+          for (const row of rows) {
+            const peerState = await loadPeerState(row.peer_stateId);
+            const peer = new Peer({
+              node_address: row.node_address,
+              peer_state: peerState
+            },
+            row.chainId,
+            row.timestamp);
+            peers.push(peer);
+          }
+          resolve(peers);
+        }
+      });
+  });
+}
+
+async function loadPeerState (id) {
+  return new Promise((resolve, reject) => {
+    const query = 'SELECT * FROM PeerState WHERE id = ?';
+    db.get(query,
+      [id],
+      async (err, row) => {
+        if (err) {
+          reject(err);
+        } else {
+          const roundState = await loadRoundState(row.round_stateId);
+          const peerStateData = {
+            round_state: roundState,
+            stats: row.stats
+          };
+          resolve(new PeerState(peerStateData,
+            row.chainId,
+            row.timestamp));
+        }
+      });
+  });
+}
+
+function deleteOldEntries (chainId, currentId) {
   return new Promise((resolve, reject) => {
     // Fetch the timestamp of the most recent ConsensusState entry
-    const fetchTimestampQuery = `SELECT timestamp FROM ConsensusState WHERE id = ?`;
-    db.get(fetchTimestampQuery, [currentId], (err, row) => {
-      if (err) {
-        reject(err);
-        return;
-      }
-      const recentTimestamp = row.timestamp;
-
-      // Delete older ConsensusState entries
-      const deleteConsensusStateQuery = `DELETE FROM ConsensusState WHERE chainId = ? AND timestamp < ?`;
-      db.run(deleteConsensusStateQuery, [chainId, recentTimestamp], (err) => {
+    const fetchTimestampQuery = 'SELECT timestamp FROM ConsensusState WHERE id = ?';
+    db.get(fetchTimestampQuery,
+      [currentId],
+      (err, row) => {
         if (err) {
           reject(err);
           return;
         }
+        const recentTimestamp = row.timestamp;
 
-        // Delete related data in other tables that are related to older ConsensusState entries
-        const relatedTables = {
-          'Peer': 'consensusStateId',
-          'PeerState': 'peerId',
-          'RoundState': 'consensusStateId',
-          'Validators': 'roundStateId',
-          'Validator': 'validatorsId'
-        };
+        // Delete older ConsensusState entries
+        const deleteConsensusStateQuery = 'DELETE FROM ConsensusState WHERE chainId = ? AND timestamp < ?';
+        db.run(deleteConsensusStateQuery,
+          [chainId, recentTimestamp],
+          (err) => {
+            if (err) {
+              reject(err);
+              return;
+            }
 
-        for (const [table, foreignKey] of Object.entries(relatedTables)) {
-          const deleteRelatedQuery = `
+            // Delete related data in other tables that are related to older ConsensusState entries
+            const relatedTables = {
+              Peer: 'consensusStateId',
+              PeerState: 'peerId',
+              RoundState: 'consensusStateId',
+              Validators: 'roundStateId',
+              Validator: 'validatorsId'
+            };
+
+            for (const [table, foreignKey] of Object.entries(relatedTables)) {
+              const deleteRelatedQuery = `
             DELETE FROM ${table}
             WHERE ${foreignKey} IN (
               SELECT id FROM ConsensusState WHERE chainId = ? AND timestamp < ?
             )
           `;
-          db.run(deleteRelatedQuery, [chainId, recentTimestamp], (err) => {
-            if (err) {
-              reject(err);
-              return;
+              db.run(deleteRelatedQuery,
+                [chainId, recentTimestamp],
+                (err) => {
+                  if (err) {
+                    reject(err);
+                  }
+                });
             }
+            resolve();
           });
-        }
-        resolve();
       });
-    });
   });
 }
-
-
 
 export {
   saveStakingValidators,

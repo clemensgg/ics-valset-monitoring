@@ -9,9 +9,11 @@ const db = new sqlite.Database('./icsValsetMonitoring.db',
     console.log('Connected to the ics-valset-monitoring database.');
   });
 
-db.on('error', err => {
-  console.error('Database error:', err);
-});
+db.on('error',
+  err => {
+    console.error('Database error:',
+      err);
+  });
 
 db.serialize(() => {
   // ChainInfo Table
@@ -102,7 +104,6 @@ db.serialize(() => {
     stats TEXT
   );
   `);
-
 
   // StakingValidators Table
   db.run(`

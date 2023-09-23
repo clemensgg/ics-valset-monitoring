@@ -1,31 +1,28 @@
+import db from './db/db.js';
 import {
   getChainInfosFromDB,
   getMatchedValidatorsFromDB,
   getStakingValidatorsFromDB,
+  loadConsensusStateFromDB,
   saveChainInfos,
   saveMatchedValidators,
   saveStakingValidators,
-  updateConsensusStateDB,
-  loadConsensusStateFromDB
+  updateConsensusStateDB
 } from './db/update.js';
+import { ConsumerChainInfo, ProviderChainInfo } from './models/ChainInfo.js';
+import { ConsensusState } from './models/ConsensusState.js';
+import { StakingValidators } from './models/StakingValidators.js';
+import app from './server.js';
 import {
   fetchConsumerSigningKeys,
   getConsensusState,
   getProviderChainInfos,
   getStakingValidators,
-  matchConsensusValidators,
   matchConsensusLastValidators,
+  matchConsensusValidators,
   sleep,
   validateConsumerRpcs
 } from './utils/utils.js';
-
-import { ConsensusState } from './models/ConsensusState.js';
-import { ConsumerChainInfo, ProviderChainInfo } from './models/ChainInfo.js';
-import { StakingValidators } from './models/StakingValidators.js';
-
-import db from './db/db.js';
-
-import app from './server.js';
 
 // Mainnet Endpoints
 //
@@ -59,12 +56,11 @@ async function updateDatabaseData () {
   if (consumerChainInfos && consumerChainInfos.length > 0) {
     await saveChainInfos(consumerChainInfos,
       'consumer');
-      console.log('[DB] updated ChainInfos for consumerChains.');
+    console.log('[DB] updated ChainInfos for consumerChains.');
   }
 
   const stakingValidators = await getStakingValidators(PROVIDER_REST);
-  if (providerChainInfos && providerChainInfos.chainId != '' && consumerChainInfos && consumerChainInfos.length > 0 && stakingValidators && stakingValidators.length > 0 ) {
-
+  if (providerChainInfos && providerChainInfos.chainId != '' && consumerChainInfos && consumerChainInfos.length > 0 && stakingValidators && stakingValidators.length > 0) {
     const allChainIds = consumerChainInfos.map(chain => chain.chainId);
     const stakingValidatorsWithSigningKeys = await fetchConsumerSigningKeys(stakingValidators,
       PROVIDER_RPC,
@@ -76,16 +72,17 @@ async function updateDatabaseData () {
 
     console.log('[DB] updated stakingValidators.');
   } else {
-    console.warn('[DB] Error updating stakingValidators!')
+    console.warn('[DB] Error updating stakingValidators!');
   }
 }
 
-async function pollConsensus(chains, stakingValidators) {
-  console.time("pollConsensus Execution Time");
+async function pollConsensus (chains, stakingValidators) {
+  console.time('pollConsensus Execution Time');
   for (const chain of chains) {
-    console.time("updateConsensusState Execution Time");
+    console.time('updateConsensusState Execution Time');
     console.log(`Processing ${chain.type} chain with ID: ${chain.chainId}`);
-    const consensusState = await getConsensusState(chain.rpcEndpoint, chain.chainId);
+    const consensusState = await getConsensusState(chain.rpcEndpoint,
+      chain.chainId);
 
     /* ---> this needs to go in querier
     const matchedValidators = await matchConsensusValidators(
@@ -107,17 +104,18 @@ async function pollConsensus(chains, stakingValidators) {
 
     await updateConsensusStateDB(consensusState);
     console.log(`[DB] updated consensusState for chain ${chain.chainId}`);
-    console.timeEnd("updateConsensusState Execution Time");
+    console.timeEnd('updateConsensusState Execution Time');
   }
   console.log('------------------------------------------------------------');
-  console.timeEnd("pollConsensus Execution Time");
+  console.timeEnd('pollConsensus Execution Time');
   console.log('------------------------------------------------------------');
 }
 
-function startConsensusPolling(chains, stakingValidators) {
+function startConsensusPolling (chains, stakingValidators) {
   const startTime = Date.now();
 
-  pollConsensus(chains, stakingValidators)
+  pollConsensus(chains,
+    stakingValidators)
     .then(() => {
       const endTime = Date.now();
       const executionTime = endTime - startTime;
@@ -125,12 +123,17 @@ function startConsensusPolling(chains, stakingValidators) {
       // Calculate the delay for the next execution
       const delay = executionTime > CONSENSUS_POLL_FREQENCY_MS ? 0 : CONSENSUS_POLL_FREQENCY_MS - executionTime;
 
-      setTimeout(() => startConsensusPolling(chains, stakingValidators), delay);
+      setTimeout(() => startConsensusPolling(chains,
+        stakingValidators),
+      delay);
     })
     .catch(error => {
-      console.error("Error during monitoring:", error);
+      console.error('Error during monitoring:',
+        error);
       // Even if there's an error, we'll try to restart the monitoring after CONSENSUS_POLL_FREQENCY_MS
-      setTimeout(() => startConsensusPolling(chains, stakingValidators), CONSENSUS_POLL_FREQENCY_MS);
+      setTimeout(() => startConsensusPolling(chains,
+        stakingValidators),
+      CONSENSUS_POLL_FREQENCY_MS);
     });
 }
 async function main () {
@@ -142,59 +145,65 @@ async function main () {
 
   try {
     providerChainInfos = await getChainInfosFromDB('provider');
-    console.log("[DB] loaded " + providerChainInfos.length + " providerChains");
+    console.log('[DB] loaded ' + providerChainInfos.length + ' providerChains');
     consumerChainInfos = await getChainInfosFromDB('consumer');
-    console.log("[DB] loaded " + consumerChainInfos.length + " consumerChains");
+    console.log('[DB] loaded ' + consumerChainInfos.length + ' consumerChains');
     stakingValidators = await getStakingValidatorsFromDB();
     if (stakingValidators.hasOwnProperty('validators')) {
-      console.log("[DB] loaded " + stakingValidators.validators.length + " stakingValidators");
+      console.log('[DB] loaded ' + stakingValidators.validators.length + ' stakingValidators');
     } else {
-      console.log("[DB] loaded 0 stakingValidators");
+      console.log('[DB] loaded 0 stakingValidators');
     }
   } catch (error) {
-    console.error("[DB] Error fetching data:", error);
-  }  
-   
+    console.error('[DB] Error fetching data:',
+      error);
+  }
+
   if (!consumerChainInfos || !providerChainInfos || !stakingValidators || consumerChainInfos.length === 0 || providerChainInfos.length === 0 || stakingValidators.length === 0) {
     console.log('running STARTUP...');
     await updateDatabaseData();
-    setInterval(updateDatabaseData, UPDATE_DB_FREQUENCY_MS);
+    setInterval(updateDatabaseData,
+      UPDATE_DB_FREQUENCY_MS);
     providerChainInfos = await getChainInfosFromDB('provider');
-    console.log("[DB] loaded " + providerChainInfos.length + " providerChains");
+    console.log('[DB] loaded ' + providerChainInfos.length + ' providerChains');
     consumerChainInfos = await getChainInfosFromDB('consumer');
-    console.log("[DB] loaded " + consumerChainInfos.length + " consumerChains");
+    console.log('[DB] loaded ' + consumerChainInfos.length + ' consumerChains');
     stakingValidators = await getStakingValidatorsFromDB();
     if (stakingValidators.hasOwnProperty('validators')) {
-      console.log("[DB] loaded " + stakingValidators.validators.length + " stakingValidators");
+      console.log('[DB] loaded ' + stakingValidators.validators.length + ' stakingValidators');
     } else {
-      console.log("[DB] loaded 0 stakingValidators");
+      console.log('[DB] loaded 0 stakingValidators');
     }
   } else {
     setTimeout(() => {
-      setInterval(updateDatabaseData, UPDATE_DB_FREQUENCY_MS);
-    }, UPDATE_DB_FREQUENCY_MS);
+      setInterval(updateDatabaseData,
+        UPDATE_DB_FREQUENCY_MS);
+    },
+    UPDATE_DB_FREQUENCY_MS);
   }
 
   providerChainInfos = new ProviderChainInfo(providerChainInfos[0]);
   stakingValidators = new StakingValidators(stakingValidators.validators);
 
-  let chains = [providerChainInfos];
+  const chains = [providerChainInfos];
   consumerChainInfos.forEach((chain) => {
     chains.push(new ConsumerChainInfo(chain));
   });
 
   console.log(JSON.stringify(chains));
 
-  startConsensusPolling(chains, stakingValidators);
-
+  startConsensusPolling(chains,
+    stakingValidators);
 }
 
 main();
 
-process.on('uncaughtException', (err) => {
-  console.error('Uncaught error: ', err);
-  process.exit(1);
-});
+process.on('uncaughtException',
+  (err) => {
+    console.error('Uncaught error: ',
+      err);
+    process.exit(1);
+  });
 
 process.on('exit',
   (code) => {
@@ -205,5 +214,3 @@ process.on('exit',
       console.log('Closed the database connection.');
     });
   });
-
-

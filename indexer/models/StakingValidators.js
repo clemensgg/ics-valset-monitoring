@@ -16,11 +16,11 @@ class Validator {
     this.operator_address = data.operator_address;
     this.consensus_pubkey = new ConsensusPubKey(data.consensus_pubkey);
     if (typeof data.consumer_signing_keys === 'string') {
-        this.consumer_signing_keys = JSON.parse(data.consumer_signing_keys);
+      this.consumer_signing_keys = JSON.parse(data.consumer_signing_keys);
     } else if (data.consumer_signing_keys && typeof data.consumer_signing_keys === 'object') {
-        this.consumer_signing_keys = data.consumer_signing_keys;
+      this.consumer_signing_keys = data.consumer_signing_keys;
     } else {
-        this.consumer_signing_keys = {};
+      this.consumer_signing_keys = {};
     }
     this.jailed = data.jailed;
     this.status = data.status;

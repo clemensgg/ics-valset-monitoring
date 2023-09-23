@@ -1,6 +1,7 @@
 // src/server.js
 
 import express from 'express';
+
 import db from './db/db.js';
 
 const app = express();

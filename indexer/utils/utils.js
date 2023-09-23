@@ -1,15 +1,15 @@
 // src/utils/utils.js
 
-import axios from 'axios';
-import bech32 from 'bech32';
 import crypto from 'crypto';
 
+import axios from 'axios';
+import bech32 from 'bech32';
 import {
   interchain_security
 } from 'interchain-security';
 
-import { ConsensusState } from '../models/ConsensusState.js';
 import { ConsumerChainInfo, ProviderChainInfo } from '../models/ChainInfo.js';
+import { ConsensusState } from '../models/ConsensusState.js';
 import { StakingValidators } from '../models/StakingValidators.js';
 
 function sleep (ms) {
@@ -21,7 +21,8 @@ async function getConsensusState (rpcUrl, chainId) {
   try {
     const response = await axios.get(`${rpcUrl}/dump_consensus_state`);
     const result = response.data.result;
-    return new ConsensusState(result, chainId);
+    return new ConsensusState(result,
+      chainId);
   } catch (error) {
     console.error(`Error fetching consensus state from ${rpcUrl}: ${error.message}`);
     return [];
@@ -194,20 +195,21 @@ async function matchConsensusValidators (stakingValidators, consensusState, chai
     let matchingStakingValidator;
     if (type === 'consumer') {
       stakingValidators.forEach(v => {
-          const consumerSigningKeysValues = v.consumer_signing_keys[chainId];
-          if (consumerSigningKeysValues.includes(consensusValidatorValcons)) {
-              matchingStakingValidator = v;
-          }
+        const consumerSigningKeysValues = v.consumer_signing_keys[chainId];
+        if (consumerSigningKeysValues.includes(consensusValidatorValcons)) {
+          matchingStakingValidator = v;
+        }
       });
     } else {
-        stakingValidators.forEach(v => {
-            const pubKeyValcons = pubKeyToValcons(v.consensus_pubkey.key, prefix);
-            if (pubKeyValcons.includes(consensusValidatorValcons)) {
-                matchingStakingValidator = v;
-            }
-        });
+      stakingValidators.forEach(v => {
+        const pubKeyValcons = pubKeyToValcons(v.consensus_pubkey.key,
+          prefix);
+        if (pubKeyValcons.includes(consensusValidatorValcons)) {
+          matchingStakingValidator = v;
+        }
+      });
     }
-    
+
     if (matchingStakingValidator) {
       matchedValidators.push({
         stakingValidator: matchingStakingValidator,
@@ -234,20 +236,21 @@ async function matchConsensusLastValidators (stakingValidators, consensusState, 
     let matchingStakingValidator;
     if (type === 'consumer') {
       stakingValidators.forEach(v => {
-          const consumerSigningKeysValues = v.consumer_signing_keys[chainId];
-          if (consumerSigningKeysValues.includes(consensusValidatorValcons)) {
-              matchingStakingValidator = v;
-          }
+        const consumerSigningKeysValues = v.consumer_signing_keys[chainId];
+        if (consumerSigningKeysValues.includes(consensusValidatorValcons)) {
+          matchingStakingValidator = v;
+        }
       });
     } else {
-        stakingValidators.forEach(v => {
-            const pubKeyValcons = pubKeyToValcons(v.consensus_pubkey.key, prefix);
-            if (pubKeyValcons.includes(consensusValidatorValcons)) {
-                matchingStakingValidator = v;
-            }
-        });
+      stakingValidators.forEach(v => {
+        const pubKeyValcons = pubKeyToValcons(v.consensus_pubkey.key,
+          prefix);
+        if (pubKeyValcons.includes(consensusValidatorValcons)) {
+          matchingStakingValidator = v;
+        }
+      });
     }
-    
+
     if (matchingStakingValidator) {
       matchedValidators.push({
         stakingValidator: matchingStakingValidator,

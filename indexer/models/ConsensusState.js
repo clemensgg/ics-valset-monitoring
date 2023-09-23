@@ -17,7 +17,7 @@ export class ConsensusState {
   }
 }
 
-class RoundState {
+export class RoundState {
   constructor (data, chainId, timestamp) {
     this.chainId = chainId;
     this.timestamp = timestamp;
@@ -45,7 +45,7 @@ class RoundState {
   }
 }
 
-class Validators {
+export class Validators {
   constructor (data, chainId, timestamp) {
     this.chainId = chainId;
     this.timestamp = timestamp;
@@ -60,7 +60,7 @@ class Validators {
   }
 }
 
-class Validator {
+export class Validator {
   constructor (data, chainId, timestamp) {
     this.chainId = chainId;
     this.timestamp = timestamp;
@@ -71,7 +71,7 @@ class Validator {
   }
 }
 
-class Peer {
+export class Peer {
   constructor (data, chainId, timestamp) {
     this.chainId = chainId;
     this.timestamp = timestamp;
@@ -82,7 +82,7 @@ class Peer {
   }
 }
 
-class PeerState {
+export class PeerState {
   constructor (data, chainId, timestamp) {
     this.chainId = chainId;
     this.timestamp = timestamp;
