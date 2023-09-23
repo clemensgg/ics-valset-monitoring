@@ -8,9 +8,9 @@ import {
   interchain_security
 } from 'interchain-security';
 
-import { ConsumerChainInfo, ProviderChainInfo } from '../models/ChainInfo.js';
-import { ConsensusState } from '../models/ConsensusState.js';
-import { StakingValidators } from '../models/StakingValidators.js';
+import { ConsumerChainInfo, ProviderChainInfo } from '../../src/models/ChainInfo.js';
+import { ConsensusState } from '../../src/models/ConsensusState.js';
+import { StakingValidators } from '../../src/models/StakingValidators.js';
 
 function sleep (ms) {
   return new Promise(resolve => setTimeout(resolve,

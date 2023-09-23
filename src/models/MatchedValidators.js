@@ -1,6 +1,6 @@
 // src/models/MatchedValidators.js
 
-import { pubKeyToValcons } from '../utils/utils';
+import { pubKeyToValcons } from '../../indexer/utils/utils';
 
 export class matchedValidators {
   constructor (stakingValidators, consensusState, chainId = null, timestamp = new Date().toISOString()) {

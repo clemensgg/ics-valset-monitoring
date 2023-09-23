@@ -1,6 +1,6 @@
 // src/db/update.js
 
-import { ConsumerChainInfo, ProviderChainInfo } from '../models/ChainInfo.js';
+import { ConsumerChainInfo, ProviderChainInfo } from '../../src/models/ChainInfo.js';
 import {
   ConsensusState,
   Peer,
@@ -8,8 +8,8 @@ import {
   RoundState,
   Validators,
   Validator
-} from '../models/ConsensusState.js';
-import { StakingValidators } from '../models/StakingValidators.js';
+} from '../../src/models/ConsensusState.js';
+import { StakingValidators } from '../../src/models/StakingValidators.js';
 
 import db from './db.js';
 

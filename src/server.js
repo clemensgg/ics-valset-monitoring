@@ -2,7 +2,7 @@
 
 import express from 'express';
 
-import db from './db/db.js';
+import db from '../indexer/db/db.js';
 
 const app = express();
 const PORT = 3000;

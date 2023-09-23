@@ -1,26 +1,18 @@
 import db from './db/db.js';
 import {
   getChainInfosFromDB,
-  getMatchedValidatorsFromDB,
   getStakingValidatorsFromDB,
-  loadConsensusStateFromDB,
   saveChainInfos,
-  saveMatchedValidators,
   saveStakingValidators,
   updateConsensusStateDB
 } from './db/update.js';
-import { ConsumerChainInfo, ProviderChainInfo } from './models/ChainInfo.js';
-import { ConsensusState } from './models/ConsensusState.js';
-import { StakingValidators } from './models/StakingValidators.js';
-import app from './server.js';
+import { ConsumerChainInfo, ProviderChainInfo } from '../src/models/ChainInfo.js';
+import { StakingValidators } from '../src/models/StakingValidators.js';
 import {
   fetchConsumerSigningKeys,
   getConsensusState,
   getProviderChainInfos,
   getStakingValidators,
-  matchConsensusLastValidators,
-  matchConsensusValidators,
-  sleep,
   validateConsumerRpcs
 } from './utils/utils.js';
 
