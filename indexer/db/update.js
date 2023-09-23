@@ -6,8 +6,8 @@ import {
   Peer,
   PeerState,
   RoundState,
-  Validator,
-  Validtors
+  Validators,
+  Validator
 } from '../models/ConsensusState.js';
 import { StakingValidators } from '../models/StakingValidators.js';
 
