@@ -36,6 +36,7 @@ export class RoundState {
     this.locked_block_parts_header = data.locked_block_parts_header;
     this.valid_block_parts_header = data.valid_block_parts_header;
     this.votes = data.votes;
+//    this.votes = JSON.parse(data.votes);
     this.last_commit = data.last_commit;
     this.last_validators = data.last_validators
       ? new Validators(data.last_validators,

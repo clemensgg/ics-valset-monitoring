@@ -16,6 +16,8 @@ db.on('error',
   });
 
 db.serialize(() => {
+  // db.run('PRAGMA foreign_keys = ON;');
+
   // ChainInfo Table
   db.run(`
     CREATE TABLE IF NOT EXISTS ChainInfo (
@@ -42,13 +44,15 @@ db.serialize(() => {
   CREATE TABLE IF NOT EXISTS RoundState (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     consensusStateId INTEGER REFERENCES ConsensusState(id),
+    chainId TEXT REFERENCES ChainInfo(chainId),
+    timestamp TEXT,
     height INTEGER,
     round INTEGER,
     step TEXT,
     start_time TEXT,
     commit_time TEXT,
-    validatorsId INTEGER REFERENCES Validators(id),
-    last_validatorsId INTEGER REFERENCES Validators(id),
+    validatorsGroupId INTEGER REFERENCES ValidatorsGroup(id),
+    lastValidatorsGroupId INTEGER REFERENCES ValidatorsGroup(id),
     proposal TEXT,
     proposal_block_parts_header TEXT,
     locked_block_parts_header TEXT,
@@ -58,14 +62,14 @@ db.serialize(() => {
   );
   `);
 
-  // Validators Table
+
+  // ValidatorsGroup Table
   db.run(`
-  CREATE TABLE IF NOT EXISTS Validators (
+  CREATE TABLE IF NOT EXISTS ValidatorsGroup (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     chainId TEXT REFERENCES ChainInfo(chainId),
     timestamp TEXT,
-    roundStateId INTEGER REFERENCES RoundState(id),
-    proposerId INTEGER REFERENCES Validator(id)
+    roundStateId INTEGER REFERENCES RoundState(id)
   );
   `);
 
@@ -73,7 +77,7 @@ db.serialize(() => {
   db.run(`
   CREATE TABLE IF NOT EXISTS Validator (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
-    validatorsId INTEGER REFERENCES Validators(id),
+    validatorsGroupId INTEGER REFERENCES ValidatorsGroup(id),
     chainId TEXT REFERENCES ChainInfo(chainId),
     timestamp TEXT,
     address TEXT,
@@ -83,6 +87,27 @@ db.serialize(() => {
   );
   `);
 
+  // Votes Table
+  db.run(`
+    CREATE TABLE IF NOT EXISTS Votes (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      validatorId INTEGER REFERENCES Validator(id),
+      type TEXT CHECK(type IN ('prevote', 'precommit')),
+      vote BOOLEAN,
+      roundStateId INTEGER REFERENCES RoundState(id)
+    );
+  `);
+
+  // Commits Table
+  db.run(`
+    CREATE TABLE IF NOT EXISTS Commits (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      height INTEGER UNIQUE,
+      votes_bit_array TEXT,
+      roundStateId INTEGER REFERENCES RoundState(id)
+    );
+  `);
+/*
   // Peer Table
   db.run(`
   CREATE TABLE IF NOT EXISTS Peer (
@@ -104,7 +129,7 @@ db.serialize(() => {
     stats TEXT
   );
   `);
-
+*/
   // StakingValidators Table
   db.run(`
         CREATE TABLE IF NOT EXISTS StakingValidatorsMeta (
@@ -139,18 +164,6 @@ db.serialize(() => {
             commission_max_rate REAL,
             commission_max_change_rate REAL,
             min_self_delegation INTEGER
-        );
-    `);
-
-  // ConsensusValidator Table
-  db.run(`
-        CREATE TABLE IF NOT EXISTS ConsensusValidator (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            roundStateId INTEGER REFERENCES RoundState(id),
-            address TEXT,
-            pub_key TEXT,
-            voting_power INTEGER,
-            proposer_priority INTEGER
         );
     `);
 

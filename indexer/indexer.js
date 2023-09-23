@@ -18,7 +18,8 @@ import {
 
 // Mainnet Endpoints
 //
-const PROVIDER_RPC = 'http://5.9.72.212:2001';
+// const PROVIDER_RPC = 'http://5.9.72.212:2001';
+const PROVIDER_RPC = 'http://162.55.92.114:2012';
 const PROVIDER_REST = 'http://162.55.92.114:2011';
 const CONSUMER_RPCS = ['http://148.251.183.254:2102', 'http://148.251.183.254:2202'];
 
@@ -33,12 +34,10 @@ const UPDATE_DB_FREQUENCY_MS = 600000;
 const CONSENSUS_POLL_FREQENCY_MS = 500;
 const PREFIX = 'cosmos';
 
-async function updateDatabaseData () {
-  console.log('Updating database data...');
-
+async function validateRPCEndpoints() {
+  const providerChainInfos = await getProviderChainInfos(PROVIDER_RPC);
   const consumerChainInfos = await validateConsumerRpcs(PROVIDER_RPC,
     CONSUMER_RPCS);
-  const providerChainInfos = await getProviderChainInfos(PROVIDER_RPC);
 
   if (providerChainInfos && providerChainInfos.chainId != '') {
     await saveChainInfos([providerChainInfos],
@@ -50,6 +49,13 @@ async function updateDatabaseData () {
       'consumer');
     console.log('[DB] updated ChainInfos for consumerChains.');
   }
+  return [providerChainInfos, consumerChainInfos];
+}
+
+async function updateDatabaseData () {
+  console.log('Updating database data...');
+
+  let [providerChainInfos, consumerChainInfos] = await validateRPCEndpoints();
 
   const stakingValidators = await getStakingValidators(PROVIDER_REST);
   if (providerChainInfos && providerChainInfos.chainId != '' && consumerChainInfos && consumerChainInfos.length > 0 && stakingValidators && stakingValidators.length > 0) {
@@ -68,13 +74,15 @@ async function updateDatabaseData () {
   }
 }
 
-async function pollConsensus (chains, stakingValidators) {
+async function pollConsensus (chains) {
   console.time('pollConsensus Execution Time');
   for (const chain of chains) {
     console.time('updateConsensusState Execution Time');
     console.log(`Processing ${chain.type} chain with ID: ${chain.chainId}`);
     const consensusState = await getConsensusState(chain.rpcEndpoint,
       chain.chainId);
+    console.log("Consensus State for " + chain.chainId, consensusState);
+    if (consensusState) {
 
     /* ---> this needs to go in querier
     const matchedValidators = await matchConsensusValidators(
@@ -93,10 +101,11 @@ async function pollConsensus (chains, stakingValidators) {
     chain.matchedValidators = matchedValidators;
     chain.matchedLastValidators = matchedLastValidators;
     */
-
-    await updateConsensusStateDB(consensusState);
-    console.log(`[DB] updated consensusState for chain ${chain.chainId}`);
-    console.timeEnd('updateConsensusState Execution Time');
+    
+      await updateConsensusStateDB(consensusState);
+      console.log(`[DB] updated consensusState for chain ${chain.chainId}`);
+      console.timeEnd('updateConsensusState Execution Time');
+    }
   }
   console.log('------------------------------------------------------------');
   console.timeEnd('pollConsensus Execution Time');
@@ -130,6 +139,8 @@ function startConsensusPolling (chains, stakingValidators) {
 }
 async function main () {
   console.log('starting ics-valset-monitoring');
+
+  await validateRPCEndpoints();
 
   let providerChainInfos;
   let consumerChainInfos;
