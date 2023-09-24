@@ -16,7 +16,7 @@ db.on('error',
   });
 
 db.serialize(() => {
-  // db.run('PRAGMA foreign_keys = ON;');
+  db.run('PRAGMA foreign_keys = ON;');
 
   // ChainInfo Table
   db.run(`
@@ -34,8 +34,7 @@ db.serialize(() => {
   CREATE TABLE IF NOT EXISTS ConsensusState (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     chainId TEXT REFERENCES ChainInfo(chainId),
-    timestamp TEXT,
-    round_stateId INTEGER REFERENCES RoundState(id)
+    timestamp TEXT
   );
   `);
 
@@ -43,7 +42,7 @@ db.serialize(() => {
   db.run(`
   CREATE TABLE IF NOT EXISTS RoundState (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
-    consensusStateId INTEGER REFERENCES ConsensusState(id),
+    consensusStateId INTEGER REFERENCES ConsensusState(id) ON DELETE CASCADE,
     chainId TEXT REFERENCES ChainInfo(chainId),
     timestamp TEXT,
     height INTEGER,
@@ -51,8 +50,8 @@ db.serialize(() => {
     step TEXT,
     start_time TEXT,
     commit_time TEXT,
-    validatorsGroupId INTEGER REFERENCES ValidatorsGroup(id),
-    lastValidatorsGroupId INTEGER REFERENCES ValidatorsGroup(id),
+    validatorsGroupId INTEGER REFERENCES ValidatorsGroup(id) ON DELETE CASCADE,
+    lastValidatorsGroupId INTEGER REFERENCES ValidatorsGroup(id) ON DELETE CASCADE,
     proposal TEXT,
     proposal_block_parts_header TEXT,
     locked_block_parts_header TEXT,
@@ -68,7 +67,7 @@ db.serialize(() => {
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     chainId TEXT REFERENCES ChainInfo(chainId),
     timestamp TEXT,
-    roundStateId INTEGER REFERENCES RoundState(id)
+    roundStateId INTEGER REFERENCES RoundState(id) ON DELETE CASCADE
   );
   `);
 
@@ -76,11 +75,12 @@ db.serialize(() => {
   db.run(`
   CREATE TABLE IF NOT EXISTS Validator (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
-    validatorsGroupId INTEGER REFERENCES ValidatorsGroup(id),
+    validatorsGroupId INTEGER REFERENCES ValidatorsGroup(id) ON DELETE CASCADE,
     chainId TEXT REFERENCES ChainInfo(chainId),
     timestamp TEXT,
     address TEXT,
     pub_key TEXT,
+    consensusAddress TEXT,
     voting_power INTEGER,
     proposer_priority INTEGER
   );
@@ -88,24 +88,15 @@ db.serialize(() => {
 
   // Votes Table
   db.run(`
-    CREATE TABLE IF NOT EXISTS Votes (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
-      validatorId INTEGER REFERENCES Validator(id),
-      type TEXT CHECK(type IN ('prevote', 'precommit')),
-      vote BOOLEAN,
-      roundStateId INTEGER REFERENCES RoundState(id)
-    );
+  CREATE TABLE IF NOT EXISTS Votes (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    validatorId INTEGER REFERENCES Validator(id) ON DELETE CASCADE,
+    type TEXT CHECK(type IN ('prevote', 'precommit', 'lastcommit')),
+    vote TEXT
+  );
   `);
 
-  // Commits Table
-  db.run(`
-    CREATE TABLE IF NOT EXISTS Commits (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
-      height INTEGER UNIQUE,
-      votes_bit_array TEXT,
-      roundStateId INTEGER REFERENCES RoundState(id)
-    );
-  `);
+
   /*
   // Peer Table
   db.run(`
