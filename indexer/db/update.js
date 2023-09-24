@@ -292,36 +292,26 @@ async function updateConsensusStateDB (consensusState) {
   }
 }
 
-async function saveVotesAndCommits (roundState, roundStateId) {
+async function saveVotesAndCommits(roundState, roundStateId) {
   // Save votes for each validator
-  for (let i = 0; i < roundState.validators.length; i++) {
-    const validator = roundState.validators[i];
-    const vote = roundState.votes[i];
-    await saveVote(validator,
-      vote,
-      'prevote',
-      roundStateId);
+  for (let i = 0; i < roundState.validators.validators.length; i++) {
+      const validator = roundState.validators.validators[i];
+      const vote = roundState.votes[i];
+      await saveVote(validator, vote, 'prevote', roundStateId);
   }
 
   // Save last_commit votes for each validator
-  for (let i = 0; i < roundState.last_validators.length; i++) {
-    const validator = roundState.last_validators[i];
-    const vote = roundState.last_commit.votes[i];
-    await saveVote(validator,
-      vote,
-      'precommit',
-      roundStateId);
+  for (let i = 0; i < roundState.last_validators.validators.length; i++) {
+      const validator = roundState.last_validators.validators[i];
+      const vote = roundState.last_commit.votes[i];
+      await saveVote(validator, vote, 'precommit', roundStateId);
   }
 
   const last_commit_height = roundState.height - 1;
-  await saveCommit(roundState.last_commit,
-    roundStateId,
-    last_commit_height);
+  await saveCommit(roundState.last_commit, roundStateId, last_commit_height);
 }
 
 async function saveValidators (validators, roundStateId) {
-  console.log('Starting saveValidators...');
-
   const validatorsGroupId = await saveValidatorsGroup(validators,
     roundStateId);
 
@@ -621,7 +611,7 @@ async function deleteOldEntries (olderThanTimestamp, chainId) {
           WHERE ${foreignKey} IN (${oldRoundStateIds.join(',')})
       `;
 
-    const result = await runDatabaseQuery(deleteRelatedQuery);
+    const result = await runDatabaseQuery(deleteRelatedQuery, [], 'delete');
     const deletedCount = result.changes || 0;
     console.log(`Deleted ${deletedCount} old entries from ${table}`);
   }

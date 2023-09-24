@@ -175,10 +175,19 @@ async function runDatabaseQuery(query, params = [], type = 'run') {
           if (err) {
               reject(err);
           } else {
-              if (type === 'run') {
-                  resolve(this.lastID);
-              } else {
-                  resolve(result);
+              switch (type) {
+                  case 'all':
+                      resolve(result);
+                      break;
+                  case 'get':
+                      resolve(result);
+                      break;
+                  case 'delete':
+                      resolve({ lastID: this.lastID, changes: this.changes });
+                      break;
+                  default:  // 'run'
+                      resolve(this.lastID);
+                      break;
               }
           }
       }
@@ -192,6 +201,7 @@ async function runDatabaseQuery(query, params = [], type = 'run') {
       }
   });
 }
+
 
 
 
