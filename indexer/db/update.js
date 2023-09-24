@@ -82,16 +82,14 @@ async function saveStakingValidators (stakingValidators) {
 async function getStakingValidatorsFromDB () {
   try {
     // Get the latest StakingValidatorsMeta entry
-    const metaRow = await runDatabaseQuery('SELECT * FROM StakingValidatorsMeta ORDER BY id DESC LIMIT 1');
+    const metaRow = await runDatabaseQuery('SELECT * FROM StakingValidatorsMeta ORDER BY id DESC LIMIT 1', [], 'get');
 
     if (!metaRow) {
       return [];
     }
 
     // Get all StakingValidator entries associated with the latest meta entry
-    const validatorRows = await runDatabaseQuery('SELECT * FROM StakingValidator WHERE stakingValidatorsMetaId = ?',
-      [metaRow.id],
-      true);
+    const validatorRows = await runDatabaseQuery('SELECT * FROM StakingValidator WHERE stakingValidatorsMetaId = ?', [metaRow.id], 'all');
 
     const result = {
       timestamp: metaRow.timestamp,
@@ -158,16 +156,14 @@ async function saveMatchedValidators (matchedValidators) {
 async function getMatchedValidatorsFromDB () {
   try {
     // Get the latest MatchedValidators entry
-    const matchedRow = await runDatabaseQuery('SELECT * FROM MatchedValidators ORDER BY id DESC LIMIT 1');
+    const matchedRow = await runDatabaseQuery('SELECT * FROM MatchedValidators ORDER BY id DESC LIMIT 1', [], 'get');
 
     if (!matchedRow) {
       return null;
     }
 
     // Get all MatchedValidatorDetail entries associated with the latest matched entry
-    const validatorRows = await runDatabaseQuery('SELECT * FROM MatchedValidatorDetail WHERE matchedValidatorsId = ?',
-      [matchedRow.id],
-      true);
+    const validatorRows = await runDatabaseQuery('SELECT * FROM MatchedValidatorDetail WHERE matchedValidatorsId = ?', [matchedRow.id], 'all');
 
     const result = {
       chainId: matchedRow.chainId,
@@ -209,9 +205,7 @@ async function saveChainInfos (chainInfos, type) {
 
 async function getChainInfosFromDB (type) {
   try {
-    const rows = await runDatabaseQuery('SELECT * FROM ChainInfo WHERE type = ?',
-      [type],
-      true);
+    const rows = await runDatabaseQuery('SELECT * FROM ChainInfo WHERE type = ?', [type], 'all');
     return rows;
   } catch (error) {
     console.error('DB Error:',
@@ -264,7 +258,7 @@ async function updateConsensusStateDB (consensusState) {
     console.log('Committed DB Transaction.');
 
     // Get the last inserted row ID using the last_insert_rowid() function
-    const lastInsertedRow = await runDatabaseQuery('SELECT last_insert_rowid() as lastID');
+    const lastInsertedRow = await runDatabaseQuery('SELECT last_insert_rowid() as lastID', [], 'get');
     const lastInsertedRowID = lastInsertedRow.lastID;
     console.log('Last inserted row ID:',
       lastInsertedRowID);
@@ -272,8 +266,8 @@ async function updateConsensusStateDB (consensusState) {
     let lastInsertedTimestamp = null;
 
     if (lastInsertedRowID) {
-      const timestampRow = await runDatabaseQuery('SELECT timestamp FROM ConsensusState WHERE id = ?',
-        [lastInsertedRowID]);
+      const timestampQuery = `SELECT timestamp FROM ConsensusState WHERE id = ?`;
+      const timestampRow = await runDatabaseQuery(timestampQuery, [lastInsertedRowID], 'get');
       lastInsertedTimestamp = timestampRow.timestamp;
       console.log('Timestamp for last inserted row:',
         lastInsertedTimestamp);
@@ -496,8 +490,7 @@ async function savePeerState (peerState) {
 
 async function loadConsensusStateFromDB (chainId) {
   const query = 'SELECT * FROM ConsensusState WHERE chainId = ?';
-  const row = await runDatabaseQuery(query,
-    [chainId]);
+  const row = await runDatabaseQuery(query, [chainId], 'get');
   if (row) {
     const roundState = await loadRoundState(row.round_stateId);
     const peers = await loadPeers(chainId);
@@ -514,8 +507,7 @@ async function loadConsensusStateFromDB (chainId) {
 
 async function loadRoundState (id) {
   const query = 'SELECT * FROM RoundState WHERE id = ?';
-  const row = await runDatabaseQuery(query,
-    [id]);
+  const row = await runDatabaseQuery(query, [id], 'get');
   const validators = await loadValidators(row.validatorsId);
   const lastValidators = await loadValidators(row.last_validatorsId);
   const roundStateData = {
@@ -540,9 +532,7 @@ async function loadRoundState (id) {
 
 async function loadValidators (id) {
   const query = 'SELECT * FROM Validators WHERE id = ?';
-  const row = await runDatabaseQuery(query,
-    [id],
-    true);
+  const row = await runDatabaseQuery(query, [id], 'all');
   const validatorsList = await loadValidatorList(row.chainId);
   const proposer = validatorsList.find(validator => validator.id === row.proposerId);
   const validatorsData = {
@@ -556,9 +546,7 @@ async function loadValidators (id) {
 
 async function loadValidatorList (chainId) {
   const query = 'SELECT * FROM Validator WHERE chainId = ?';
-  const rows = await runDatabaseQuery(query,
-    [chainId],
-    true);
+  const rows = await runDatabaseQuery(query, [chainId], 'all');
   return rows.map(row => new Validator({
     address: row.address,
     pub_key: JSON.parse(row.pub_key),
@@ -571,9 +559,7 @@ async function loadValidatorList (chainId) {
 
 async function loadPeers (chainId) {
   const query = 'SELECT * FROM Peer WHERE chainId = ?';
-  const rows = await runDatabaseQuery(query,
-    [chainId],
-    true);
+  const rows = await runDatabaseQuery(query, [chainId], 'all');
   const peers = [];
   for (const row of rows) {
     const peerState = await loadPeerState(row.peer_stateId);
@@ -590,8 +576,7 @@ async function loadPeers (chainId) {
 
 async function loadPeerState (id) {
   const query = 'SELECT * FROM PeerState WHERE id = ?';
-  const row = await runDatabaseQuery(query,
-    [id]);
+  const row = await runDatabaseQuery(query, [id], 'get');
   const roundState = await loadRoundState(row.round_stateId);
   const peerStateData = {
     round_state: roundState,
@@ -614,7 +599,7 @@ async function deleteOldEntries (olderThanTimestamp, chainId) {
 
   const oldRoundStateIdsResult = await runDatabaseQuery(selectOldRoundStateIdsQuery,
     [olderThanTimestamp, chainId],
-    true);
+    'all');
   const oldRoundStateIds = oldRoundStateIdsResult.map(entry => entry.id);
   if (oldRoundStateIds.length === 0) {
     console.log('No old RoundState entries found');
@@ -658,7 +643,7 @@ async function deleteOldEntries (olderThanTimestamp, chainId) {
   `;
   const oldConsensusIdsResult = await runDatabaseQuery(selectOldConsensusIdsQuery,
     [olderThanTimestamp, chainId],
-    true);
+    'all');
   const oldConsensusIds = oldConsensusIdsResult.map(entry => entry.id);
 
   if (oldConsensusIds.length > 0) {

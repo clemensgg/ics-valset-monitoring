@@ -169,26 +169,26 @@ db.serialize(() => {
   console.log('All tables created successfully!');
 });
 
-async function runDatabaseQuery(query, params = [], all = false) {
+async function runDatabaseQuery(query, params = [], type = 'run') {
   return new Promise((resolve, reject) => {
       function callback(err, result) {
           if (err) {
               reject(err);
           } else {
-              if (typeof result === 'undefined') {
-                  resolve(this.lastID);  // For db.run
+              if (type === 'run') {
+                  resolve(this.lastID);
               } else {
-                  resolve(result);  // For db.get and db.all
+                  resolve(result);
               }
           }
       }
 
-      if (all) {
+      if (type === 'all') {
           db.all(query, params, callback);
-      } else if (params.length > 0) {
+      } else if (type === 'get') {
           db.get(query, params, callback);
       } else {
-          db.run(query, callback);
+          db.run(query, params, callback);
       }
   });
 }
