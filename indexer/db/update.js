@@ -12,7 +12,6 @@ import {
 import { StakingValidators } from '../../src/models/StakingValidators.js';
 
 import {
-  queryDatabase,
   runDatabaseQuery
 } from './db.js';
 
@@ -83,14 +82,14 @@ async function saveStakingValidators (stakingValidators) {
 async function getStakingValidatorsFromDB () {
   try {
     // Get the latest StakingValidatorsMeta entry
-    const metaRow = await queryDatabase('SELECT * FROM StakingValidatorsMeta ORDER BY id DESC LIMIT 1');
+    const metaRow = await runDatabaseQuery('SELECT * FROM StakingValidatorsMeta ORDER BY id DESC LIMIT 1');
 
     if (!metaRow) {
       return [];
     }
 
     // Get all StakingValidator entries associated with the latest meta entry
-    const validatorRows = await queryDatabase('SELECT * FROM StakingValidator WHERE stakingValidatorsMetaId = ?',
+    const validatorRows = await runDatabaseQuery('SELECT * FROM StakingValidator WHERE stakingValidatorsMetaId = ?',
       [metaRow.id],
       true);
 
@@ -159,14 +158,14 @@ async function saveMatchedValidators (matchedValidators) {
 async function getMatchedValidatorsFromDB () {
   try {
     // Get the latest MatchedValidators entry
-    const matchedRow = await queryDatabase('SELECT * FROM MatchedValidators ORDER BY id DESC LIMIT 1');
+    const matchedRow = await runDatabaseQuery('SELECT * FROM MatchedValidators ORDER BY id DESC LIMIT 1');
 
     if (!matchedRow) {
       return null;
     }
 
     // Get all MatchedValidatorDetail entries associated with the latest matched entry
-    const validatorRows = await queryDatabase('SELECT * FROM MatchedValidatorDetail WHERE matchedValidatorsId = ?',
+    const validatorRows = await runDatabaseQuery('SELECT * FROM MatchedValidatorDetail WHERE matchedValidatorsId = ?',
       [matchedRow.id],
       true);
 
@@ -210,7 +209,7 @@ async function saveChainInfos (chainInfos, type) {
 
 async function getChainInfosFromDB (type) {
   try {
-    const rows = await queryDatabase('SELECT * FROM ChainInfo WHERE type = ?',
+    const rows = await runDatabaseQuery('SELECT * FROM ChainInfo WHERE type = ?',
       [type],
       true);
     return rows;
@@ -265,7 +264,7 @@ async function updateConsensusStateDB (consensusState) {
     console.log('Committed DB Transaction.');
 
     // Get the last inserted row ID using the last_insert_rowid() function
-    const lastInsertedRow = await queryDatabase('SELECT last_insert_rowid() as lastID');
+    const lastInsertedRow = await runDatabaseQuery('SELECT last_insert_rowid() as lastID');
     const lastInsertedRowID = lastInsertedRow.lastID;
     console.log('Last inserted row ID:',
       lastInsertedRowID);
@@ -273,7 +272,7 @@ async function updateConsensusStateDB (consensusState) {
     let lastInsertedTimestamp = null;
 
     if (lastInsertedRowID) {
-      const timestampRow = await queryDatabase('SELECT timestamp FROM ConsensusState WHERE id = ?',
+      const timestampRow = await runDatabaseQuery('SELECT timestamp FROM ConsensusState WHERE id = ?',
         [lastInsertedRowID]);
       lastInsertedTimestamp = timestampRow.timestamp;
       console.log('Timestamp for last inserted row:',
@@ -497,7 +496,7 @@ async function savePeerState (peerState) {
 
 async function loadConsensusStateFromDB (chainId) {
   const query = 'SELECT * FROM ConsensusState WHERE chainId = ?';
-  const row = await queryDatabase(query,
+  const row = await runDatabaseQuery(query,
     [chainId]);
   if (row) {
     const roundState = await loadRoundState(row.round_stateId);
@@ -515,7 +514,7 @@ async function loadConsensusStateFromDB (chainId) {
 
 async function loadRoundState (id) {
   const query = 'SELECT * FROM RoundState WHERE id = ?';
-  const row = await queryDatabase(query,
+  const row = await runDatabaseQuery(query,
     [id]);
   const validators = await loadValidators(row.validatorsId);
   const lastValidators = await loadValidators(row.last_validatorsId);
@@ -541,7 +540,7 @@ async function loadRoundState (id) {
 
 async function loadValidators (id) {
   const query = 'SELECT * FROM Validators WHERE id = ?';
-  const row = await queryDatabase(query,
+  const row = await runDatabaseQuery(query,
     [id],
     true);
   const validatorsList = await loadValidatorList(row.chainId);
@@ -557,7 +556,7 @@ async function loadValidators (id) {
 
 async function loadValidatorList (chainId) {
   const query = 'SELECT * FROM Validator WHERE chainId = ?';
-  const rows = await queryDatabase(query,
+  const rows = await runDatabaseQuery(query,
     [chainId],
     true);
   return rows.map(row => new Validator({
@@ -572,7 +571,7 @@ async function loadValidatorList (chainId) {
 
 async function loadPeers (chainId) {
   const query = 'SELECT * FROM Peer WHERE chainId = ?';
-  const rows = await queryDatabase(query,
+  const rows = await runDatabaseQuery(query,
     [chainId],
     true);
   const peers = [];
@@ -591,7 +590,7 @@ async function loadPeers (chainId) {
 
 async function loadPeerState (id) {
   const query = 'SELECT * FROM PeerState WHERE id = ?';
-  const row = await queryDatabase(query,
+  const row = await runDatabaseQuery(query,
     [id]);
   const roundState = await loadRoundState(row.round_stateId);
   const peerStateData = {
@@ -613,7 +612,7 @@ async function deleteOldEntries (olderThanTimestamp, chainId) {
       WHERE timestamp < ? AND chainId = ?
   `;
 
-  const oldRoundStateIdsResult = await queryDatabase(selectOldRoundStateIdsQuery,
+  const oldRoundStateIdsResult = await runDatabaseQuery(selectOldRoundStateIdsQuery,
     [olderThanTimestamp, chainId],
     true);
   const oldRoundStateIds = oldRoundStateIdsResult.map(entry => entry.id);
@@ -657,7 +656,7 @@ async function deleteOldEntries (olderThanTimestamp, chainId) {
       FROM ConsensusState 
       WHERE timestamp < ? AND chainId = ?
   `;
-  const oldConsensusIdsResult = await queryDatabase(selectOldConsensusIdsQuery,
+  const oldConsensusIdsResult = await runDatabaseQuery(selectOldConsensusIdsQuery,
     [olderThanTimestamp, chainId],
     true);
   const oldConsensusIds = oldConsensusIdsResult.map(entry => entry.id);
