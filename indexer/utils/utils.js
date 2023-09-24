@@ -20,15 +20,20 @@ function sleep (ms) {
 async function getConsensusState (rpcUrl, chainId) {
   try {
     const url = `${rpcUrl}/dump_consensus_state`;
-    console.log("Making request to:", url);
+    console.log('Making request to:',
+      url);
 
     const response = await axios.get(url);
 
-    console.log("Received response:", response.status, response.statusText);
+    console.log('Received response:',
+      response.status,
+      response.statusText);
     if (response.data && response.data.result) {
-        console.log("Response data:", response.data.result);
+      console.log('Response data:',
+        response.data.result);
     } else {
-        console.log("Unexpected response structure:", response.data);
+      console.log('Unexpected response structure:',
+        response.data);
     }
     return new ConsensusState(response.data.result,
       chainId);

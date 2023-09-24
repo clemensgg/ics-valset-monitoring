@@ -62,7 +62,6 @@ db.serialize(() => {
   );
   `);
 
-
   // ValidatorsGroup Table
   db.run(`
   CREATE TABLE IF NOT EXISTS ValidatorsGroup (
@@ -107,7 +106,7 @@ db.serialize(() => {
       roundStateId INTEGER REFERENCES RoundState(id)
     );
   `);
-/*
+  /*
   // Peer Table
   db.run(`
   CREATE TABLE IF NOT EXISTS Peer (
@@ -132,42 +131,75 @@ db.serialize(() => {
 */
   // StakingValidators Table
   db.run(`
-        CREATE TABLE IF NOT EXISTS StakingValidatorsMeta (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            timestamp TEXT,
-            created_at TEXT,
-            updated_at TEXT
-        );
-    `);
+    CREATE TABLE IF NOT EXISTS StakingValidatorsMeta (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        timestamp TEXT,
+        created_at TEXT,
+        updated_at TEXT
+    );
+  `);
 
   // StakingValidator Table
   db.run(`
-        CREATE TABLE IF NOT EXISTS StakingValidator (
-            id INTEGER PRIMARY KEY,
-            stakingValidatorsMetaId INTEGER REFERENCES StakingValidatorsMeta(id),
-            operator_address TEXT,
-            consensus_pubkey_type TEXT,
-            consensus_pubkey_key TEXT,
-            consumer_signing_keys TEXT,
-            jailed BOOLEAN,
-            status TEXT,
-            tokens INTEGER,
-            delegator_shares REAL,
-            moniker TEXT,
-            identity TEXT,
-            website TEXT,
-            security_contact TEXT,
-            details TEXT,
-            unbonding_height INTEGER,
-            unbonding_time TEXT,
-            commission_rate REAL,
-            commission_max_rate REAL,
-            commission_max_change_rate REAL,
-            min_self_delegation INTEGER
-        );
-    `);
+    CREATE TABLE IF NOT EXISTS StakingValidator (
+      id INTEGER PRIMARY KEY,
+      stakingValidatorsMetaId INTEGER REFERENCES StakingValidatorsMeta(id),
+      operator_address TEXT,
+      consensus_pubkey_type TEXT,
+      consensus_pubkey_key TEXT,
+      consumer_signing_keys TEXT,
+      jailed BOOLEAN,
+      status TEXT,
+      tokens INTEGER,
+      delegator_shares REAL,
+      moniker TEXT,
+      identity TEXT,
+      website TEXT,
+      security_contact TEXT,
+      details TEXT,
+      unbonding_height INTEGER,
+      unbonding_time TEXT,
+      commission_rate REAL,
+      commission_max_rate REAL,
+      commission_max_change_rate REAL,
+      min_self_delegation INTEGER
+    );
+  `);
 
   console.log('All tables created successfully!');
 });
 
-export default db;
+async function queryDatabase (query, params, all = false) {
+  return new Promise((resolve, reject) => {
+    const callback = (err, rows) => {
+      if (err) reject(err);
+      else resolve(rows);
+    };
+
+    if (all) {
+      db.all(query,
+        params,
+        callback);
+    } else {
+      db.get(query,
+        params,
+        callback);
+    }
+  });
+}
+
+async function runDatabaseQuery (query) {
+  return new Promise((resolve, reject) => {
+    db.run(query,
+      function (err) {
+        if (err) reject(err);
+        else resolve(this.lastID);
+      });
+  });
+}
+
+export {
+  db,
+  queryDatabase,
+  runDatabaseQuery
+};

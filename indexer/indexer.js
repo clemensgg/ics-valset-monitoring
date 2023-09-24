@@ -1,4 +1,7 @@
-import db from './db/db.js';
+import { ConsumerChainInfo, ProviderChainInfo } from '../src/models/ChainInfo.js';
+import { StakingValidators } from '../src/models/StakingValidators.js';
+
+import { db } from './db/db.js';
 import {
   getChainInfosFromDB,
   getStakingValidatorsFromDB,
@@ -6,8 +9,6 @@ import {
   saveStakingValidators,
   updateConsensusStateDB
 } from './db/update.js';
-import { ConsumerChainInfo, ProviderChainInfo } from '../src/models/ChainInfo.js';
-import { StakingValidators } from '../src/models/StakingValidators.js';
 import {
   fetchConsumerSigningKeys,
   getConsensusState,
@@ -34,7 +35,7 @@ const UPDATE_DB_FREQUENCY_MS = 600000;
 const CONSENSUS_POLL_FREQENCY_MS = 500;
 const PREFIX = 'cosmos';
 
-async function validateRPCEndpoints() {
+async function validateRPCEndpoints () {
   const providerChainInfos = await getProviderChainInfos(PROVIDER_RPC);
   const consumerChainInfos = await validateConsumerRpcs(PROVIDER_RPC,
     CONSUMER_RPCS);
@@ -55,7 +56,7 @@ async function validateRPCEndpoints() {
 async function updateDatabaseData () {
   console.log('Updating database data...');
 
-  let [providerChainInfos, consumerChainInfos] = await validateRPCEndpoints();
+  const [providerChainInfos, consumerChainInfos] = await validateRPCEndpoints();
 
   const stakingValidators = await getStakingValidators(PROVIDER_REST);
   if (providerChainInfos && providerChainInfos.chainId != '' && consumerChainInfos && consumerChainInfos.length > 0 && stakingValidators && stakingValidators.length > 0) {
@@ -81,9 +82,9 @@ async function pollConsensus (chains) {
     console.log(`Processing ${chain.type} chain with ID: ${chain.chainId}`);
     const consensusState = await getConsensusState(chain.rpcEndpoint,
       chain.chainId);
-    console.log("Consensus State for " + chain.chainId, consensusState);
+    console.log('Consensus State for ' + chain.chainId,
+      consensusState);
     if (consensusState) {
-
     /* ---> this needs to go in querier
     const matchedValidators = await matchConsensusValidators(
       stakingValidators.validators,
@@ -101,7 +102,7 @@ async function pollConsensus (chains) {
     chain.matchedValidators = matchedValidators;
     chain.matchedLastValidators = matchedLastValidators;
     */
-    
+
       await updateConsensusStateDB(consensusState);
       console.log(`[DB] updated consensusState for chain ${chain.chainId}`);
       console.timeEnd('updateConsensusState Execution Time');
@@ -152,7 +153,7 @@ async function main () {
     consumerChainInfos = await getChainInfosFromDB('consumer');
     console.log('[DB] loaded ' + consumerChainInfos.length + ' consumerChains');
     stakingValidators = await getStakingValidatorsFromDB();
-    if (stakingValidators.hasOwnProperty('validators')) {
+    if (stakingValidators.validators && stakingValidators.validators.length > 0) {
       console.log('[DB] loaded ' + stakingValidators.validators.length + ' stakingValidators');
     } else {
       console.log('[DB] loaded 0 stakingValidators');
@@ -172,7 +173,7 @@ async function main () {
     consumerChainInfos = await getChainInfosFromDB('consumer');
     console.log('[DB] loaded ' + consumerChainInfos.length + ' consumerChains');
     stakingValidators = await getStakingValidatorsFromDB();
-    if (stakingValidators.hasOwnProperty('validators')) {
+    if (stakingValidators.validators && stakingValidators.validators.length > 0) {
       console.log('[DB] loaded ' + stakingValidators.validators.length + ' stakingValidators');
     } else {
       console.log('[DB] loaded 0 stakingValidators');
