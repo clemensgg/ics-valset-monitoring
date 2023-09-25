@@ -67,7 +67,8 @@ db.serialize(() => {
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     chainId TEXT REFERENCES ChainInfo(chainId),
     timestamp TEXT,
-    roundStateId INTEGER REFERENCES RoundState(id) ON DELETE CASCADE
+    roundStateId INTEGER REFERENCES RoundState(id) ON DELETE CASCADE,
+    proposerId INTEGER REFERENCES Validator(id) ON DELETE CASCADE
   );
   `);
 

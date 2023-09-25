@@ -267,28 +267,41 @@ async function updateConsensusStateDB(consensusState) {
 
 async function saveValidatorsAndVotes(roundState, roundStateId, type) {
   let validatorsGroupId;
+  let proposerId;
 
   if (type === 'current') {
-      validatorsGroupId = await saveValidatorsGroup(roundState.validators.validators, roundStateId);
       for (let i = 0; i < roundState.validators.validators.length; i++) {
           const validator = roundState.validators.validators[i];
-          const validatorId = await saveValidator(validator, validatorsGroupId);
-
-          for (let f = 0; f < roundState.votes.length; f++) {
-              const votes = roundState.votes[f];
-              await saveVote(votes.prevotes[i], 'prevote', validatorId);
-              await saveVote(votes.precommits[i], 'precommit', validatorId);
+          if (validator.address === roundState.validators.proposer.address) {
+              proposerId = await saveValidator(validator, null);
           }
       }
+      validatorsGroupId = await saveValidatorsGroup(roundState.validators.validators, roundStateId, proposerId);
+      for (let i = 0; i < roundState.validators.validators.length; i++) {
+        const validator = roundState.validators.validators[i];
+        const validatorId = await saveValidator(validator, validatorsGroupId);
+
+        for (let f = 0; f < roundState.votes.length; f++) {
+            const votes = roundState.votes[f];
+            await saveVote(votes.prevotes[i], 'prevote', validatorId);
+            await saveVote(votes.precommits[i], 'precommit', validatorId);
+        }
+    }
   }
 
   if (type === 'last') {
-      validatorsGroupId = await saveValidatorsGroup(roundState.last_validators.validators, roundStateId);
-      for (let i = 0; i < roundState.last_validators.validators.length; i++) {
-          const validator = roundState.last_validators.validators[i];
-          const validatorId = await saveValidator(validator, validatorsGroupId);
-          await saveVote(roundState.last_commit.votes[i], 'lastcommit', validatorId);
-      }
+    for (let i = 0; i < roundState.last_validators.validators.length; i++) {
+        const validator = roundState.last_validators.validators[i];
+        if (validator.address === roundState.last_validators.proposer.address) {
+            proposerId = await saveValidator(validator, null);
+        }
+    }
+    validatorsGroupId = await saveValidatorsGroup(roundState.last_validators.validators, roundStateId, proposerId);
+    for (let i = 0; i < roundState.last_validators.validators.length; i++) {
+      const validator = roundState.last_validators.validators[i];
+      const validatorId = await saveValidator(validator, validatorsGroupId);
+      await saveVote(roundState.last_commit.votes[i], 'lastcommit', validatorId);
+    }
   }
 
   return validatorsGroupId;
@@ -338,15 +351,16 @@ async function saveRoundState(roundState, consensusStateId) {
   return roundStateId;
 }
 
-async function saveValidatorsGroup(validators, roundStateId) {
+async function saveValidatorsGroup(validators, roundStateId, proposerId) {
   const query = `
-      INSERT INTO ValidatorsGroup (chainId, timestamp, roundStateId)
-      VALUES (?, ?, ?);
+      INSERT INTO ValidatorsGroup (chainId, timestamp, roundStateId, proposerId)
+      VALUES (?, ?, ?, ?);
   `;
   const params = [
       validators.chainId,
       validators.timestamp,
-      roundStateId
+      roundStateId,
+      proposerId
   ];
 
   const validatorsGroupId = await runDatabaseQuery(query, params);
