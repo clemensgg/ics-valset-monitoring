@@ -121,8 +121,6 @@ function startConsensusPolling (chains, stakingValidators) {
     .then(() => {
       const endTime = Date.now();
       const executionTime = endTime - startTime;
-
-      // Calculate the delay for the next execution
       const delay = executionTime > CONSENSUS_POLL_FREQENCY_MS ? 0 : CONSENSUS_POLL_FREQENCY_MS - executionTime;
 
       setTimeout(() => startConsensusPolling(chains,

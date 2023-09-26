@@ -67,6 +67,7 @@ db.serialize(() => {
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     chainId TEXT REFERENCES ChainInfo(chainId),
     timestamp TEXT,
+    type TEXT,
     roundStateId INTEGER REFERENCES RoundState(id) ON DELETE CASCADE,
     proposerId INTEGER REFERENCES Validator(id) ON DELETE CASCADE
   );
@@ -93,7 +94,8 @@ db.serialize(() => {
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     validatorId INTEGER REFERENCES Validator(id) ON DELETE CASCADE,
     type TEXT CHECK(type IN ('prevote', 'precommit', 'lastcommit')),
-    vote TEXT
+    vote TEXT,
+    voteString TEXT
   );
   `);
 

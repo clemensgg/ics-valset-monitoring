@@ -155,6 +155,18 @@ async function validateConsumerRpcs (providerRpcEndpoint, consumerRpcEndpoints) 
   return consumerChainInfos;
 }
 
+function decodeVoteData(vote) {
+  const regex = /(\d+):([A-F0-9]+)\s(\d+)\/(\d+)\/(SIGNED_MSG_TYPE_[A-Z]+)\((\w+)\)\s([A-F0-9]{12}).+?@ ([\d\-T:.]+)Z/;
+  const match = vote.match(regex);
+  let result = [];
+
+  if (match) {
+      const [_, index, address, height, round, msgType, voteType, voteHash, date] = match;
+      result.push(index, address, height, round, msgType, voteType, voteHash, date);
+  }
+  return result;
+}
+
 /*
 
 async function matchValidators(stakingValidators, consensusValidators, providerRpcEndpoint, chainIds, prefix) {
@@ -362,6 +374,7 @@ async function fetchConsumerSigningKeys (stakingValidators, providerRpcEndpoint,
 }
 
 export {
+  decodeVoteData,
   getConsensusState,
   getStakingValidators,
   orderByVotingPower,
