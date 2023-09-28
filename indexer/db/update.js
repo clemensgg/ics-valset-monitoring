@@ -3,9 +3,6 @@
 import { ConsumerChainInfo, ProviderChainInfo } from '../../src/models/ChainInfo.js';
 import {
   ConsensusState,
-  Peer,
-  PeerState,
-  RoundState,
   Validators,
   Validator
 } from '../../src/models/ConsensusState.js';
@@ -220,27 +217,12 @@ async function getChainInfosFromDB (type) {
 
 /// ///////////////////////////////////// TODO
 
-async function updateConsensusStateDB(consensusState) {
-  console.log('updateConsensusStateDB called with consensusState:', consensusState);
+async function updateConsensusStateDB(consensusState, retainStates = 0) {
   try {
-      console.log('Starting DB Transaction...');
       await runDatabaseQuery('BEGIN TRANSACTION');
-      console.log('Started DB Transaction.');
 
-      const query = `
-          INSERT INTO ConsensusState (chainId, timestamp)
-          VALUES (?, ?);
-      `;
-      const params = [
-          consensusState.chainId,
-          consensusState.timestamp,
-      ];
-
-      const consensusStateId = await runDatabaseQuery(query, params);
-      console.log('[DEBUG] consensusStateId for chain', consensusState.chainId, ':', consensusStateId);
-
-      const roundStateId = await saveRoundState(consensusState.round_state, consensusStateId);
-      console.log('[DEBUG] RoundStateId for chain', consensusState.chainId, ':', roundStateId);
+      const consensusStateId = await saveConsensusState(consensusState);
+      console.log('[DEBUG] New consensusStateId for chain', consensusState.chainId, ':', consensusStateId);
 
       // Fetch the IDs of the states that are older than the `retainStates` count
       const selectPruneIdsQuery = `
@@ -251,13 +233,12 @@ async function updateConsensusStateDB(consensusState) {
         ORDER BY id ASC
         LIMIT -1 OFFSET ?
       `;
-      const RETAIN_STATES = 0;
-      const pruneIdsResult = await runDatabaseQuery(selectPruneIdsQuery, [consensusState.chainId, consensusStateId, RETAIN_STATES], 'all');
+      const pruneIdsResult = await runDatabaseQuery(selectPruneIdsQuery, [consensusState.chainId, consensusStateId, retainStates], 'all');
       const pruneIds = pruneIdsResult.map(entry => entry.id);
 
       // Before pruning, ensure that the lastcommit data is correctly associated with the current state
-      const currentRoundState = await getRoundStateByConsensusStateId(consensusStateId);
-      if (currentRoundState.validatorsGroupId && currentRoundState.lastValidatorsGroupId) {
+      const currentConsensusState = await getConsensusStateByConsensusStateId(consensusStateId);
+      if (currentConsensusState.validatorsGroupId && currentConsensusState.lastValidatorsGroupId) {
         if (pruneIds.length > 0) {
           await pruneConsensusStateDB(pruneIds, consensusState.chainId);
         }
@@ -265,9 +246,7 @@ async function updateConsensusStateDB(consensusState) {
         console.error('Error: lastcommit data is not correctly associated with the current state.');
       }
 
-      console.log('Committing DB Transaction...');
       await runDatabaseQuery('COMMIT');
-      console.log('Committed DB Transaction.');
   } catch (err) {
       console.error('Error in updateConsensusStateDB:', err);
       try {
@@ -287,25 +266,25 @@ async function updateValidatorsGroupWithProposerId(validatorsGroupId, proposerId
       SET proposerId = ?
       WHERE id = ?
   `;
-  console.log('setting lastProposerId ' + proposerId + ' in ValidatorsGroup ' + validatorsGroupId)   
+  console.log('setting proposerId ' + proposerId + ' in ValidatorsGroup ' + validatorsGroupId)   
   await runDatabaseQuery(query, [proposerId, validatorsGroupId]);
 }
 
-async function saveValidatorsAndVotes(roundState, roundStateId, type) {
+async function saveValidatorsAndVotes(consensusState, consensusStateId, type) {
   let validatorsGroupId;
   let proposer;
 
   if (type === 'current') {
       // Identify the proposer but don't save yet
-      for (let i = 0; i < roundState.validators.validators.length; i++) {
-          const validator = roundState.validators.validators[i];
-          if (validator.address === roundState.validators.proposer.address) {
+      for (let i = 0; i < consensusState.validators.validators.length; i++) {
+          const validator = consensusState.validators.validators[i];
+          if (validator.address === consensusState.validators.proposer.address) {
               proposer = validator;
           }
       }
 
       // Save the validators group without the proposerId
-      validatorsGroupId = await saveValidatorsGroup(roundState.validators.validators, roundStateId, null, 'current');
+      validatorsGroupId = await saveValidatorsGroup(consensusStateId, null, 'current');
 
       // Now, save the proposer with the correct validators group ID
       const proposerId = await saveValidator(proposer, validatorsGroupId);
@@ -313,36 +292,48 @@ async function saveValidatorsAndVotes(roundState, roundStateId, type) {
       // Update the validators group with the correct proposerId
       await updateValidatorsGroupWithProposerId(validatorsGroupId, proposerId);
 
-      // Continue with the rest of the logic for saving other validators and votes
-      for (let i = 0; i < roundState.validators.validators.length; i++) {
-          const validator = roundState.validators.validators[i];
+      // Save Rounds Group
+      const roundsGroupId = await saveRoundsGroup(consensusStateId, 'current');
+
+      for (let f = 0; f < consensusState.votes.length; f++) {
+        
+        // Save Round with roundsGroupId reference
+        const roundId = await saveRound(roundsGroupId, f);
+
+        // Continue with the rest of the logic for saving other validators and votes.
+        // Votes reference validatorId and roundId
+        for (let i = 0; i < consensusState.validators.validators.length; i++) {
+          const validator = consensusState.validators.validators[i];
           let validatorId;
-          if (validator.address !== roundState.validators.proposer.address) {
+          if (validator.address !== consensusState.validators.proposer.address) {
             validatorId = await saveValidator(validator, validatorsGroupId);
+          } else {
+            validatorId = proposerId;
+            console.log('proposing Validator with validatorId ' + validatorId + ' already saved');
           }
 
-          for (let f = 0; f < roundState.votes.length; f++) {
-              const votes = roundState.votes[f];
-              if (validator.address === roundState.validators.proposer.address) {
-                validatorId = proposerId;
-              }
-              await saveVote(votes.prevotes[i], 'prevote', validatorId);
-              await saveVote(votes.precommits[i], 'precommit', validatorId);
+          const votes = consensusState.votes[f];
+          await saveVote(votes.prevotes[i], 'prevote', validatorId, roundId);
+          await saveVote(votes.precommits[i], 'precommit', validatorId, roundId);  
+          if (votes.precommits[i] !== 'nil-Vote' && consensusState.chainId === 'cosmoshub-4') {
+            console.log('eee')
           }
+
+        }
       }
   }
 
   if (type === 'last') {
     // Identify the last proposer but don't save yet
-    for (let i = 0; i < roundState.last_validators.validators.length; i++) {
-        const validator = roundState.last_validators.validators[i];
-        if (validator.address === roundState.last_validators.proposer.address) {
+    for (let i = 0; i < consensusState.last_validators.validators.length; i++) {
+        const validator = consensusState.last_validators.validators[i];
+        if (validator.address === consensusState.last_validators.proposer.address) {
             proposer = validator;
         }
     }
 
     // Save the last validators group without the proposerId
-    validatorsGroupId = await saveValidatorsGroup(roundState.last_validators.validators, roundStateId, null, 'last');
+    validatorsGroupId = await saveValidatorsGroup(consensusStateId, null, 'last');
 
     // Now, save the last proposer with the correct validators group ID
     const proposerId = await saveValidator(proposer, validatorsGroupId);
@@ -351,83 +342,131 @@ async function saveValidatorsAndVotes(roundState, roundStateId, type) {
     await updateValidatorsGroupWithProposerId(validatorsGroupId, proposerId);
     console.log('updated lastProposerId for validatorsGroupId ' + validatorsGroupId)
 
+    // Save finalized RoundsGroup and one Round
+    const roundsGroupId = await saveRoundsGroup(consensusStateId, 'last');
+    const roundId = await saveRound(roundsGroupId, -1);
+
     // Continue with the rest of the logic for saving other validators and last_commit votes
-    for (let i = 0; i < roundState.last_validators.validators.length; i++) {
-        const validator = roundState.last_validators.validators[i];
+    for (let i = 0; i < consensusState.last_validators.validators.length; i++) {
+        const validator = consensusState.last_validators.validators[i];
         let validatorId;
-        if (validator.address !== roundState.last_validators.proposer.address) {
+        if (validator.address !== consensusState.last_validators.proposer.address) {
           validatorId = await saveValidator(validator, validatorsGroupId);
-        } else if (validator.address === roundState.last_validators.proposer.address) {
+        } else if (validator.address === consensusState.last_validators.proposer.address) {
           validatorId = proposerId;
-          console.log('saving vote for proposer id ' + validatorId + ": " + roundState.last_commit.votes[i])
         }
-        await saveVote(roundState.last_commit.votes[i], 'lastcommit', validatorId);
+
+        await saveVote(consensusState.last_commit.votes[i], 'lastcommit', validatorId, roundId);
     }
   }
 
   return validatorsGroupId;
 }
 
-async function saveRoundState(roundState, consensusStateId) {
-  console.log('Starting saveRoundState...');
+async function saveConsensusState(consensusState) {
+  console.log('Starting saveConsensusState...');
 
   const query = `
-      INSERT INTO RoundState (consensusStateId, chainId, timestamp, height, round, step, start_time, commit_time, validatorsGroupId, lastValidatorsGroupId, proposal, proposal_block_parts_header, locked_block_parts_header, valid_block_parts_header, votes, last_commit)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
+      INSERT INTO ConsensusState (
+        chainId, 
+        timestamp, 
+        height, 
+        round, 
+        step, 
+        start_time, 
+        commit_time, 
+        validatorsGroupId, 
+        lastValidatorsGroupId, 
+        proposal, 
+        proposal_block_parts_header, 
+        locked_block_parts_header, 
+        valid_block_parts_header, 
+        votes, 
+        last_commit
+      )
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
   `;
 
   const params = [
-      consensusStateId,
-      roundState.chainId,
-      roundState.timestamp,
-      roundState.height,
-      roundState.round,
-      roundState.step,
-      roundState.start_time,
-      roundState.commit_time,
+      consensusState.chainId,
+      consensusState.timestamp,
+      consensusState.height,
+      consensusState.round,
+      consensusState.step,
+      consensusState.start_time,
+      consensusState.commit_time,
       null,
       null,
-      JSON.stringify(roundState.proposal),
-      JSON.stringify(roundState.proposal_block_parts_header),
-      JSON.stringify(roundState.locked_block_parts_header),
-      JSON.stringify(roundState.valid_block_parts_header),
-      JSON.stringify(roundState.votes),
-      JSON.stringify(roundState.last_commit),
+      JSON.stringify(consensusState.proposal),
+      JSON.stringify(consensusState.proposal_block_parts_header),
+      JSON.stringify(consensusState.locked_block_parts_header),
+      JSON.stringify(consensusState.valid_block_parts_header),
+      JSON.stringify(consensusState.votes),
+      JSON.stringify(consensusState.last_commit),
   ];
 
-  const roundStateId = await runDatabaseQuery(query, params);
+  const consensusStateId = await runDatabaseQuery(query, params);
 
-  const validatorsGroupId = await saveValidatorsAndVotes(roundState, roundStateId, 'current');
-  const lastValidatorsGroupId = await saveValidatorsAndVotes(roundState, roundStateId, 'last');
+  const validatorsGroupId = await saveValidatorsAndVotes(consensusState, consensusStateId, 'current');
+  const lastValidatorsGroupId = await saveValidatorsAndVotes(consensusState, consensusStateId, 'last');
   console.log('saved validatorsGroup and lastValidatorsGroup for consensusStateId: ' + consensusStateId)
 
   const updateQuery = `
-      UPDATE RoundState
+      UPDATE ConsensusState
       SET validatorsGroupId = ?, lastValidatorsGroupId = ?
       WHERE id = ?;
   `;
 
-  const updateParams = [validatorsGroupId, lastValidatorsGroupId, roundStateId];
+  const updateParams = [validatorsGroupId, lastValidatorsGroupId, consensusStateId];
   await runDatabaseQuery(updateQuery, updateParams);
-  console.log('updated roundStateId ' + roundStateId + ' with validatorsGroupId: ' + validatorsGroupId + ' and lastValidatorsGroupId ' + lastValidatorsGroupId);
+  console.log('updated consensusStateId ' + consensusStateId + ' with validatorsGroupId: ' + validatorsGroupId + ' and lastValidatorsGroupId ' + lastValidatorsGroupId);
 
-  return roundStateId;
+  return consensusStateId;
 }
 
-async function saveValidatorsGroup(validators, roundStateId, proposerId = null, type) {
+async function saveRoundsGroup(consensusStateId, type = null) {
   const query = `
-      INSERT INTO ValidatorsGroup (chainId, timestamp, type, roundStateId, proposerId)
-      VALUES (?, ?, ?, ?, ?);
+      INSERT INTO RoundsGroup (consensusStateId, type)
+      VALUES (?, ?);
   `;
   const params = [
-      validators.chainId,
-      validators.timestamp,
+      consensusStateId,
+      type
+  ];
+
+  const roundsGroupId = await runDatabaseQuery(query, params);
+  console.log(`saved roundsGroup ${roundsGroupId} of type ${type}`);
+  return roundsGroupId;
+}
+
+async function saveRound(roundsGroupId, rundNumber = -1) {
+  const query = `
+      INSERT INTO Round (roundsGroupId, roundNumber)
+      VALUES (?, ?);
+  `;
+  const params = [
+    roundsGroupId,
+    rundNumber
+  ];
+
+  const roundId = await runDatabaseQuery(query, params);
+  console.log(`saved roundId ${roundId} (roundNumber ${rundNumber})`);
+  return roundId;
+}
+
+async function saveValidatorsGroup(consensusStateId, proposerId = null, type) {
+  const query = `
+      INSERT INTO ValidatorsGroup (type, consensusStateId, proposerId)
+      VALUES (?, ?, ?);
+  `;
+  const params = [
       type,
-      roundStateId,
+      consensusStateId,
       proposerId
   ];
 
   const validatorsGroupId = await runDatabaseQuery(query, params);
+  console.log(`saved ValidatorsGroup ${validatorsGroupId}`);
   return validatorsGroupId;
 }
 
@@ -435,39 +474,40 @@ async function saveValidatorsGroup(validators, roundStateId, proposerId = null, 
 async function saveValidator(validator, validatorsGroupId) {
   const valconsAddress = pubKeyToValcons(validator.pub_key.value, 'cosmos');
   const query = `
-      INSERT INTO Validator (validatorsGroupId, chainId, timestamp, address, pub_key, consensusAddress, voting_power, proposer_priority)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?);
+      INSERT INTO Validator (validatorsGroupId, address, pub_key, consensusAddress, voting_power, proposer_priority)
+      VALUES (?, ?, ?, ?, ?, ?);
   `;
   const params = [
       validatorsGroupId,
-      validator.chainId,
-      validator.timestamp,
       validator.address,
       JSON.stringify(validator.pub_key),
       valconsAddress,
       validator.voting_power,
       validator.proposer_priority
   ];
-
+  
   const validatorId = await runDatabaseQuery(query, params);
+  
   return validatorId;
 }
 
-async function saveVote(vote, type, validatorId) {
+
+async function saveVote(vote, type, validatorId, roundId) {
   let voteString = vote;
   let voteHash, index, address, height, round, msgType, voteType, date;
-  if (!voteString.includes('nil-Vote')){
+  if (voteString !== 'nil-Vote'){
     [index, address, height, round, msgType, voteType, voteHash, date] = decodeVoteData(voteString);
   } else {
     voteHash = voteString;
   }
   const query = `
-      INSERT INTO Votes (validatorId, type, vote, voteString)
-      VALUES (?, ?, ?, ?);
+      INSERT INTO Votes (validatorId, roundId, type, vote, voteString)
+      VALUES (?, ?, ?, ?, ?);
   `;
 
   const params = [
       validatorId,
+      roundId,
       type,
       voteHash,
       voteString
@@ -476,10 +516,10 @@ async function saveVote(vote, type, validatorId) {
   await runDatabaseQuery(query, params);
 }
 
-async function getRoundStateByConsensusStateId(consensusStateId) {
+async function getConsensusStateByConsensusStateId(consensusStateId) {
   const query = `
-      SELECT * FROM RoundState
-      WHERE consensusStateId = ?;
+      SELECT * FROM ConsensusState
+      WHERE id = ?;
   `;
   const params = [consensusStateId];
   const result = await runDatabaseQuery(query, params, 'get');
@@ -503,6 +543,74 @@ async function savePeer (peer) {
     params);
 }
 
+///////////////////////////////
+//////////////////// REFACTORED
+async function loadConsensusStateFromDB(chainId) {
+  const consensusStateRow = await fetchConsensusState(chainId);
+  if (!consensusStateRow) return null;
+
+  const validatorsGroup = await fetchValidatorsGroup(consensusStateRow.validatorsGroupId);
+  const lastValidatorsGroup = await fetchValidatorsGroup(consensusStateRow.lastValidatorsGroupId);
+
+  const rounds = await fetchRoundsForConsensusState(consensusStateRow.id);
+
+  return new ConsensusState({
+      height: consensusStateRow.height,
+      round: consensusStateRow.round,
+      step: consensusStateRow.step,
+      start_time: consensusStateRow.start_time,
+      commit_time: consensusStateRow.commit_time,
+      validators: validatorsGroup,
+      last_validators: lastValidatorsGroup,
+      proposal: consensusStateRow.proposal,
+      proposal_block_parts_header: consensusStateRow.proposal_block_parts_header,
+      locked_block_parts_header: consensusStateRow.locked_block_parts_header,
+      valid_block_parts_header: consensusStateRow.valid_block_parts_header,
+      votes: consensusStateRow.votes,
+      last_commit: consensusStateRow.last_commit
+  }, chainId, consensusStateRow.timestamp);
+}
+
+async function fetchConsensusState(chainId) {
+  const query = 'SELECT * FROM ConsensusState WHERE chainId = ?';
+  return await runDatabaseQuery(query, [chainId], 'get');
+}
+
+async function fetchValidatorsGroup(validatorsGroupId) {
+  const query = 'SELECT * FROM ValidatorsGroup WHERE id = ?';
+  const validatorsGroupRow = await runDatabaseQuery(query, [validatorsGroupId], 'get');
+
+  const validatorsQuery = 'SELECT * FROM Validator WHERE validatorsGroupId = ?';
+  const validatorsRows = await runDatabaseQuery(validatorsQuery, [validatorsGroupId], 'all');
+
+  const validators = validatorsRows.map(validatorRow => new Validator(validatorRow));
+
+  const proposerValidator = validators.find(v => v.id === validatorsGroupRow.proposerId);
+
+  return new Validators({
+      validators: validators,
+      proposer: proposerValidator
+  });
+}
+
+async function fetchRoundsForConsensusState(consensusStateId) {
+  const query = 'SELECT * FROM RoundsGroup WHERE consensusStateId = ?';
+  const roundsGroupRows = await runDatabaseQuery(query, [consensusStateId], 'all');
+
+  const rounds = [];
+  for (const roundsGroupRow of roundsGroupRows) {
+      const roundQuery = 'SELECT * FROM Round WHERE roundsGroupId = ?';
+      const roundRows = await runDatabaseQuery(roundQuery, [roundsGroupRow.id], 'all');
+      rounds.push(...roundRows);
+  }
+
+  return rounds;
+}
+//////////////////// REFACTORED
+///////////////////////////////
+
+/*
+// TODO: REFACTOR THIS
 async function loadConsensusStateFromDB(chainId) {
   const consensusStateQuery = 'SELECT * FROM ConsensusState WHERE chainId = ?';
   const consensusStateRow = await runDatabaseQuery(consensusStateQuery, [chainId], 'get');
@@ -559,6 +667,7 @@ async function loadConsensusStateFromDB(chainId) {
     round_state: roundStates
   }, chainId, consensusStateRow.timestamp);
 }
+*/
 
 async function pruneConsensusStateDB(pruneIds, chainId) {
   console.log(`Pruning entries with IDs: ${pruneIds.join(', ')} for chainId: ${chainId}`);

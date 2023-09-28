@@ -20,19 +20,20 @@ import {
 // Mainnet Endpoints
 //
 // const PROVIDER_RPC = 'http://5.9.72.212:2001';
-const PROVIDER_RPC = 'http://162.55.92.114:2012';
-const PROVIDER_REST = 'http://162.55.92.114:2011';
-const CONSUMER_RPCS = ['http://148.251.183.254:2102', 'http://148.251.183.254:2202'];
+// const PROVIDER_RPC = 'http://162.55.92.114:2012';
+// const PROVIDER_REST = 'http://162.55.92.114:2011';
+// const CONSUMER_RPCS = ['http://148.251.183.254:2102', 'http://148.251.183.254:2202'];
 
 // RS Testnet Endpoints
 //
-// const PROVIDER_RPC = "http://65.108.127.249:2001";
-// const PROVIDER_REST = "http://65.108.127.249:2004"
-// const CONSUMER_RPCS = ["https://rpc-palvus.pion-1.ntrn.tech:443"];
+ const PROVIDER_RPC = "http://65.108.127.249:2001";
+ const PROVIDER_REST = "http://65.108.127.249:2004"
+ const CONSUMER_RPCS = ["http://65.108.127.249:3001","http://65.108.127.249:4001"];
 
 const RPC_DELAY_MS = 45;
 const UPDATE_DB_FREQUENCY_MS = 600000;
 const CONSENSUS_POLL_FREQENCY_MS = 500;
+const RETAIN_STATES = 0;
 const PREFIX = 'cosmos';
 
 async function validateRPCEndpoints () {
@@ -80,30 +81,14 @@ async function pollConsensus (chains) {
   for (const chain of chains) {
     console.time('updateConsensusState Execution Time');
     console.log(`Processing ${chain.type} chain with ID: ${chain.chainId}`);
+    
     const consensusState = await getConsensusState(chain.rpcEndpoint,
       chain.chainId);
     console.log('Consensus State for ' + chain.chainId,
       consensusState);
-    if (consensusState) {
-    /* ---> this needs to go in querier
-    const matchedValidators = await matchConsensusValidators(
-      stakingValidators.validators,
-      consensusState,
-      chain.chainId,
-      chain.type,
-      PREFIX);
-    const matchedLastValidators = await matchConsensusLastValidators(
-      stakingValidators.validators,
-      consensusState,
-      chain.chainId,
-      chain.type,
-      PREFIX);
-
-    chain.matchedValidators = matchedValidators;
-    chain.matchedLastValidators = matchedLastValidators;
-    */
-
-      await updateConsensusStateDB(consensusState);
+    
+      if (consensusState) {
+      await updateConsensusStateDB(consensusState, RETAIN_STATES);
       console.log(`[DB] updated consensusState for chain ${chain.chainId}`);
       console.timeEnd('updateConsensusState Execution Time');
     }
