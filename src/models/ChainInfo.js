@@ -26,3 +26,12 @@ export class ProviderChainInfo extends ChainInfo {
     this.rpcEndpoint = chain.rpcEndpoint;
   }
 }
+
+export class SovereignChainInfo extends ChainInfo {
+  constructor (chain) {
+    super(chain,
+      'sovereign'); // Set type as 'provider'
+    this.clientIds = chain.clientIds || [];
+    this.rpcEndpoint = chain.rpcEndpoint;
+  }
+}
