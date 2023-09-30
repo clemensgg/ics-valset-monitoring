@@ -1,6 +1,7 @@
 // src/db/update.js
 
 import { ConsumerChainInfo, ProviderChainInfo } from '../../src/models/ChainInfo.js';
+import { StakingValidators } from '../../src/models/StakingValidators.js';
 import {
   ConsensusState,
   Validators,
@@ -9,7 +10,9 @@ import {
 import { 
   pubKeyToValcons,
   decodeVoteData,
+  fetchConsumerSigningKeys,
   getProviderChainInfos,
+  getStakingValidators,
   validateConsumerRpcs,
 } from '../utils/utils.js';
 
@@ -585,8 +588,6 @@ async function savePeer (peer) {
     params);
 }
 
-///////////////////////////////
-//////////////////// REFACTORED
 async function loadConsensusStateFromDB(chainId) {
   const consensusStateRow = await fetchConsensusState(chainId);
   if (!consensusStateRow) return null;
@@ -594,7 +595,7 @@ async function loadConsensusStateFromDB(chainId) {
   const validatorsGroup = await fetchValidatorsGroup(consensusStateRow.validatorsGroupId);
   const lastValidatorsGroup = await fetchValidatorsGroup(consensusStateRow.lastValidatorsGroupId);
 
-  const rounds = await fetchRoundsForConsensusState(consensusStateRow.id);
+  // const rounds = await fetchRoundsForConsensusState(consensusStateRow.id);
 
   return new ConsensusState({
       height: consensusStateRow.height,
@@ -663,6 +664,41 @@ async function pruneConsensusStateDB(pruneIds, chainId) {
   console.log(`Pruned ConsensusState entries with IDs: ${pruneIds.join(', ')} for chainId: ${chainId}`);
 }
 
+async function updateStakingValidatorsDB(providerChainInfos, consumerChainInfos) {
+  console.time('updateDatabaseData Execution Time');
+  const stakingValidators = await getStakingValidators(CONFIG.PROVIDER_REST);
+  let sovereignStakingValidators;
+
+  const hasSovereign = consumerChainInfos.some(obj => obj.type === 'sovereign');
+  if (hasSovereign) {
+      sovereignStakingValidators = new StakingValidators(await getStakingValidators(CONFIG.SOVEREIGN_REST));
+      if (!sovereignStakingValidators) {
+          console.error(`ERROR fetching sovereign staking validators from ${CONFIG.SOVEREIGN_REST}! Check your config!`);
+          process.exit(1);
+      }
+  }
+
+  if (providerChainInfos && providerChainInfos.chainId != '' && consumerChainInfos && consumerChainInfos.length > 0 && stakingValidators && stakingValidators.length > 0) {
+      const allChainIds = consumerChainInfos.map(chain => chain.chainId);
+      const stakingValidatorsWithSigningKeys = await fetchConsumerSigningKeys(stakingValidators, CONFIG.PROVIDER_RPC, allChainIds, CONFIG.PREFIX, CONFIG.RPC_DELAY_MS);
+
+      await saveStakingValidators(stakingValidatorsWithSigningKeys, providerChainInfos.chainId);
+      console.log('Updated stakingValidators.');
+
+      if (hasSovereign) {
+          sovereignStakingValidators.validators.forEach(validator => {
+              validator.consumer_signing_keys = [];
+          });
+          await saveStakingValidators(sovereignStakingValidators);
+      }
+  } else {
+      console.warn('Error updating stakingValidators!');
+  }
+
+  console.timeEnd('updateDatabaseData Execution Time');
+  console.log('---------------------------------------------------------------------------');
+}
+
 export {
   saveStakingValidators,
   getStakingValidatorsFromDB,
@@ -675,5 +711,6 @@ export {
   getChainInfosFromDB,
   saveChainInfos,
   updateConsensusStateDB,
+  updateStakingValidatorsDB,
   loadConsensusStateFromDB
 };
