@@ -6,15 +6,68 @@ import {
   Validators,
   Validator
 } from '../../src/models/ConsensusState.js';
-import { StakingValidators } from '../../src/models/StakingValidators.js';
 import { 
   pubKeyToValcons,
-  decodeVoteData
+  decodeVoteData,
+  getProviderChainInfos,
+  validateConsumerRpcs,
 } from '../utils/utils.js';
 
 import {
   runDatabaseQuery
 } from './db.js';
+
+import { CONFIG } from '../config.js'
+
+async function initializeData() {
+  let providerChainInfos, consumerChainInfos, stakingValidators;
+
+  try {
+    providerChainInfos = await getChainInfosFromDB('provider');
+    consumerChainInfos = await getChainInfosFromDB('consumer');
+    
+    const stakingValidatorsMetaId = await getLastStakingValidatorsMetaFromDB(providerChainInfos.chainId);
+    stakingValidators = await getStakingValidatorsFromDB(stakingValidatorsMetaId);
+  } catch (error) {
+    console.error('Error fetching data from DB:', error);
+    throw error;
+  }
+
+  if (!providerChainInfos || !consumerChainInfos || !stakingValidators) {
+    throw new Error('Initialization failed due to missing data.');
+  }
+
+  return [providerChainInfos, consumerChainInfos, stakingValidators];
+}
+
+function prepareChains(providerChainInfos, consumerChainInfos) {
+  if (providerChainInfos.length > 0) {
+    const chains = [new ProviderChainInfo(providerChainInfos[0])];
+    consumerChainInfos.forEach((chain) => {
+      chains.push(new ConsumerChainInfo(chain));
+    });
+    return chains;
+  } else return [];
+}
+
+async function validateEndpointsAndSaveChains() {
+  const providerChainInfos = await getProviderChainInfos(CONFIG.PROVIDER_RPC);
+  const consumerChainInfos = await validateConsumerRpcs(CONFIG.PROVIDER_RPC, CONFIG.CONSUMER_RPCS);
+
+  if (providerChainInfos && providerChainInfos.chainId != '') {
+    await saveChainInfos(providerChainInfos);
+    console.log('Updated ChainInfos for provider chain.');
+  }
+  
+  if (consumerChainInfos && consumerChainInfos.length > 0) {
+    for (const consumerChainInfo of consumerChainInfos) {
+      await saveChainInfos(consumerChainInfo);
+    }
+    console.log('Updated ChainInfos for consumer chains.');
+  }
+
+  return [providerChainInfos, consumerChainInfos];
+}
 
 async function saveStakingValidators (stakingValidators) {
   console.log('Saving stakingValidators to DB:',
@@ -22,8 +75,8 @@ async function saveStakingValidators (stakingValidators) {
 
   try {
     // First, insert into StakingValidatorsMeta table
-    const metaQuery = 'INSERT INTO StakingValidatorsMeta (timestamp, created_at, updated_at) VALUES (?, ?, ?)';
-    const metaParams = [stakingValidators.timestamp, stakingValidators.created_at, stakingValidators.updated_at];
+    const metaQuery = 'INSERT INTO StakingValidatorsMeta (chainId, timestamp, created_at, updated_at) VALUES (?, ?, ?, ?)';
+    const metaParams = [stakingValidators.chainId, stakingValidators.timestamp, stakingValidators.created_at, stakingValidators.updated_at];
     const metaResult = await runDatabaseQuery(metaQuery,
       metaParams);
 
@@ -80,20 +133,18 @@ async function saveStakingValidators (stakingValidators) {
   }
 }
 
-async function getStakingValidatorsFromDB () {
+async function getLastStakingValidatorsMetaFromDB (chainId) {
+    const stakingValidatorsMetaId  = await runDatabaseQuery('SELECT * FROM StakingValidatorsMeta WHERE chainId = ? ORDER BY id DESC LIMIT 1', [chainId], 'get');
+    if (!stakingValidatorsMetaId) {
+      return null;
+    } else return stakingValidatorsMetaId;
+}
+
+async function getStakingValidatorsFromDB (metaRowId) {
   try {
-    // Get the latest StakingValidatorsMeta entry
-    const metaRow = await runDatabaseQuery('SELECT * FROM StakingValidatorsMeta ORDER BY id DESC LIMIT 1', [], 'get');
-
-    if (!metaRow) {
-      return [];
-    }
-
-    // Get all StakingValidator entries associated with the latest meta entry
-    const validatorRows = await runDatabaseQuery('SELECT * FROM StakingValidator WHERE stakingValidatorsMetaId = ?', [metaRow.id], 'all');
+    const validatorRows = await runDatabaseQuery('SELECT * FROM StakingValidator WHERE stakingValidatorsMetaId = ?', [metaRowId], 'all');
 
     const result = {
-      timestamp: metaRow.timestamp,
       validators: validatorRows
     };
 
@@ -180,29 +231,20 @@ async function getMatchedValidatorsFromDB () {
   }
 }
 
-async function saveChainInfos (chainInfos, type) {
-  console.log(`Saving ${type}ChainInfos to DB:`,
-    chainInfos);
+async function saveChainInfos(chainInfo) {
+  const type = chainInfo.type;
+  console.log(`Saving ${type} ChainInfo to DB:`, JSON.stringify(chainInfo));
 
-  try {
-    const insertQuery = 'INSERT OR REPLACE INTO ChainInfo (chainId, rpcEndpoint, type, clientIds) VALUES (?, ?, ?, ?)';
+  const insertQuery = 'INSERT OR REPLACE INTO ChainInfo (chainId, rpcEndpoint, type, clientIds) VALUES (?, ?, ?, ?)';
 
-    for (const info of chainInfos) {
-      // Convert clientIds array to a JSON string for storage
-      const clientIdsString = JSON.stringify(info.clientIds);
-      const params = [info.chainId, info.rpcEndpoint, type, clientIdsString];
-      await runDatabaseQuery(insertQuery,
-        params);
-      console.log(`Successfully inserted ${type}ChainInfo with chainId ${info.chainId}`);
-    }
+  const clientIdsString = JSON.stringify(chainInfo.clientIds);
+  const params = [chainInfo.chainId, chainInfo.rpcEndpoint, type, clientIdsString];
 
-    console.log('All chainInfos inserted successfully.');
-  } catch (error) {
-    console.error(`Error saving ${type}ChainInfos to DB:`,
-      error);
-    throw error;
-  }
+  await runDatabaseQuery(insertQuery, params);
+
+  console.log(`Successfully inserted or replaced ${type} ChainInfo with chainId ${chainInfo.chainId}`);
 }
+
 
 async function getChainInfosFromDB (type) {
   try {
@@ -606,68 +648,6 @@ async function fetchRoundsForConsensusState(consensusStateId) {
 
   return rounds;
 }
-//////////////////// REFACTORED
-///////////////////////////////
-
-/*
-// TODO: REFACTOR THIS
-async function loadConsensusStateFromDB(chainId) {
-  const consensusStateQuery = 'SELECT * FROM ConsensusState WHERE chainId = ?';
-  const consensusStateRow = await runDatabaseQuery(consensusStateQuery, [chainId], 'get');
-
-  if (!consensusStateRow) {
-    return null;
-  }
-
-  const roundStateQuery = 'SELECT * FROM RoundState WHERE consensusStateId = ?';
-  const roundStatesRows = await runDatabaseQuery(roundStateQuery, [consensusStateRow.id], 'all');
-
-  const roundStates = await Promise.all(roundStatesRows.map(async (roundStateRow) => {
-    const validatorsGroupQuery = 'SELECT * FROM ValidatorsGroup WHERE roundStateId = ?';
-    const validatorsGroupRow = await runDatabaseQuery(validatorsGroupQuery, [roundStateRow.id], 'get');
-    const lastValidatorsGroupRow = await runDatabaseQuery(validatorsGroupQuery, [roundStateRow.lastValidatorsGroupId], 'get');
-
-    const validatorsQuery = 'SELECT * FROM Validator WHERE validatorsGroupId = ?';
-    const validatorsRows = await runDatabaseQuery(validatorsQuery, [validatorsGroupRow.id], 'all');
-    const lastValidatorsRows = await runDatabaseQuery(validatorsQuery, [lastValidatorsGroupRow.id], 'all');
-
-    const validators = validatorsRows.map(validatorRow => new Validator(validatorRow, chainId, validatorRow.timestamp));
-    const lastValidators = lastValidatorsRows.map(validatorRow => new Validator(validatorRow, chainId, validatorRow.timestamp));
-
-    const proposerValidator = validators.find(v => v.address === validatorsGroupRow.proposer);
-
-    const validatorsGroup = new Validators({
-      validators: validators,
-      proposer: proposerValidator
-    }, chainId, validatorsGroupRow.timestamp);
-
-    const lastValidatorsGroup = new Validators({
-      validators: lastValidators,
-      proposer: lastValidators.find(v => v.address === lastValidatorsGroupRow.proposer)
-    }, chainId, lastValidatorsGroupRow.timestamp);
-
-    return new RoundState({
-      height: roundStateRow.height,
-      round: roundStateRow.round,
-      step: roundStateRow.step,
-      start_time: roundStateRow.start_time,
-      commit_time: roundStateRow.commit_time,
-      validators: validatorsGroup,
-      proposal: roundStateRow.proposal,
-      proposal_block_parts_header: roundStateRow.proposal_block_parts_header,
-      locked_block_parts_header: roundStateRow.locked_block_parts_header,
-      valid_block_parts_header: roundStateRow.valid_block_parts_header,
-      votes: roundStateRow.votes,
-      last_commit: roundStateRow.last_commit,
-      last_validators: lastValidatorsGroup
-    }, chainId, roundStateRow.timestamp);
-  }));
-
-  return new ConsensusState({
-    round_state: roundStates
-  }, chainId, consensusStateRow.timestamp);
-}
-*/
 
 async function pruneConsensusStateDB(pruneIds, chainId) {
   console.log(`Pruning entries with IDs: ${pruneIds.join(', ')} for chainId: ${chainId}`);
@@ -683,15 +663,14 @@ async function pruneConsensusStateDB(pruneIds, chainId) {
   console.log(`Pruned ConsensusState entries with IDs: ${pruneIds.join(', ')} for chainId: ${chainId}`);
 }
 
-
-
-
-
-
 export {
   saveStakingValidators,
   getStakingValidatorsFromDB,
+  getLastStakingValidatorsMetaFromDB,
   saveMatchedValidators,
+  initializeData,
+  prepareChains,
+  validateEndpointsAndSaveChains,
   getMatchedValidatorsFromDB,
   getChainInfosFromDB,
   saveChainInfos,

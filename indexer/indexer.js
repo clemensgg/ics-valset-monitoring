@@ -1,203 +1,135 @@
-import { ConsumerChainInfo, ProviderChainInfo } from '../src/models/ChainInfo.js';
-import { StakingValidators } from '../src/models/StakingValidators.js';
 
-import { db } from './db/db.js';
-import {
-  getChainInfosFromDB,
-  getStakingValidatorsFromDB,
-  saveChainInfos,
-  saveStakingValidators,
-  updateConsensusStateDB
+// Import statements
+import { updateConsensusStateDB,
+  initializeData,
+  prepareChains,
+  validateEndpointsAndSaveChains 
 } from './db/update.js';
-import {
-  fetchConsumerSigningKeys,
-  getConsensusState,
-  getProviderChainInfos,
-  getStakingValidators,
-  validateConsumerRpcs
-} from './utils/utils.js';
+import { getConsensusState } from './utils/utils.js';
 
-// Mainnet Endpoints
-//
-// const PROVIDER_RPC = 'http://5.9.72.212:2001';
-// const PROVIDER_RPC = 'http://162.55.92.114:2012';
-// const PROVIDER_REST = 'http://162.55.92.114:2011';
-// const CONSUMER_RPCS = ['http://148.251.183.254:2102', 'http://148.251.183.254:2202'];
+import { Worker } from 'worker_threads';
+import { fileURLToPath } from 'url';
+import path from 'path';
 
-// RS Testnet Endpoints
-//
- const PROVIDER_RPC = "http://65.108.127.249:2001";
- const PROVIDER_REST = "http://65.108.127.249:2004"
- const CONSUMER_RPCS = ["http://65.108.127.249:3001","http://65.108.127.249:4001"];
+import { CONFIG } from './config.js'
 
-const RPC_DELAY_MS = 45;
-const UPDATE_DB_FREQUENCY_MS = 600000;
-const CONSENSUS_POLL_FREQENCY_MS = 500;
-const RETAIN_STATES = 0;
-const PREFIX = 'cosmos';
+// Init Workers
+const currentFilePath = fileURLToPath(import.meta.url);
+const workerFilePath = path.resolve(path.dirname(currentFilePath), './db/updateStakingDatabaseWorker.js');
 
-async function validateRPCEndpoints () {
-  const providerChainInfos = await getProviderChainInfos(PROVIDER_RPC);
-  const consumerChainInfos = await validateConsumerRpcs(PROVIDER_RPC,
-    CONSUMER_RPCS);
+const updateStakingDatabaseWorker = new Worker(workerFilePath);
 
-  if (providerChainInfos && providerChainInfos.chainId != '') {
-    await saveChainInfos([providerChainInfos],
-      'provider');
-    console.log('[DB] updated ChainInfos for provider chain.');
+updateStakingDatabaseWorker.on('message', (message) => {
+  if (message === 'Done') {
+    console.log('Database update completed');
+  } else if (message.startsWith('Error:')) {
+    console.error(`Worker Error: ${message}`);
   }
-  if (consumerChainInfos && consumerChainInfos.length > 0) {
-    await saveChainInfos(consumerChainInfos,
-      'consumer');
-    console.log('[DB] updated ChainInfos for consumerChains.');
-  }
-  return [providerChainInfos, consumerChainInfos];
-}
+});
 
-async function updateDatabaseData () {
-  console.log('Updating database data...');
+updateStakingDatabaseWorker.on('error', (error) => {
+  console.error(`Worker Thread Error: ${error.message}`);
+});
 
-  const [providerChainInfos, consumerChainInfos] = await validateRPCEndpoints();
+async function startupRoutine() {
+  console.log('Running startup routine...');
+  await validateEndpointsAndSaveChains();
 
-  const stakingValidators = await getStakingValidators(PROVIDER_REST);
-  if (providerChainInfos && providerChainInfos.chainId != '' && consumerChainInfos && consumerChainInfos.length > 0 && stakingValidators && stakingValidators.length > 0) {
-    const allChainIds = consumerChainInfos.map(chain => chain.chainId);
-    const stakingValidatorsWithSigningKeys = await fetchConsumerSigningKeys(stakingValidators,
-      PROVIDER_RPC,
-      allChainIds,
-      PREFIX,
-      RPC_DELAY_MS);
+  // Wrap worker's message handling in a Promise
+  await new Promise((resolve, reject) => {
+    const messageHandler = (message) => {
+      console.log("Received message from worker:", message, "Type:", typeof message);
 
-    await saveStakingValidators(stakingValidatorsWithSigningKeys);
-
-    console.log('[DB] updated stakingValidators.');
-  } else {
-    console.warn('[DB] Error updating stakingValidators!');
-  }
-}
-
-async function pollConsensus (chains) {
-  console.time('pollConsensus Execution Time');
-  for (const chain of chains) {
-    console.time('updateConsensusState Execution Time');
-    console.log(`Processing ${chain.type} chain with ID: ${chain.chainId}`);
-    
-    const consensusState = await getConsensusState(chain.rpcEndpoint,
-      chain.chainId);
-    console.log('Consensus State for ' + chain.chainId,
-      consensusState);
-    
-      if (consensusState) {
-      await updateConsensusStateDB(consensusState, RETAIN_STATES);
-      console.log(`[DB] updated consensusState for chain ${chain.chainId}`);
-      console.timeEnd('updateConsensusState Execution Time');
-    }
-  }
-  console.log('------------------------------------------------------------');
-  console.timeEnd('pollConsensus Execution Time');
-  console.log('------------------------------------------------------------');
-}
-
-function startConsensusPolling (chains, stakingValidators) {
-  const startTime = Date.now();
-
-  pollConsensus(chains,
-    stakingValidators)
-    .then(() => {
-      const endTime = Date.now();
-      const executionTime = endTime - startTime;
-      const delay = executionTime > CONSENSUS_POLL_FREQENCY_MS ? 0 : CONSENSUS_POLL_FREQENCY_MS - executionTime;
-
-      setTimeout(() => startConsensusPolling(chains,
-        stakingValidators),
-      delay);
-    })
-    .catch(error => {
-      console.error('Error during monitoring:',
-        error);
-      // Even if there's an error, we'll try to restart the monitoring after CONSENSUS_POLL_FREQENCY_MS
-      setTimeout(() => startConsensusPolling(chains,
-        stakingValidators),
-      CONSENSUS_POLL_FREQENCY_MS);
-    });
-}
-async function main () {
-  console.log('starting ics-valset-monitoring');
-
-  await validateRPCEndpoints();
-
-  let providerChainInfos;
-  let consumerChainInfos;
-  let stakingValidators;
-
-  try {
-    providerChainInfos = await getChainInfosFromDB('provider');
-    console.log('[DB] loaded ' + providerChainInfos.length + ' providerChains');
-    consumerChainInfos = await getChainInfosFromDB('consumer');
-    console.log('[DB] loaded ' + consumerChainInfos.length + ' consumerChains');
-    stakingValidators = await getStakingValidatorsFromDB();
-    if (stakingValidators.validators && stakingValidators.validators.length > 0) {
-      console.log('[DB] loaded ' + stakingValidators.validators.length + ' stakingValidators');
-    } else {
-      console.log('[DB] loaded 0 stakingValidators');
-    }
-  } catch (error) {
-    console.error('[DB] Error fetching data:',
-      error);
-  }
-
-  if (!consumerChainInfos || !providerChainInfos || !stakingValidators || consumerChainInfos.length === 0 || providerChainInfos.length === 0 || stakingValidators.length === 0) {
-    console.log('running STARTUP...');
-    await updateDatabaseData();
-    setInterval(updateDatabaseData,
-      UPDATE_DB_FREQUENCY_MS);
-    providerChainInfos = await getChainInfosFromDB('provider');
-    console.log('[DB] loaded ' + providerChainInfos.length + ' providerChains');
-    consumerChainInfos = await getChainInfosFromDB('consumer');
-    console.log('[DB] loaded ' + consumerChainInfos.length + ' consumerChains');
-    stakingValidators = await getStakingValidatorsFromDB();
-    if (stakingValidators.validators && stakingValidators.validators.length > 0) {
-      console.log('[DB] loaded ' + stakingValidators.validators.length + ' stakingValidators');
-    } else {
-      console.log('[DB] loaded 0 stakingValidators');
-    }
-  } else {
-    setTimeout(() => {
-      setInterval(updateDatabaseData,
-        UPDATE_DB_FREQUENCY_MS);
-    },
-    UPDATE_DB_FREQUENCY_MS);
-  }
-
-  providerChainInfos = new ProviderChainInfo(providerChainInfos[0]);
-  stakingValidators = new StakingValidators(stakingValidators.validators);
-
-  const chains = [providerChainInfos];
-  consumerChainInfos.forEach((chain) => {
-    chains.push(new ConsumerChainInfo(chain));
-  });
-
-  console.log(JSON.stringify(chains));
-
-  startConsensusPolling(chains,
-    stakingValidators);
-}
-
-main();
-
-process.on('uncaughtException',
-  (err) => {
-    console.error('Uncaught error: ',
-      err);
-    process.exit(1);
-  });
-
-process.on('exit',
-  (code) => {
-    db.close((err) => {
-      if (err) {
-        console.error(err.message);
+      if (typeof message === 'string') {
+        if (message === 'Done') {
+          updateStakingDatabaseWorker.off('message', messageHandler);
+          resolve();
+        } else if (message.startsWith('Error:')) {
+          updateStakingDatabaseWorker.off('message', messageHandler);
+          reject(new Error(message));
+        }
+      } else {
+        console.log("Unexpected message type from worker");
+        reject(new Error("Unexpected message type from worker"));
       }
-      console.log('Closed the database connection.');
-    });
+    };
+
+    const errorHandler = (error) => {
+      console.log("Received error from worker:", error);
+      updateStakingDatabaseWorker.off('error', errorHandler);
+      reject(error);
+    };
+
+    updateStakingDatabaseWorker.on('message', messageHandler);
+    updateStakingDatabaseWorker.on('error', errorHandler);
+
+    updateStakingDatabaseWorker.postMessage('updateStakingValidatorsDB');
   });
+  
+  console.log('Startup routine completed.');
+}
+
+
+
+// Update Chain and Validator Data
+async function updateChainAndValidatorData() {
+  setInterval(async () => {
+    console.log('Updating chain and validator data...');
+    await validateEndpointsAndSaveChains();
+    updateStakingDatabaseWorker.postMessage('updateStakingValidatorsDB');
+    console.log('Chain and validator data updated.');
+  }, CONFIG.UPDATE_DB_FREQUENCY_MS);
+}
+
+// Monitor Consensus State
+async function consensusStateMonitor(chains, stakingValidators) {
+  while (true) {
+    console.log('Monitoring consensus state...');
+    await pollConsensus(chains, stakingValidators);
+    console.log('Consensus state monitored.');
+  }
+}
+
+// Main Function
+async function main() {
+  console.log('Starting ics-valset-monitoring');
+
+  // Initialize Data
+  let [providerChainInfos, consumerChainInfos, stakingValidators] = await initializeData();
+  if (providerChainInfos.length === 0 || consumerChainInfos.length === 0 
+    || stakingValidators.hasOwnProperty('validators') !== true || stakingValidators.validators.length === 0
+  ) {
+    // Startup Routine
+    await startupRoutine();
+    [providerChainInfos, consumerChainInfos, stakingValidators] = await initializeData();
+  }
+
+  // Update Chain and Validator Data
+  updateChainAndValidatorData();
+
+  // Monitor Consensus State
+  const chains = prepareChains(providerChainInfos, consumerChainInfos);
+  consensusStateMonitor(chains, stakingValidators);
+}
+
+// Poll Consensus
+async function pollConsensus(chains) {
+  for (const chain of chains) {
+    console.time(`[${chain.chainId}] pollConsensus Execution Time`);
+    const consensusState = await getConsensusState(chain.rpcEndpoint, chain.chainId);
+    
+    if (consensusState) {
+      await updateConsensusStateDB(consensusState, CONFIG.RETAIN_STATES);
+      console.log(`Updated consensusState for chain ${chain.chainId}`);
+    } else {
+      console.warn(`Error updating consensusState for chain ${chain.chainId}`);
+    }
+    console.timeEnd(`[${chain.chainId}] pollConsensus Execution Time`);
+  }
+}
+
+// Main function error handling
+main().catch((err) => {
+  console.error('Uncaught error:', err);
+  process.exit(1);
+});

@@ -104,7 +104,7 @@ db.serialize(() => {
   );
   `);
 
-  // StakingValidators Table
+  // StakingValidatorsMeta Table
   db.run(`
     CREATE TABLE IF NOT EXISTS StakingValidatorsMeta (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -203,6 +203,15 @@ async function runDatabaseQuery(query, params = [], type = 'run') {
   });
 }
 
+// Process exit handling
+process.on('exit', (code) => {
+  db.close((err) => {
+    if (err) {
+      console.error(err.message);
+    }
+    console.log('Closed the database connection.');
+  });
+});
 
 
 

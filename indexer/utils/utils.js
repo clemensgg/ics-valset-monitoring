@@ -4,11 +4,9 @@ import crypto from 'crypto';
 
 import axios from 'axios';
 import bech32 from 'bech32';
-import {
-  interchain_security
-} from 'interchain-security';
+import { interchain_security } from 'interchain-security';
 
-import { ConsumerChainInfo, ProviderChainInfo } from '../../src/models/ChainInfo.js';
+import { ConsumerChainInfo, ProviderChainInfo, SovereignChainInfo } from '../../src/models/ChainInfo.js';
 import { ConsensusState } from '../../src/models/ConsensusState.js';
 import { StakingValidators } from '../../src/models/StakingValidators.js';
 
@@ -101,7 +99,7 @@ async function getStakingValidators (restUrl) {
   } catch (error) {
     console.error(`Error fetching validators from ${restUrl}: ${error.message}`);
   }
-  console.log(`fetched ${validators.length} validator infos from provider chain`);
+  console.log(`fetched ${validators.length} validator infos ${restUrl}`);
   return validators;
 }
 
@@ -131,6 +129,7 @@ async function getConsumerChainInfos (providerRpcEndpoint) {
 async function validateConsumerRpcs (providerRpcEndpoint, consumerRpcEndpoints) {
   const consumerChainInfos = await getConsumerChainInfos(providerRpcEndpoint);
   const chainIdsFromRpcs = await Promise.all(consumerRpcEndpoints.map(getChainIdFromRpc));
+  let sovereign;
 
   for (let i = 0; i < consumerRpcEndpoints.length; i++) {
     const chainId = chainIdsFromRpcs[i];
@@ -138,7 +137,13 @@ async function validateConsumerRpcs (providerRpcEndpoint, consumerRpcEndpoints) 
     if (matchingChainInfo) {
       matchingChainInfo.rpcEndpoint = consumerRpcEndpoints[i];
     } else {
-      console.warn(`No matching chain found for RPC endpoint ${consumerRpcEndpoints[i]}`);
+      console.log(`[WARN] No matching consumerchain found for ${chainId}. This could mean it is a to-become consumerchain pre spawn time (sovereign). Setting ChainInfo type = sovereign`);
+      sovereign = {
+        chainId, chainId,
+        clientIds: [],
+        rpcEndpoint: consumerRpcEndpoints[i],
+        type: 'sovereign'
+      };
     }
   }
 
@@ -146,6 +151,10 @@ async function validateConsumerRpcs (providerRpcEndpoint, consumerRpcEndpoints) 
   const chainsWithoutRpc = consumerChainInfos.filter(info => !info.rpcEndpoint);
   if (chainsWithoutRpc.length > 0) {
     console.warn(`WARN: No RPC endpoints provided for chains: ${chainsWithoutRpc.map(info => info.chainId).join(', ')}`);
+  }
+
+  if (sovereign) {
+    consumerChainInfos.push(new SovereignChainInfo(sovereign));
   }
 
   console.log('fetched consumer chains: ' + JSON.stringify(consumerChainInfos));
@@ -365,7 +374,7 @@ async function fetchConsumerSigningKeys (stakingValidators, providerRpcEndpoint,
 
   const promises = stakingValidators.map((validator, index) => fetchKeysForValidator(validator,
     index));
-  await Promise.all(promises);
+  await Promise.allSettled(promises);
 
   return new StakingValidators(stakingValidators);
 }
