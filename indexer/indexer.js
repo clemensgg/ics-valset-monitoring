@@ -22,7 +22,7 @@ const updateStakingDatabaseWorker = new Worker(workerFilePath);
 
 updateStakingDatabaseWorker.on('message', (message) => {
   if (message === 'Done') {
-    console.log('Database update completed');
+    console.log('Chain and validator data updated.');
   } else if (message.startsWith('Error:')) {
     console.error(`Worker Error: ${message}`);
   }
@@ -45,7 +45,6 @@ async function updateChainAndValidatorData() {
   setInterval(async () => {
     console.log('Updating chain and validator data...');
     updateStakingDatabaseWorker.postMessage('updateStakingValidatorsDB');
-    console.log('Chain and validator data updated.');
   }, CONFIG.UPDATE_DB_FREQUENCY_MS);
 }
 

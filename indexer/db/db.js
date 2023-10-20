@@ -18,6 +18,9 @@ db.on('error',
 db.serialize(() => {
   db.run('PRAGMA foreign_keys = ON;');
 
+  // wait up to 2000 milliseconds for the database to become unlocked before failing with an error
+  db.run("PRAGMA busy_timeout = 2000");
+
   // ChainInfo Table
   db.run(`
     CREATE TABLE IF NOT EXISTS ChainInfo (
@@ -212,8 +215,6 @@ process.on('exit', (code) => {
     console.log('Closed the database connection.');
   });
 });
-
-
 
 export {
   db,

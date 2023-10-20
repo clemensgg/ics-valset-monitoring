@@ -72,67 +72,104 @@ async function validateEndpointsAndSaveChains() {
   return [providerChainInfos, consumerChainInfos];
 }
 
-async function saveStakingValidators (stakingValidators) {
-  console.log('Saving stakingValidators to DB:',
-    stakingValidators);
-
+async function saveChainInfos(chainInfo) {
   try {
-    // First, insert into StakingValidatorsMeta table
-    const metaQuery = 'INSERT INTO StakingValidatorsMeta (chainId, timestamp, created_at, updated_at) VALUES (?, ?, ?, ?)';
-    const metaParams = [stakingValidators.chainId, stakingValidators.timestamp, stakingValidators.created_at, stakingValidators.updated_at];
-    const metaResult = await runDatabaseQuery(metaQuery,
-      metaParams);
+  const type = chainInfo.type;
+  console.log(`Saving ${type} ChainInfo to DB:`, JSON.stringify(chainInfo));
 
-    console.log('Inserted into StakingValidatorsMeta with ID:',
-      metaResult);
+  const insertQuery = 'INSERT OR REPLACE INTO ChainInfo (chainId, rpcEndpoint, type, clientIds) VALUES (?, ?, ?, ?)';
 
-    // Now, insert each validator into StakingValidator table
-    const validatorQuery = `
-          INSERT INTO StakingValidator (
-              stakingValidatorsMetaId, 
-              operator_address, 
-              consensus_pubkey_type, 
-              consensus_pubkey_key, 
-              consumer_signing_keys,
-              jailed, status, tokens, delegator_shares, moniker, 
-              identity, website, security_contact, details, 
-              unbonding_height, unbonding_time, commission_rate, 
-              commission_max_rate, commission_max_change_rate, 
-              min_self_delegation
-          ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-      `;
+  const clientIdsString = JSON.stringify(chainInfo.clientIds);
+  const params = [chainInfo.chainId, chainInfo.rpcEndpoint, type, clientIdsString];
 
-    for (const validator of stakingValidators.validators) {
-      const validatorParams = [
-        metaResult,
-        validator.operator_address,
-        validator.consensus_pubkey.type,
-        validator.consensus_pubkey.key,
-        JSON.stringify(validator.consumer_signing_keys),
-        validator.jailed,
-        validator.status,
-        validator.tokens,
-        validator.delegator_shares,
-        validator.description.moniker,
-        validator.description.identity,
-        validator.description.website,
-        validator.description.security_contact,
-        validator.description.details,
-        validator.unbonding_height,
-        validator.unbonding_time,
-        validator.commission.commission_rates.rate,
-        validator.commission.commission_rates.max_rate,
-        validator.commission.commission_rates.max_change_rate,
-        validator.min_self_delegation
-      ];
-      await runDatabaseQuery(validatorQuery,
-        validatorParams);
-    }
+  await runDatabaseQuery(insertQuery, params);
 
-    console.log('All validators inserted successfully.');
+  console.log(`Successfully inserted or replaced ${type} ChainInfo with chainId ${chainInfo.chainId}`);
+  } catch (err) {
+    console.error('Error saving ChainInfos to DB:', err);
+  }
+}
+
+async function getChainInfosFromDB (type) {
+  try {
+    const rows = await runDatabaseQuery('SELECT * FROM ChainInfo WHERE type = ?', [type], 'all');
+    return rows;
   } catch (error) {
-    console.error('Error saving stakingValidators to DB:',
+    console.error('DB Error:',
       error);
+    throw error;
+  }
+}
+
+async function saveStakingValidators (stakingValidators) {
+  try {
+    await runDatabaseQuery('BEGIN TRANSACTION');
+    console.log('Saving stakingValidators to DB:',
+      stakingValidators);
+
+      // First, insert into StakingValidatorsMeta table
+      const metaQuery = 'INSERT INTO StakingValidatorsMeta (chainId, timestamp, created_at, updated_at) VALUES (?, ?, ?, ?)';
+      const metaParams = [stakingValidators.chainId, stakingValidators.timestamp, stakingValidators.created_at, stakingValidators.updated_at];
+      const metaResult = await runDatabaseQuery(metaQuery,
+        metaParams);
+
+      console.log('Inserted into StakingValidatorsMeta with ID:',
+        metaResult);
+
+      // Now, insert each validator into StakingValidator table
+      const validatorQuery = `
+            INSERT INTO StakingValidator (
+                stakingValidatorsMetaId, 
+                operator_address, 
+                consensus_pubkey_type, 
+                consensus_pubkey_key, 
+                consumer_signing_keys,
+                jailed, status, tokens, delegator_shares, moniker, 
+                identity, website, security_contact, details, 
+                unbonding_height, unbonding_time, commission_rate, 
+                commission_max_rate, commission_max_change_rate, 
+                min_self_delegation
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        `;
+
+      for (const validator of stakingValidators.validators) {
+        const validatorParams = [
+          metaResult,
+          validator.operator_address,
+          validator.consensus_pubkey.type,
+          validator.consensus_pubkey.key,
+          JSON.stringify(validator.consumer_signing_keys),
+          validator.jailed,
+          validator.status,
+          validator.tokens,
+          validator.delegator_shares,
+          validator.description.moniker,
+          validator.description.identity,
+          validator.description.website,
+          validator.description.security_contact,
+          validator.description.details,
+          validator.unbonding_height,
+          validator.unbonding_time,
+          validator.commission.commission_rates.rate,
+          validator.commission.commission_rates.max_rate,
+          validator.commission.commission_rates.max_change_rate,
+          validator.min_self_delegation
+        ];
+        await runDatabaseQuery(validatorQuery,
+          validatorParams);
+      }
+      await runDatabaseQuery('COMMIT');
+      console.log('All validators inserted successfully.');
+  } catch (err) {
+    console.error('Error saving stakingValidators to DB:', err);
+    console.error('attempting DB rollback...')
+    try {
+        await runDatabaseQuery('ROLLBACK');
+    } catch (rollbackErr) {
+        console.error('[DEBUG] Error on ROLLBACK', rollbackErr);
+        throw rollbackErr;
+    }
+//  throw err;
   }
 }
 
@@ -234,32 +271,6 @@ async function getMatchedValidatorsFromDB () {
   }
 }
 
-async function saveChainInfos(chainInfo) {
-  const type = chainInfo.type;
-  console.log(`Saving ${type} ChainInfo to DB:`, JSON.stringify(chainInfo));
-
-  const insertQuery = 'INSERT OR REPLACE INTO ChainInfo (chainId, rpcEndpoint, type, clientIds) VALUES (?, ?, ?, ?)';
-
-  const clientIdsString = JSON.stringify(chainInfo.clientIds);
-  const params = [chainInfo.chainId, chainInfo.rpcEndpoint, type, clientIdsString];
-
-  await runDatabaseQuery(insertQuery, params);
-
-  console.log(`Successfully inserted or replaced ${type} ChainInfo with chainId ${chainInfo.chainId}`);
-}
-
-
-async function getChainInfosFromDB (type) {
-  try {
-    const rows = await runDatabaseQuery('SELECT * FROM ChainInfo WHERE type = ?', [type], 'all');
-    return rows;
-  } catch (error) {
-    console.error('DB Error:',
-      error);
-    throw error;
-  }
-}
-
 /// ///////////////////////////////////// TODO
 
 async function updateConsensusStateDB(consensusState, retainStates = 0) {
@@ -294,13 +305,14 @@ async function updateConsensusStateDB(consensusState, retainStates = 0) {
       await runDatabaseQuery('COMMIT');
   } catch (err) {
       console.error('Error in updateConsensusStateDB:', err);
+      console.error('attempting DB rollback...')
       try {
           await runDatabaseQuery('ROLLBACK');
       } catch (rollbackErr) {
           console.error('[DEBUG] Error on ROLLBACK', rollbackErr);
           throw rollbackErr;
       }
-      throw err;
+//      throw err;
   }
 }
 
@@ -694,7 +706,7 @@ async function updateStakingValidatorsDB(providerChainInfos, consumerChainInfos)
   } else {
       console.warn('Error updating stakingValidators!');
   }
-
+  console.log('Chain and validator data updated.');
   console.timeEnd('updateDatabaseData Execution Time');
   console.log('---------------------------------------------------------------------------');
 }
