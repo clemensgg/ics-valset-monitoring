@@ -23,12 +23,12 @@ async function getConsensusState (rpcUrl, chainId) {
     if (response.data && response.data.result && response.data.result.round_state) {
       return new ConsensusState(response.data.result.round_state, chainId);
     } else {
-      console.error(`Unexpected data returned from ${rpcUrl}`);
-      return new ConsensusState(null, chainId);
+      console.log(`Unexpected data returned from ${rpcUrl}`);
+      return null;
     }
   } catch (error) {
-    console.error(`Error fetching consensus state from ${rpcUrl}: ${error.message}`);
-    return new ConsensusState(null, chainId);
+    console.log(`Error fetching consensus state from ${rpcUrl}: ${error.message}`);
+    return null;
   }
 }
 
