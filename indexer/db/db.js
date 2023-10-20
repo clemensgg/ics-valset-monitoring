@@ -145,31 +145,6 @@ db.serialize(() => {
     );
   `);
 
-
-  /*
-  // Peer Table
-  db.run(`
-  CREATE TABLE IF NOT EXISTS Peer (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    consensusStateId INTEGER REFERENCES ConsensusState(id),
-    chainId TEXT REFERENCES ChainInfo(chainId),
-    timestamp TEXT,
-    node_address TEXT
-  );
-  `);
-
-  // PeerState Table
-  db.run(`
-  CREATE TABLE IF NOT EXISTS PeerState (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    peerId INTEGER REFERENCES Peer(id),
-    chainId TEXT REFERENCES ChainInfo(chainId),
-    timestamp TEXT,
-    stats TEXT
-  );
-  `);
-*/
-
   console.log('All tables created successfully!');
 });
 

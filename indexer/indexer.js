@@ -51,9 +51,7 @@ async function updateChainAndValidatorData() {
 // Monitor Consensus State
 async function consensusStateMonitor(chains, stakingValidators) {
   while (true) {
-    console.log('Monitoring consensus state...');
     await pollConsensus(chains, stakingValidators);
-    console.log('Consensus state monitored.');
   }
 }
 
