@@ -166,7 +166,7 @@ async function saveStakingValidators (stakingValidators) {
     try {
         await runDatabaseQuery('ROLLBACK');
     } catch (rollbackErr) {
-        console.error('[DEBUG] Error on ROLLBACK', rollbackErr);
+        console.error('Error on ROLLBACK', rollbackErr);
         throw rollbackErr;
     }
 //  throw err;
@@ -271,14 +271,11 @@ async function getMatchedValidatorsFromDB () {
   }
 }
 
-/// ///////////////////////////////////// TODO
-
 async function updateConsensusStateDB(consensusState, retainStates = 0) {
   try {
       await runDatabaseQuery('BEGIN TRANSACTION');
 
       const consensusStateId = await saveConsensusState(consensusState);
-      console.log('[DEBUG] New consensusStateId for chain', consensusState.chainId, ':', consensusStateId);
 
       // Fetch the IDs of the states that are older than the `retainStates` count
       const selectPruneIdsQuery = `
@@ -309,7 +306,7 @@ async function updateConsensusStateDB(consensusState, retainStates = 0) {
       try {
           await runDatabaseQuery('ROLLBACK');
       } catch (rollbackErr) {
-          console.error('[DEBUG] Error on ROLLBACK', rollbackErr);
+          console.error('Error on ROLLBACK', rollbackErr);
           throw rollbackErr;
       }
 //      throw err;
@@ -323,7 +320,6 @@ async function updateValidatorsGroupWithProposerId(validatorsGroupId, proposerId
       SET proposerId = ?
       WHERE id = ?
   `;
-  console.log('setting proposerId ' + proposerId + ' in ValidatorsGroup ' + validatorsGroupId)   
   await runDatabaseQuery(query, [proposerId, validatorsGroupId]);
 }
 
@@ -366,16 +362,11 @@ async function saveValidatorsAndVotes(consensusState, consensusStateId, type) {
             validatorId = await saveValidator(validator, validatorsGroupId);
           } else {
             validatorId = proposerId;
-            console.log('proposing Validator with validatorId ' + validatorId + ' already saved');
           }
 
           const votes = consensusState.votes[f];
           await saveVote(votes.prevotes[i], 'prevote', validatorId, roundId);
-          await saveVote(votes.precommits[i], 'precommit', validatorId, roundId);  
-          if (votes.precommits[i] !== 'nil-Vote' && consensusState.chainId === 'cosmoshub-4') {
-            console.log('eee')
-          }
-
+          await saveVote(votes.precommits[i], 'precommit', validatorId, roundId); 
         }
       }
   }
@@ -397,7 +388,6 @@ async function saveValidatorsAndVotes(consensusState, consensusStateId, type) {
 
     // Update the last validators group with the correct proposerId
     await updateValidatorsGroupWithProposerId(validatorsGroupId, proposerId);
-    console.log('updated lastProposerId for validatorsGroupId ' + validatorsGroupId)
 
     // Save finalized RoundsGroup and one Round
     const roundsGroupId = await saveRoundsGroup(consensusStateId, 'last');
@@ -421,8 +411,6 @@ async function saveValidatorsAndVotes(consensusState, consensusStateId, type) {
 }
 
 async function saveConsensusState(consensusState) {
-  console.log('Starting saveConsensusState...');
-
   const query = `
       INSERT INTO ConsensusState (
         chainId, 
@@ -466,7 +454,6 @@ async function saveConsensusState(consensusState) {
 
   const validatorsGroupId = await saveValidatorsAndVotes(consensusState, consensusStateId, 'current');
   const lastValidatorsGroupId = await saveValidatorsAndVotes(consensusState, consensusStateId, 'last');
-  console.log('saved validatorsGroup and lastValidatorsGroup for consensusStateId: ' + consensusStateId)
 
   const updateQuery = `
       UPDATE ConsensusState
@@ -476,7 +463,6 @@ async function saveConsensusState(consensusState) {
 
   const updateParams = [validatorsGroupId, lastValidatorsGroupId, consensusStateId];
   await runDatabaseQuery(updateQuery, updateParams);
-  console.log('updated consensusStateId ' + consensusStateId + ' with validatorsGroupId: ' + validatorsGroupId + ' and lastValidatorsGroupId ' + lastValidatorsGroupId);
 
   return consensusStateId;
 }
@@ -492,22 +478,20 @@ async function saveRoundsGroup(consensusStateId, type = null) {
   ];
 
   const roundsGroupId = await runDatabaseQuery(query, params);
-  console.log(`saved roundsGroup ${roundsGroupId} of type ${type}`);
   return roundsGroupId;
 }
 
-async function saveRound(roundsGroupId, rundNumber = -1) {
+async function saveRound(roundsGroupId, roundNumber = -1) {
   const query = `
       INSERT INTO Round (roundsGroupId, roundNumber)
       VALUES (?, ?);
   `;
   const params = [
     roundsGroupId,
-    rundNumber
+    roundNumber
   ];
 
   const roundId = await runDatabaseQuery(query, params);
-  console.log(`saved roundId ${roundId} (roundNumber ${rundNumber})`);
   return roundId;
 }
 
@@ -523,7 +507,6 @@ async function saveValidatorsGroup(consensusStateId, proposerId = null, type) {
   ];
 
   const validatorsGroupId = await runDatabaseQuery(query, params);
-  console.log(`saved ValidatorsGroup ${validatorsGroupId}`);
   return validatorsGroupId;
 }
 
@@ -583,31 +566,12 @@ async function getConsensusStateByConsensusStateId(consensusStateId) {
   return result;
 }
 
-async function savePeer (peer) {
-  const query = `
-      INSERT INTO Peer (chainId, timestamp, node_address, peer_stateId)
-      VALUES (?, ?, ?, ?);
-  `;
-  const peerStateId = await savePeerState(peer.peer_state);
-  const params = [
-    peer.chainId,
-    peer.timestamp,
-    peer.node_address,
-    peerStateId
-  ];
-
-  await runDatabaseQuery(query,
-    params);
-}
-
 async function loadConsensusStateFromDB(chainId) {
   const consensusStateRow = await fetchConsensusState(chainId);
   if (!consensusStateRow) return null;
 
   const validatorsGroup = await fetchValidatorsGroup(consensusStateRow.validatorsGroupId);
   const lastValidatorsGroup = await fetchValidatorsGroup(consensusStateRow.lastValidatorsGroupId);
-
-  // const rounds = await fetchRoundsForConsensusState(consensusStateRow.id);
 
   return new ConsensusState({
       height: consensusStateRow.height,
@@ -648,32 +612,14 @@ async function fetchValidatorsGroup(validatorsGroupId) {
   });
 }
 
-async function fetchRoundsForConsensusState(consensusStateId) {
-  const query = 'SELECT * FROM RoundsGroup WHERE consensusStateId = ?';
-  const roundsGroupRows = await runDatabaseQuery(query, [consensusStateId], 'all');
-
-  const rounds = [];
-  for (const roundsGroupRow of roundsGroupRows) {
-      const roundQuery = 'SELECT * FROM Round WHERE roundsGroupId = ?';
-      const roundRows = await runDatabaseQuery(roundQuery, [roundsGroupRow.id], 'all');
-      rounds.push(...roundRows);
-  }
-
-  return rounds;
-}
-
 async function pruneConsensusStateDB(pruneIds, chainId) {
-  console.log(`Pruning entries with IDs: ${pruneIds.join(', ')} for chainId: ${chainId}`);
-
   const deleteConsensusStateQuery = `
       DELETE FROM ConsensusState 
       WHERE chainId = ? 
       AND id IN (${pruneIds.map(() => '?').join(', ')})
   `;
   await runDatabaseQuery(deleteConsensusStateQuery, [chainId, ...pruneIds], 'delete');
-  
-  // Log the pruned IDs
-  console.log(`Pruned ConsensusState entries with IDs: ${pruneIds.join(', ')} for chainId: ${chainId}`);
+  return true;
 }
 
 async function updateStakingValidatorsDB(providerChainInfos, consumerChainInfos) {
@@ -691,6 +637,7 @@ async function updateStakingValidatorsDB(providerChainInfos, consumerChainInfos)
   }
 
   if (providerChainInfos && providerChainInfos.chainId != '' && consumerChainInfos && consumerChainInfos.length > 0 && stakingValidators && stakingValidators.length > 0) {
+      console.log('No ChainInfos found, running startup...');
       const allChainIds = consumerChainInfos.map(chain => chain.chainId);
       const stakingValidatorsWithSigningKeys = await fetchConsumerSigningKeys(stakingValidators, CONFIG.PROVIDER_RPC, allChainIds, CONFIG.PREFIX, CONFIG.RPC_DELAY_MS);
 
@@ -703,12 +650,9 @@ async function updateStakingValidatorsDB(providerChainInfos, consumerChainInfos)
           });
           await saveStakingValidators(sovereignStakingValidators);
       }
-  } else {
-      console.warn('Error updating stakingValidators!');
   }
   console.log('Chain and validator data updated.');
   console.timeEnd('updateDatabaseData Execution Time');
-  console.log('---------------------------------------------------------------------------');
 }
 
 export {

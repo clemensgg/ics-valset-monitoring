@@ -18,14 +18,8 @@ function sleep (ms) {
 async function getConsensusState (rpcUrl, chainId) {
   try {
     const url = `${rpcUrl}/dump_consensus_state`;
-    console.log('Making request to:',
-      url);
-
     const response = await axios.get(url);
 
-    console.log('Received response:',
-      response.status,
-      response.statusText);
     if (response.data && response.data.result && response.data.result.round_state) {
       return new ConsensusState(response.data.result.round_state, chainId);
     } else {
@@ -52,34 +46,6 @@ function pubKeyToValcons (pubkey, prefix) {
     bech32.bech32.toWords(addressBytes));
   return valconsAddress;
 }
-
-/*
-async function getConsensusValidators (rpcUrl) {
-  let validators = [];
-  let fetchedCount = 0;
-  let totalCount = null;
-  let offset = 0;
-  const limit = 30;
-
-  try {
-    do {
-      const url = `${rpcUrl}/validators?limit=${limit}&offset=${offset}`;
-      console.log('Fetching URL:', url);
-      const response = await axios.get(url);
-      const consensusValidators = new ConsensusValidators(response.data);
-      validators = validators.concat(consensusValidators.result.validators);
-
-      fetchedCount += parseInt(response.data.result.count, 10);
-      totalCount = parseInt(response.data.result.total, 10);
-      offset += limit;
-    } while (fetchedCount < totalCount);
-  } catch (error) {
-    console.error(`Error fetching consensus validators from ${rpcUrl}: ${error.message}`);
-  }
-
-  return validators;
-}
-*/
 
 async function getStakingValidators (restUrl) {
   let validators = [];
@@ -157,7 +123,7 @@ async function validateConsumerRpcs (providerRpcEndpoint, consumerRpcEndpoints) 
     consumerChainInfos.push(new SovereignChainInfo(sovereign));
   }
 
-  console.log('fetched consumer chains: ' + JSON.stringify(consumerChainInfos));
+  console.log('fetched ConsumerChainInfos: ' + JSON.stringify(consumerChainInfos));
   return consumerChainInfos;
 }
 
@@ -172,49 +138,6 @@ function decodeVoteData(vote) {
   }
   return result;
 }
-
-/*
-
-async function matchValidators(stakingValidators, consensusValidators, providerRpcEndpoint, chainIds, prefix) {
-    const matchedValidators = [];
-
-    console.log(`Total stakingValidators: ${stakingValidators.length}`);
-    console.log(`Total consensusValidators: ${consensusValidators.length}`);
-
-    for (let i = 0; i < stakingValidators.length; i++) {
-        const stakingValidator = stakingValidators[i];
-        stakingValidator.consumerKeys = {};
-
-        console.log(`Processing stakingValidator ${i + 1}/${stakingValidators.length} with address: ${stakingValidator.operator_address}`);
-
-        for (const chainId of chainIds) {
-            const valconsAddress = pubKeyToValcons(stakingValidator.consensus_pubkey.key, prefix);
-            const consumerSigningKey = await getValconsForValidator(providerRpcEndpoint, chainId, valconsAddress);
-
-            stakingValidator.consumerKeys[chainId] = consumerSigningKey;
-        }
-    }
-
-    for (let j = 0; j < consensusValidators.length; j++) {
-        const consensusValidator = consensusValidators[j];
-        const valcons = pubKeyToValcons(consensusValidator.pub_key.value, prefix);
-
-        console.log(`Processing consensusValidator ${j + 1}/${consensusValidators.length} with pubkey: ${consensusValidator.pub_key.value}`);
-
-        const matchingStakingValidator = stakingValidators.find(sv => Object.values(sv.consumerKeys).includes(valcons));
-        if (matchingStakingValidator) {
-            matchedValidators.push({
-                stakingValidator: matchingStakingValidator,
-                consensusValidator: consensusValidator
-            });
-
-            console.log(`Matched stakingValidator with address ${matchingStakingValidator.operator_address} to consensusValidator with pubkey ${consensusValidator.pub_key.value}`);
-        }
-    }
-
-    console.log(`Total matched validators: ${matchedValidators.length}`);
-    return matchedValidators;
-} */
 
 async function matchConsensusValidators (stakingValidators, consensusState, chainId, type, prefix) {
   const matchedValidators = [];
@@ -250,15 +173,11 @@ async function matchConsensusValidators (stakingValidators, consensusState, chai
     }
   }
 
-  console.log(`Total matched consensusValidators: ${matchedValidators.length}`);
   return matchedValidators;
 }
 
 async function matchConsensusLastValidators (stakingValidators, consensusState, chainId, type, prefix) {
   const matchedValidators = [];
-
-  console.log(`Total stakingValidators: ${stakingValidators.length}`);
-  console.log(`Total consensusLastValidators: ${consensusState.round_state.last_validators.validators.length}`);
 
   for (let j = 0; j < consensusState.round_state.last_validators.validators.length; j++) {
     const consensusValidator = consensusState.round_state.last_validators.validators[j];
@@ -291,7 +210,6 @@ async function matchConsensusLastValidators (stakingValidators, consensusState, 
     }
   }
 
-  console.log(`Total matched consensusLastValidators: ${matchedValidators.length}`);
   return matchedValidators;
 }
 
@@ -357,13 +275,11 @@ async function fetchConsumerSigningKeys (stakingValidators, providerRpcEndpoint,
       const valconsAddress = pubKeyToValcons(stakingValidator.consensus_pubkey.key,
         prefix);
 
-      // console.log(`[DEBUG] Fetching valcons for validator: ${valconsAddress} on chain: ${chainId} at ${new Date().toISOString()}`);
       const consumerKey = await fetchWithRetry(() => getValconsForValidator(providerRpcEndpoint,
         chainId,
         valconsAddress),
       3,
       rpcDelay);
-      // console.log(`[DEBUG] Completed fetching for validator: ${valconsAddress} on chain: ${chainId} at ${new Date().toISOString()}`);
 
       stakingValidator.consumer_signing_keys[chainId] = consumerKey;
 

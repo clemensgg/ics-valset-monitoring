@@ -32,7 +32,7 @@ db.serialize(() => {
     );
   `);
 
-  // ConsensusState Table // TODO: WIRE THIS!
+  // ConsensusState Table
   db.run(`
   CREATE TABLE IF NOT EXISTS ConsensusState (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
