@@ -38,6 +38,13 @@ services:
       - postgres-icsvalset
     networks:
       - icsvalset_network
+    environment:
+      - DEPLOYMENT
+      - PROVIDER_REST
+      - PROVIDER_RPC
+      - SOVEREIGN_RPC
+      - CONSUMER_RPCS
+      - NUM_WORKERS
 
 networks:
   icsvalset_network:
