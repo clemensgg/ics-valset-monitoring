@@ -28,6 +28,7 @@ export async function loadConfig() {
 
     global.CONFIG = CONFIG;
     console.log('>>> Loaded config for deployment mode: ' + DEPLOYMENT)
+    console.log(`Config valid!`);
   } catch (err) {
     console.error(`Failed to load ${DEPLOYMENT} config:`, err);
     throw err;

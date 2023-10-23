@@ -26,6 +26,5 @@ export function validateCONFIG(config) {
     if (error) {
         throw new Error(`Config validation error: ${error.message}`);
     }
-    
     return value;
 }

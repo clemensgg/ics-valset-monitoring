@@ -6,6 +6,7 @@
   "scripts": {
     "indexer": "node indexer/indexer.js",
     "reset-db": "node indexer/resetDb.js",
+    "config-validate": "node indexer/callConfigLoader.js",
     "lint": "eslint 'src/**'"
   },
   "repository": {
