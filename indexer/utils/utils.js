@@ -255,7 +255,6 @@ async function fetchWithRetry (fetchFunction, maxRetries = 3, delayBetweenRetrie
 }
 
 async function fetchConsumerSigningKeys (stakingValidators, providerRpcEndpoint, chainIds, prefix, rpcDelay) {
-  console.log('DELAY: ' + rpcDelay);
   let rpcCallCounter = 0;
   let completedTasks = 0;
   const totalTasks = stakingValidators.length * chainIds.length;
@@ -278,7 +277,7 @@ async function fetchConsumerSigningKeys (stakingValidators, providerRpcEndpoint,
       const consumerKey = await fetchWithRetry(() => getValconsForValidator(providerRpcEndpoint,
         chainId,
         valconsAddress),
-      3,
+      10,
       rpcDelay);
 
       stakingValidator.consumer_signing_keys[chainId] = consumerKey;
