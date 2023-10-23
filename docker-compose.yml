@@ -34,7 +34,7 @@ services:
       - ./grafana-provisioning/:/home/service/.grafana/provisioning
       - ./grafana-provisioning/:/home/service/.grafana/grafana.ini
     environment:
-      - GF_DASHBOARDS_MIN_REFRESH_INTERVAL="1s"
+      - GF_DASHBOARDS_MIN_REFRESH_INTERVAL=1s
 
   indexer-icsvalset:
     build: . 
