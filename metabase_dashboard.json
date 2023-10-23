@@ -1,0 +1,3694 @@
+{
+  "description": null,
+  "archived": false,
+  "collection_position": 1,
+  "ordered_cards": [
+    {
+      "size_x": 18,
+      "dashboard_tab_id": 1,
+      "series": [],
+      "action_id": null,
+      "collection_authority_level": null,
+      "card": {
+        "description": null,
+        "archived": false,
+        "collection_position": null,
+        "table_id": null,
+        "result_metadata": [
+          {
+            "display_name": "validatorId",
+            "field_ref": [
+              "field",
+              "validatorId",
+              {
+                "base-type": "type/Integer"
+              }
+            ],
+            "name": "validatorId",
+            "base_type": "type/Integer",
+            "effective_type": "type/Integer",
+            "semantic_type": null,
+            "fingerprint": {
+              "global": {
+                "distinct-count": 33,
+                "nil%": 0
+              },
+              "type": {
+                "type/Number": {
+                  "min": 744219,
+                  "q1": 744226.75,
+                  "q3": 744243.25,
+                  "max": 744251,
+                  "sd": 9.669539802906858,
+                  "avg": 744235
+                }
+              }
+            }
+          },
+          {
+            "display_name": "voting_power",
+            "field_ref": [
+              "field",
+              "voting_power",
+              {
+                "base-type": "type/BigInteger"
+              }
+            ],
+            "name": "voting_power",
+            "base_type": "type/BigInteger",
+            "effective_type": "type/BigInteger",
+            "semantic_type": null,
+            "fingerprint": {
+              "global": {
+                "distinct-count": 33,
+                "nil%": 0
+              },
+              "type": {
+                "type/Number": {
+                  "min": 9,
+                  "q1": 7797676,
+                  "q3": 12050273.5,
+                  "max": 133157444,
+                  "sd": 35660028.85868322,
+                  "avg": 20069679
+                }
+              }
+            }
+          },
+          {
+            "display_name": "address",
+            "field_ref": [
+              "field",
+              "address",
+              {
+                "base-type": "type/Text"
+              }
+            ],
+            "name": "address",
+            "base_type": "type/Text",
+            "effective_type": "type/Text",
+            "semantic_type": null,
+            "fingerprint": {
+              "global": {
+                "distinct-count": 33,
+                "nil%": 0
+              },
+              "type": {
+                "type/Text": {
+                  "percent-json": 0,
+                  "percent-url": 0,
+                  "percent-email": 0,
+                  "percent-state": 0,
+                  "average-length": 40
+                }
+              }
+            }
+          },
+          {
+            "display_name": "pub_key",
+            "field_ref": [
+              "field",
+              "pub_key",
+              {
+                "base-type": "type/Text"
+              }
+            ],
+            "name": "pub_key",
+            "base_type": "type/Text",
+            "effective_type": "type/Text",
+            "semantic_type": null,
+            "fingerprint": {
+              "global": {
+                "distinct-count": 33,
+                "nil%": 0
+              },
+              "type": {
+                "type/Text": {
+                  "percent-json": 1,
+                  "percent-url": 0,
+                  "percent-email": 0,
+                  "percent-state": 0,
+                  "average-length": 90
+                }
+              }
+            }
+          },
+          {
+            "display_name": "consensusAddress",
+            "field_ref": [
+              "field",
+              "consensusAddress",
+              {
+                "base-type": "type/Text"
+              }
+            ],
+            "name": "consensusAddress",
+            "base_type": "type/Text",
+            "effective_type": "type/Text",
+            "semantic_type": null,
+            "fingerprint": {
+              "global": {
+                "distinct-count": 33,
+                "nil%": 0
+              },
+              "type": {
+                "type/Text": {
+                  "percent-json": 0,
+                  "percent-url": 0,
+                  "percent-email": 0,
+                  "percent-state": 0,
+                  "average-length": 52
+                }
+              }
+            }
+          },
+          {
+            "display_name": "proposer_priority",
+            "field_ref": [
+              "field",
+              "proposer_priority",
+              {
+                "base-type": "type/BigInteger"
+              }
+            ],
+            "name": "proposer_priority",
+            "base_type": "type/BigInteger",
+            "effective_type": "type/BigInteger",
+            "semantic_type": null,
+            "fingerprint": {
+              "global": {
+                "distinct-count": 33,
+                "nil%": 0
+              },
+              "type": {
+                "type/Number": {
+                  "min": -515219755,
+                  "q1": -134115089.25,
+                  "q3": 161874246.25,
+                  "max": 332014025,
+                  "sd": 216907553.09381026,
+                  "avg": 0.06060604615644975
+                }
+              }
+            }
+          },
+          {
+            "display_name": "id",
+            "field_ref": [
+              "field",
+              "id",
+              {
+                "base-type": "type/Integer"
+              }
+            ],
+            "name": "id",
+            "base_type": "type/Integer",
+            "effective_type": "type/Integer",
+            "semantic_type": "type/PK",
+            "fingerprint": null
+          },
+          {
+            "display_name": "stakingValidatorsMetaId",
+            "field_ref": [
+              "field",
+              "stakingValidatorsMetaId",
+              {
+                "base-type": "type/BigInteger"
+              }
+            ],
+            "name": "stakingValidatorsMetaId",
+            "base_type": "type/BigInteger",
+            "effective_type": "type/BigInteger",
+            "semantic_type": null,
+            "fingerprint": {
+              "global": {
+                "distinct-count": 1,
+                "nil%": 0
+              },
+              "type": {
+                "type/Number": {
+                  "min": 45,
+                  "q1": 45,
+                  "q3": 45,
+                  "max": 45,
+                  "sd": 0,
+                  "avg": 45
+                }
+              }
+            }
+          },
+          {
+            "display_name": "operator_address",
+            "field_ref": [
+              "field",
+              "operator_address",
+              {
+                "base-type": "type/Text"
+              }
+            ],
+            "name": "operator_address",
+            "base_type": "type/Text",
+            "effective_type": "type/Text",
+            "semantic_type": null,
+            "fingerprint": {
+              "global": {
+                "distinct-count": 33,
+                "nil%": 0
+              },
+              "type": {
+                "type/Text": {
+                  "percent-json": 0,
+                  "percent-url": 0,
+                  "percent-email": 0,
+                  "percent-state": 0,
+                  "average-length": 52
+                }
+              }
+            }
+          },
+          {
+            "display_name": "consensus_pubkey_type",
+            "field_ref": [
+              "field",
+              "consensus_pubkey_type",
+              {
+                "base-type": "type/Text"
+              }
+            ],
+            "name": "consensus_pubkey_type",
+            "base_type": "type/Text",
+            "effective_type": "type/Text",
+            "semantic_type": "type/Category",
+            "fingerprint": {
+              "global": {
+                "distinct-count": 1,
+                "nil%": 1
+              },
+              "type": {
+                "type/Text": {
+                  "percent-json": 0,
+                  "percent-url": 0,
+                  "percent-email": 0,
+                  "percent-state": 0,
+                  "average-length": 0
+                }
+              }
+            }
+          },
+          {
+            "display_name": "consensus_pubkey_key",
+            "field_ref": [
+              "field",
+              "consensus_pubkey_key",
+              {
+                "base-type": "type/Text"
+              }
+            ],
+            "name": "consensus_pubkey_key",
+            "base_type": "type/Text",
+            "effective_type": "type/Text",
+            "semantic_type": null,
+            "fingerprint": {
+              "global": {
+                "distinct-count": 33,
+                "nil%": 0
+              },
+              "type": {
+                "type/Text": {
+                  "percent-json": 0,
+                  "percent-url": 0,
+                  "percent-email": 0,
+                  "percent-state": 0,
+                  "average-length": 44
+                }
+              }
+            }
+          },
+          {
+            "display_name": "consumer_signing_keys",
+            "field_ref": [
+              "field",
+              "consumer_signing_keys",
+              {
+                "base-type": "type/Text"
+              }
+            ],
+            "name": "consumer_signing_keys",
+            "base_type": "type/Text",
+            "effective_type": "type/Text",
+            "semantic_type": null,
+            "fingerprint": {
+              "global": {
+                "distinct-count": 33,
+                "nil%": 0
+              },
+              "type": {
+                "type/Text": {
+                  "percent-json": 1,
+                  "percent-url": 0,
+                  "percent-email": 0,
+                  "percent-state": 0,
+                  "average-length": 129
+                }
+              }
+            }
+          },
+          {
+            "display_name": "tokens",
+            "field_ref": [
+              "field",
+              "tokens",
+              {
+                "base-type": "type/BigInteger"
+              }
+            ],
+            "name": "tokens",
+            "base_type": "type/BigInteger",
+            "effective_type": "type/BigInteger",
+            "semantic_type": null,
+            "fingerprint": {
+              "global": {
+                "distinct-count": 33,
+                "nil%": 0
+              },
+              "type": {
+                "type/Number": {
+                  "min": 9000000,
+                  "q1": 7797676390988.75,
+                  "q3": 12050274190975.25,
+                  "max": 133157444945709,
+                  "sd": 35660028903041.21,
+                  "avg": 20069679565169.453
+                }
+              }
+            }
+          },
+          {
+            "display_name": "delegator_shares",
+            "field_ref": [
+              "field",
+              "delegator_shares",
+              {
+                "base-type": "type/Float"
+              }
+            ],
+            "name": "delegator_shares",
+            "base_type": "type/Float",
+            "effective_type": "type/Float",
+            "semantic_type": "type/Share",
+            "fingerprint": {
+              "global": {
+                "distinct-count": 33,
+                "nil%": 0
+              },
+              "type": {
+                "type/Number": {
+                  "min": 9000000,
+                  "q1": 7876440752128,
+                  "q3": 12252421292032,
+                  "max": 133542663159808,
+                  "sd": 35914247672467.46,
+                  "avg": 20283040673747.363
+                }
+              }
+            }
+          },
+          {
+            "display_name": "moniker",
+            "field_ref": [
+              "field",
+              "moniker",
+              {
+                "base-type": "type/Text"
+              }
+            ],
+            "name": "moniker",
+            "base_type": "type/Text",
+            "effective_type": "type/Text",
+            "semantic_type": null,
+            "fingerprint": {
+              "global": {
+                "distinct-count": 33,
+                "nil%": 0
+              },
+              "type": {
+                "type/Text": {
+                  "percent-json": 0,
+                  "percent-url": 0,
+                  "percent-email": 0,
+                  "percent-state": 0,
+                  "average-length": 11.575757575757576
+                }
+              }
+            }
+          },
+          {
+            "display_name": "identity",
+            "field_ref": [
+              "field",
+              "identity",
+              {
+                "base-type": "type/Text"
+              }
+            ],
+            "name": "identity",
+            "base_type": "type/Text",
+            "effective_type": "type/Text",
+            "semantic_type": null,
+            "fingerprint": {
+              "global": {
+                "distinct-count": 28,
+                "nil%": 0
+              },
+              "type": {
+                "type/Text": {
+                  "percent-json": 0,
+                  "percent-url": 0,
+                  "percent-email": 0,
+                  "percent-state": 0,
+                  "average-length": 13.818181818181818
+                }
+              }
+            }
+          },
+          {
+            "display_name": "prevote",
+            "field_ref": [
+              "field",
+              "prevote",
+              {
+                "base-type": "type/Text"
+              }
+            ],
+            "name": "prevote",
+            "base_type": "type/Text",
+            "effective_type": "type/Text",
+            "semantic_type": null,
+            "fingerprint": {
+              "global": {
+                "distinct-count": 1,
+                "nil%": 0
+              },
+              "type": {
+                "type/Text": {
+                  "percent-json": 0,
+                  "percent-url": 0,
+                  "percent-email": 0,
+                  "percent-state": 0,
+                  "average-length": 8
+                }
+              }
+            }
+          },
+          {
+            "display_name": "prevoteDotColor",
+            "field_ref": [
+              "field",
+              "prevoteDotColor",
+              {
+                "base-type": "type/Text"
+              }
+            ],
+            "name": "prevoteDotColor",
+            "base_type": "type/Text",
+            "effective_type": "type/Text",
+            "semantic_type": null,
+            "fingerprint": {
+              "global": {
+                "distinct-count": 1,
+                "nil%": 0
+              },
+              "type": {
+                "type/Text": {
+                  "percent-json": 0,
+                  "percent-url": 0,
+                  "percent-email": 0,
+                  "percent-state": 0,
+                  "average-length": 1
+                }
+              }
+            }
+          },
+          {
+            "display_name": "precommitDotColor",
+            "field_ref": [
+              "field",
+              "precommitDotColor",
+              {
+                "base-type": "type/Text"
+              }
+            ],
+            "name": "precommitDotColor",
+            "base_type": "type/Text",
+            "effective_type": "type/Text",
+            "semantic_type": null,
+            "fingerprint": {
+              "global": {
+                "distinct-count": 1,
+                "nil%": 0
+              },
+              "type": {
+                "type/Text": {
+                  "percent-json": 0,
+                  "percent-url": 0,
+                  "percent-email": 0,
+                  "percent-state": 0,
+                  "average-length": 1
+                }
+              }
+            }
+          },
+          {
+            "display_name": "consumer_signing_key",
+            "field_ref": [
+              "field",
+              "consumer_signing_key",
+              {
+                "base-type": "type/Text"
+              }
+            ],
+            "name": "consumer_signing_key",
+            "base_type": "type/Text",
+            "effective_type": "type/Text",
+            "semantic_type": null,
+            "fingerprint": {
+              "global": {
+                "distinct-count": 33,
+                "nil%": 0
+              },
+              "type": {
+                "type/Text": {
+                  "percent-json": 0,
+                  "percent-url": 0,
+                  "percent-email": 0,
+                  "percent-state": 0,
+                  "average-length": 44
+                }
+              }
+            }
+          }
+        ],
+        "database_id": 3,
+        "enable_embedding": false,
+        "collection_id": 3,
+        "query_type": "native",
+        "name": "prod_getAllValidatorsForConsensusState",
+        "query_average_duration": 1046,
+        "creator_id": 1,
+        "moderation_reviews": [],
+        "updated_at": "2023-10-23T06:32:48.099656Z",
+        "made_public_by_id": null,
+        "embedding_params": null,
+        "cache_ttl": null,
+        "dataset_query": {
+          "type": "native",
+          "native": {
+            "query": "WITH \"LatestConsensusState\" AS (\n    SELECT \"id\" AS \"latestConsensusStateId\", \"validatorsGroupId\"\n    FROM \"ConsensusState\"\n    WHERE \"chainId\" = {{chainId}}\n    ORDER BY \"timestamp\" DESC\n    LIMIT 1\n),\n\"LatestRoundsGroup\" AS (\n    SELECT \"id\" AS \"latestRoundsGroupId\"\n    FROM \"RoundsGroup\"\n    WHERE \"consensusStateId\" = (SELECT \"latestConsensusStateId\" FROM \"LatestConsensusState\")\n    LIMIT 1\n),\n\"LatestRound\" AS (\n    SELECT MAX(\"id\") AS \"latestRoundId\"\n    FROM \"Round\"\n    WHERE \"roundsGroupId\" = (SELECT \"latestRoundsGroupId\" FROM \"LatestRoundsGroup\")\n),\n\"LatestValidatorsGroupId\" AS (\n    SELECT \"validatorsGroupId\"\n    FROM \"ConsensusState\"\n    WHERE \"id\" = (SELECT \"latestConsensusStateId\" FROM \"LatestConsensusState\")\n),\n\"ChainType\" AS (\n    SELECT \"type\"\n    FROM \"ChainInfo\"\n    WHERE \"chainId\" = {{chainId}}\n    LIMIT 1\n),\n\"LastProposerVote\" AS (\n    SELECT \n        (SELECT MAX(\"vote\") FROM \"Votes\" WHERE \"validatorId\" = \"VG\".\"proposerId\" AND \"type\" = 'prevote' AND \"roundId\" = (SELECT \"latestRoundId\" FROM \"LatestRound\")) AS \"prevoteProposerVote\",\n        (SELECT MAX(\"vote\") FROM \"Votes\" WHERE \"validatorId\" = \"VG\".\"proposerId\" AND \"type\" = 'precommit' AND \"roundId\" = (SELECT \"latestRoundId\" FROM \"LatestRound\")) AS \"precommitProposerVote\"\n    FROM \"LatestConsensusState\" \"LCS\"\n    JOIN \"ValidatorsGroup\" \"VG\" ON \"LCS\".\"validatorsGroupId\" = \"VG\".\"id\"\n)\nSELECT \n    \"V\".\"id\" AS \"validatorId\",\n    \"V\".\"voting_power\",\n    \"V\".\"address\",\n    \"V\".\"pub_key\",\n    \"V\".\"consensusAddress\",\n    \"V\".\"proposer_priority\",\n    \"SV\".\"id\",\n    \"SV\".\"stakingValidatorsMetaId\",\n    \"SV\".\"operator_address\",\n    \"SV\".\"consensus_pubkey_type\",\n    \"SV\".\"consensus_pubkey_key\",\n    \"SV\".\"consumer_signing_keys\",\n    \"SV\".\"tokens\",\n    \"SV\".\"delegator_shares\",\n    \"SV\".\"moniker\",\n    \"SV\".\"identity\",\n    (SELECT MAX(\"vote\") FROM \"Votes\" WHERE \"validatorId\" = \"V\".\"id\" AND \"roundId\" = (SELECT \"latestRoundId\" FROM \"LatestRound\")) AS \"prevote\",\n    CASE \n        WHEN (SELECT MAX(\"vote\") FROM \"Votes\" WHERE \"validatorId\" = \"V\".\"id\" AND \"type\" = 'prevote' AND \"roundId\" = (SELECT \"latestRoundId\" FROM \"LatestRound\")) = 'nil-Vote' THEN '⚪'\n        WHEN (SELECT MAX(\"vote\") FROM \"Votes\" WHERE \"validatorId\" = \"V\".\"id\" AND \"type\" = 'prevote' AND \"roundId\" = (SELECT \"latestRoundId\" FROM \"LatestRound\")) = '000000000000' THEN '🟡'\n        WHEN (SELECT MAX(\"vote\") FROM \"Votes\" WHERE \"validatorId\" = \"V\".\"id\" AND \"type\" = 'prevote' AND \"roundId\" = (SELECT \"latestRoundId\" FROM \"LatestRound\")) = (SELECT \"prevoteProposerVote\" FROM \"LastProposerVote\") THEN '🟢'\n        ELSE '🔴'\n    END AS \"prevoteDotColor\",\n    CASE \n        WHEN (SELECT MAX(\"vote\") FROM \"Votes\" WHERE \"validatorId\" = \"V\".\"id\" AND \"type\" = 'precommit' AND \"roundId\" = (SELECT \"latestRoundId\" FROM \"LatestRound\")) = 'nil-Vote' THEN '⚪'\n        WHEN (SELECT MAX(\"vote\") FROM \"Votes\" WHERE \"validatorId\" = \"V\".\"id\" AND \"type\" = 'precommit' AND \"roundId\" = (SELECT \"latestRoundId\" FROM \"LatestRound\")) = '000000000000' THEN '🟡'\n        WHEN (SELECT MAX(\"vote\") FROM \"Votes\" WHERE \"validatorId\" = \"V\".\"id\" AND \"type\" = 'precommit' AND \"roundId\" = (SELECT \"latestRoundId\" FROM \"LatestRound\")) = (SELECT \"precommitProposerVote\" FROM \"LastProposerVote\") THEN '🟢'\n        ELSE '🔴'\n    END AS \"precommitDotColor\",\n    CASE \n        WHEN (SELECT \"type\" FROM \"ChainType\") = 'provider' THEN (\"V\".\"pub_key\"::json)->>'value'\n        ELSE (\"SV\".\"consumer_signing_keys\"::json)->>{{chainId}}::text\n    END AS \"consumer_signing_key\"\nFROM \"Validator\" \"V\" \nJOIN \"LatestValidatorsGroupId\" \"LVG\" ON \"V\".\"validatorsGroupId\" = \"LVG\".\"validatorsGroupId\"\nLEFT JOIN \"StakingValidator\" \"SV\" ON \n    CASE \n        WHEN (SELECT \"type\" FROM \"ChainType\") = 'provider' THEN \"SV\".\"consensus_pubkey_key\" = (\"V\".\"pub_key\"::json)->>'value'\n        ELSE (\"SV\".\"consumer_signing_keys\"::json)->>{{chainId}}::text = \"V\".\"consensusAddress\"\n    END\nWHERE \"V\".\"id\" IN (\n    SELECT DISTINCT \"validatorId\"\n    FROM \"Votes\"\n    WHERE \"type\" = 'prevote' AND \"roundId\" = (SELECT \"latestRoundId\" FROM \"LatestRound\")\n)\nGROUP BY \"V\".\"id\", \"SV\".\"id\", \"SV\".\"stakingValidatorsMetaId\", \"SV\".\"operator_address\"\nORDER BY \"V\".\"voting_power\" DESC;\n",
+            "template-tags": {
+              "chainId": {
+                "type": "text",
+                "name": "chainId",
+                "id": "7e0d9ec1-ac41-45fc-9ceb-cc3847fc97b3",
+                "display-name": "ChainId",
+                "required": true,
+                "default": [
+                  "provider"
+                ]
+              }
+            }
+          },
+          "database": 3
+        },
+        "id": 61,
+        "parameter_mappings": [],
+        "display": "table",
+        "entity_id": "0VwX06Fb1TOyEjvFqdNlW",
+        "collection_preview": true,
+        "visualization_settings": {
+          "table.pivot_column": "stakingValidatorsMetaId",
+          "table.cell_column": "validatorId"
+        },
+        "parameters": [
+          {
+            "slug": "chainId",
+            "values_query_type": "list",
+            "default": [
+              "provider"
+            ],
+            "name": "ChainId",
+            "type": "category",
+            "values_source_type": "card",
+            "id": "7e0d9ec1-ac41-45fc-9ceb-cc3847fc97b3",
+            "target": [
+              "variable",
+              [
+                "template-tag",
+                "chainId"
+              ]
+            ],
+            "values_source_config": {
+              "card_id": 60,
+              "value_field": [
+                "field",
+                "chainId",
+                {
+                  "base-type": "type/Text"
+                }
+              ]
+            }
+          }
+        ],
+        "dataset": false,
+        "created_at": "2023-10-22T12:35:19.040081",
+        "public_uuid": null
+      },
+      "updated_at": "2023-10-22T14:39:28.811943",
+      "col": 6,
+      "id": 57,
+      "parameter_mappings": [
+        {
+          "parameter_id": "577801b0",
+          "card_id": 61,
+          "target": [
+            "variable",
+            [
+              "template-tag",
+              "chainId"
+            ]
+          ]
+        }
+      ],
+      "card_id": 61,
+      "entity_id": "PKb48C8XQme3XrQ7wwZlz",
+      "visualization_settings": {
+        "table.pivot_column": "stakingValidatorsMetaId",
+        "table.cell_column": "validatorId",
+        "table.columns": [
+          {
+            "name": "validatorId",
+            "fieldRef": [
+              "field",
+              "validatorId",
+              {
+                "base-type": "type/Integer"
+              }
+            ],
+            "enabled": false
+          },
+          {
+            "name": "moniker",
+            "fieldRef": [
+              "field",
+              "moniker",
+              {
+                "base-type": "type/Text"
+              }
+            ],
+            "enabled": true
+          },
+          {
+            "name": "prevote",
+            "fieldRef": [
+              "field",
+              "prevote",
+              {
+                "base-type": "type/Text"
+              }
+            ],
+            "enabled": true
+          },
+          {
+            "name": "prevoteDotColor",
+            "fieldRef": [
+              "field",
+              "prevoteDotColor",
+              {
+                "base-type": "type/Text"
+              }
+            ],
+            "enabled": true
+          },
+          {
+            "name": "precommitDotColor",
+            "fieldRef": [
+              "field",
+              "precommitDotColor",
+              {
+                "base-type": "type/Text"
+              }
+            ],
+            "enabled": true
+          },
+          {
+            "name": "voting_power",
+            "fieldRef": [
+              "field",
+              "voting_power",
+              {
+                "base-type": "type/BigInteger"
+              }
+            ],
+            "enabled": true
+          },
+          {
+            "name": "address",
+            "fieldRef": [
+              "field",
+              "address",
+              {
+                "base-type": "type/Text"
+              }
+            ],
+            "enabled": false
+          },
+          {
+            "name": "pub_key",
+            "fieldRef": [
+              "field",
+              "pub_key",
+              {
+                "base-type": "type/Text"
+              }
+            ],
+            "enabled": false
+          },
+          {
+            "name": "consensusAddress",
+            "fieldRef": [
+              "field",
+              "consensusAddress",
+              {
+                "base-type": "type/Text"
+              }
+            ],
+            "enabled": false
+          },
+          {
+            "name": "proposer_priority",
+            "fieldRef": [
+              "field",
+              "proposer_priority",
+              {
+                "base-type": "type/BigInteger"
+              }
+            ],
+            "enabled": false
+          },
+          {
+            "name": "id",
+            "fieldRef": [
+              "field",
+              "id",
+              {
+                "base-type": "type/Integer"
+              }
+            ],
+            "enabled": false
+          },
+          {
+            "name": "stakingValidatorsMetaId",
+            "fieldRef": [
+              "field",
+              "stakingValidatorsMetaId",
+              {
+                "base-type": "type/BigInteger"
+              }
+            ],
+            "enabled": false
+          },
+          {
+            "name": "operator_address",
+            "fieldRef": [
+              "field",
+              "operator_address",
+              {
+                "base-type": "type/Text"
+              }
+            ],
+            "enabled": true
+          },
+          {
+            "name": "consensus_pubkey_type",
+            "fieldRef": [
+              "field",
+              "consensus_pubkey_type",
+              {
+                "base-type": "type/Text"
+              }
+            ],
+            "enabled": false
+          },
+          {
+            "name": "consensus_pubkey_key",
+            "fieldRef": [
+              "field",
+              "consensus_pubkey_key",
+              {
+                "base-type": "type/Text"
+              }
+            ],
+            "enabled": false
+          },
+          {
+            "name": "consumer_signing_key",
+            "fieldRef": [
+              "field",
+              "consumer_signing_key",
+              {
+                "base-type": "type/Text"
+              }
+            ],
+            "enabled": true
+          },
+          {
+            "name": "consumer_signing_keys",
+            "fieldRef": [
+              "field",
+              "consumer_signing_keys",
+              {
+                "base-type": "type/Text"
+              }
+            ],
+            "enabled": false
+          },
+          {
+            "name": "tokens",
+            "fieldRef": [
+              "field",
+              "tokens",
+              {
+                "base-type": "type/BigInteger"
+              }
+            ],
+            "enabled": false
+          },
+          {
+            "name": "delegator_shares",
+            "fieldRef": [
+              "field",
+              "delegator_shares",
+              {
+                "base-type": "type/Float"
+              }
+            ],
+            "enabled": false
+          },
+          {
+            "name": "identity",
+            "fieldRef": [
+              "field",
+              "identity",
+              {
+                "base-type": "type/Text"
+              }
+            ],
+            "enabled": false
+          }
+        ],
+        "card.title": "Validators",
+        "column_settings": {
+          "[\"name\",\"voting_power\"]": {
+            "column_title": "Voting Power"
+          },
+          "[\"name\",\"operator_address\"]": {
+            "column_title": "Operator Address"
+          },
+          "[\"name\",\"consumer_signing_key\"]": {
+            "column_title": "Consumer Signing Key"
+          },
+          "[\"name\",\"prevoteDotColor\"]": {
+            "column_title": "Prevote"
+          },
+          "[\"name\",\"precommitDotColor\"]": {
+            "column_title": "Precommit"
+          }
+        }
+      },
+      "size_y": 27,
+      "dashboard_id": 4,
+      "created_at": "2023-10-22T12:36:00.177168",
+      "row": 6
+    },
+    {
+      "size_x": 6,
+      "dashboard_tab_id": 1,
+      "series": [],
+      "action_id": null,
+      "collection_authority_level": null,
+      "card": {
+        "description": null,
+        "archived": false,
+        "collection_position": null,
+        "table_id": null,
+        "result_metadata": [
+          {
+            "display_name": "chainId",
+            "field_ref": [
+              "field",
+              "chainId",
+              {
+                "base-type": "type/Text"
+              }
+            ],
+            "name": "chainId",
+            "base_type": "type/Text",
+            "effective_type": "type/Text",
+            "semantic_type": null,
+            "fingerprint": {
+              "global": {
+                "distinct-count": 1,
+                "nil%": 0
+              },
+              "type": {
+                "type/Text": {
+                  "percent-json": 0,
+                  "percent-url": 0,
+                  "percent-email": 0,
+                  "percent-state": 0,
+                  "average-length": 8
+                }
+              }
+            }
+          },
+          {
+            "display_name": "type",
+            "field_ref": [
+              "field",
+              "type",
+              {
+                "base-type": "type/Text"
+              }
+            ],
+            "name": "type",
+            "base_type": "type/Text",
+            "effective_type": "type/Text",
+            "semantic_type": "type/Category",
+            "fingerprint": {
+              "global": {
+                "distinct-count": 1,
+                "nil%": 0
+              },
+              "type": {
+                "type/Text": {
+                  "percent-json": 0,
+                  "percent-url": 0,
+                  "percent-email": 0,
+                  "percent-state": 0,
+                  "average-length": 8
+                }
+              }
+            }
+          },
+          {
+            "display_name": "rpcEndpoint",
+            "field_ref": [
+              "field",
+              "rpcEndpoint",
+              {
+                "base-type": "type/Text"
+              }
+            ],
+            "name": "rpcEndpoint",
+            "base_type": "type/Text",
+            "effective_type": "type/Text",
+            "semantic_type": null,
+            "fingerprint": {
+              "global": {
+                "distinct-count": 1,
+                "nil%": 0
+              },
+              "type": {
+                "type/Text": {
+                  "percent-json": 0,
+                  "percent-url": 1,
+                  "percent-email": 0,
+                  "percent-state": 0,
+                  "average-length": 26
+                }
+              }
+            }
+          },
+          {
+            "display_name": "clientIds",
+            "field_ref": [
+              "field",
+              "clientIds",
+              {
+                "base-type": "type/Text"
+              }
+            ],
+            "name": "clientIds",
+            "base_type": "type/Text",
+            "effective_type": "type/Text",
+            "semantic_type": null,
+            "fingerprint": {
+              "global": {
+                "distinct-count": 1,
+                "nil%": 0
+              },
+              "type": {
+                "type/Text": {
+                  "percent-json": 1,
+                  "percent-url": 0,
+                  "percent-email": 0,
+                  "percent-state": 0,
+                  "average-length": 2
+                }
+              }
+            }
+          }
+        ],
+        "database_id": 3,
+        "enable_embedding": false,
+        "collection_id": 3,
+        "query_type": "native",
+        "name": "prod_getChainInfos",
+        "query_average_duration": 8,
+        "creator_id": 1,
+        "moderation_reviews": [],
+        "updated_at": "2023-10-23T06:32:46.660609Z",
+        "made_public_by_id": null,
+        "embedding_params": null,
+        "cache_ttl": null,
+        "dataset_query": {
+          "type": "native",
+          "native": {
+            "query": "SELECT \"chainId\", \"type\", \"rpcEndpoint\", \"clientIds\" FROM \"ChainInfo\" WHERE \"chainId\" = {{chainId}};",
+            "template-tags": {
+              "chainId": {
+                "type": "text",
+                "name": "chainId",
+                "id": "3378085a-4458-47d5-921b-244d194954a1",
+                "display-name": "ChainId",
+                "required": true,
+                "default": [
+                  "provider"
+                ]
+              }
+            }
+          },
+          "database": 3
+        },
+        "id": 55,
+        "parameter_mappings": [],
+        "display": "object",
+        "entity_id": "JOAr96maErkf4TeUPmr6l",
+        "collection_preview": true,
+        "visualization_settings": {
+          "table.pivot_column": "chainId",
+          "table.cell_column": "clientIds"
+        },
+        "parameters": [
+          {
+            "slug": "chainId",
+            "values_query_type": "list",
+            "default": [
+              "provider"
+            ],
+            "name": "ChainId",
+            "type": "category",
+            "values_source_type": "card",
+            "id": "3378085a-4458-47d5-921b-244d194954a1",
+            "target": [
+              "variable",
+              [
+                "template-tag",
+                "chainId"
+              ]
+            ],
+            "values_source_config": {
+              "card_id": 60,
+              "value_field": [
+                "field",
+                "chainId",
+                {
+                  "base-type": "type/Text"
+                }
+              ]
+            }
+          }
+        ],
+        "dataset": false,
+        "created_at": "2023-10-21T08:38:59.4669",
+        "public_uuid": null
+      },
+      "updated_at": "2023-10-22T14:39:28.811943",
+      "col": 0,
+      "id": 58,
+      "parameter_mappings": [
+        {
+          "parameter_id": "577801b0",
+          "card_id": 55,
+          "target": [
+            "variable",
+            [
+              "template-tag",
+              "chainId"
+            ]
+          ]
+        }
+      ],
+      "card_id": 55,
+      "entity_id": "0IeLeyBHDVxRToBb__zkq",
+      "visualization_settings": {
+        "table.pivot_column": "chainId",
+        "table.cell_column": "clientIds",
+        "table.columns": [
+          {
+            "name": "chainId",
+            "fieldRef": [
+              "field",
+              "chainId",
+              {
+                "base-type": "type/Text"
+              }
+            ],
+            "enabled": true
+          },
+          {
+            "name": "type",
+            "fieldRef": [
+              "field",
+              "type",
+              {
+                "base-type": "type/Text"
+              }
+            ],
+            "enabled": true
+          },
+          {
+            "name": "rpcEndpoint",
+            "fieldRef": [
+              "field",
+              "rpcEndpoint",
+              {
+                "base-type": "type/Text"
+              }
+            ],
+            "enabled": false
+          },
+          {
+            "name": "clientIds",
+            "fieldRef": [
+              "field",
+              "clientIds",
+              {
+                "base-type": "type/Text"
+              }
+            ],
+            "enabled": false
+          }
+        ],
+        "card.title": "Chain Info",
+        "column_settings": {
+          "[\"name\",\"chainId\"]": {
+            "column_title": "Chain ID"
+          },
+          "[\"name\",\"type\"]": {
+            "column_title": "ICS Type"
+          },
+          "[\"name\",\"rpcEndpoint\"]": {
+            "column_title": "RPC Endpoint"
+          }
+        }
+      },
+      "size_y": 3,
+      "dashboard_id": 4,
+      "created_at": "2023-10-22T12:44:14.708987",
+      "row": 0
+    },
+    {
+      "size_x": 4,
+      "dashboard_tab_id": 1,
+      "series": [],
+      "action_id": null,
+      "collection_authority_level": null,
+      "card": {
+        "description": null,
+        "archived": false,
+        "collection_position": null,
+        "table_id": null,
+        "result_metadata": [
+          {
+            "display_name": "height",
+            "field_ref": [
+              "field",
+              "height",
+              {
+                "base-type": "type/BigInteger"
+              }
+            ],
+            "name": "height",
+            "base_type": "type/BigInteger",
+            "effective_type": "type/BigInteger",
+            "semantic_type": null,
+            "fingerprint": {
+              "global": {
+                "distinct-count": 1,
+                "nil%": 0
+              },
+              "type": {
+                "type/Number": {
+                  "min": 3697998,
+                  "q1": 3697998,
+                  "q3": 3697998,
+                  "max": 3697998,
+                  "sd": null,
+                  "avg": 3697998
+                }
+              }
+            }
+          },
+          {
+            "display_name": "round",
+            "field_ref": [
+              "field",
+              "round",
+              {
+                "base-type": "type/BigInteger"
+              }
+            ],
+            "name": "round",
+            "base_type": "type/BigInteger",
+            "effective_type": "type/BigInteger",
+            "semantic_type": null,
+            "fingerprint": {
+              "global": {
+                "distinct-count": 1,
+                "nil%": 0
+              },
+              "type": {
+                "type/Number": {
+                  "min": 0,
+                  "q1": 0,
+                  "q3": 0,
+                  "max": 0,
+                  "sd": null,
+                  "avg": 0
+                }
+              }
+            }
+          },
+          {
+            "display_name": "step",
+            "field_ref": [
+              "field",
+              "step",
+              {
+                "base-type": "type/Text"
+              }
+            ],
+            "name": "step",
+            "base_type": "type/Text",
+            "effective_type": "type/Text",
+            "semantic_type": null,
+            "fingerprint": {
+              "global": {
+                "distinct-count": 1,
+                "nil%": 0
+              },
+              "type": {
+                "type/Text": {
+                  "percent-json": 0,
+                  "percent-url": 0,
+                  "percent-email": 0,
+                  "percent-state": 0,
+                  "average-length": 1
+                }
+              }
+            }
+          }
+        ],
+        "database_id": 3,
+        "enable_embedding": false,
+        "collection_id": 3,
+        "query_type": "native",
+        "name": "prod_getHeightRoundStep",
+        "query_average_duration": 13,
+        "creator_id": 1,
+        "moderation_reviews": [],
+        "updated_at": "2023-10-23T06:32:46.720759Z",
+        "made_public_by_id": null,
+        "embedding_params": null,
+        "cache_ttl": null,
+        "dataset_query": {
+          "type": "native",
+          "native": {
+            "query": "SELECT \"height\", \"round\", \"step\"\nFROM \"ConsensusState\"\nWHERE \"chainId\" = {{chainId}}\nORDER BY timestamp DESC\nLIMIT 1;",
+            "template-tags": {
+              "chainId": {
+                "type": "text",
+                "name": "chainId",
+                "id": "61246ece-22d8-406f-a026-46ed7a4c5f36",
+                "display-name": "ChainId",
+                "required": true,
+                "default": [
+                  "provider"
+                ]
+              }
+            }
+          },
+          "database": 3
+        },
+        "id": 56,
+        "parameter_mappings": [],
+        "display": "object",
+        "entity_id": "OeO2EJn8h_Hu7ujqLOKCz",
+        "collection_preview": true,
+        "visualization_settings": {},
+        "parameters": [
+          {
+            "slug": "chainId",
+            "values_query_type": "list",
+            "default": [
+              "provider"
+            ],
+            "name": "ChainId",
+            "type": "category",
+            "values_source_type": "card",
+            "id": "61246ece-22d8-406f-a026-46ed7a4c5f36",
+            "target": [
+              "variable",
+              [
+                "template-tag",
+                "chainId"
+              ]
+            ],
+            "values_source_config": {
+              "card_id": 55,
+              "value_field": [
+                "field",
+                "chainId",
+                {
+                  "base-type": "type/Text"
+                }
+              ]
+            }
+          }
+        ],
+        "dataset": false,
+        "created_at": "2023-10-21T08:47:28.647582",
+        "public_uuid": null
+      },
+      "updated_at": "2023-10-22T14:39:28.811943",
+      "col": 6,
+      "id": 59,
+      "parameter_mappings": [
+        {
+          "parameter_id": "577801b0",
+          "card_id": 56,
+          "target": [
+            "variable",
+            [
+              "template-tag",
+              "chainId"
+            ]
+          ]
+        }
+      ],
+      "card_id": 56,
+      "entity_id": "LwpsGyajJlla8hsdivQbW",
+      "visualization_settings": {
+        "card.title": "Height / Round / Step",
+        "column_settings": {
+          "[\"name\",\"height\"]": {
+            "column_title": "Height"
+          },
+          "[\"name\",\"round\"]": {
+            "column_title": "Round"
+          },
+          "[\"name\",\"step\"]": {
+            "column_title": "Step"
+          }
+        }
+      },
+      "size_y": 3,
+      "dashboard_id": 4,
+      "created_at": "2023-10-22T12:44:14.708987",
+      "row": 0
+    },
+    {
+      "size_x": 5,
+      "dashboard_tab_id": 1,
+      "series": [],
+      "action_id": null,
+      "collection_authority_level": null,
+      "card": {
+        "description": null,
+        "archived": false,
+        "collection_position": null,
+        "table_id": null,
+        "result_metadata": [
+          {
+            "display_name": "prevoteAgreePercentage",
+            "field_ref": [
+              "field",
+              "prevoteAgreePercentage",
+              {
+                "base-type": "type/Float"
+              }
+            ],
+            "name": "prevoteAgreePercentage",
+            "base_type": "type/Float",
+            "effective_type": "type/Float",
+            "semantic_type": "type/Share",
+            "fingerprint": {
+              "global": {
+                "distinct-count": 1,
+                "nil%": 0
+              },
+              "type": {
+                "type/Number": {
+                  "min": 0,
+                  "q1": 0,
+                  "q3": 0,
+                  "max": 0,
+                  "sd": null,
+                  "avg": 0
+                }
+              }
+            }
+          },
+          {
+            "display_name": "precommitAgreePercentage",
+            "field_ref": [
+              "field",
+              "precommitAgreePercentage",
+              {
+                "base-type": "type/Float"
+              }
+            ],
+            "name": "precommitAgreePercentage",
+            "base_type": "type/Float",
+            "effective_type": "type/Float",
+            "semantic_type": "type/Share",
+            "fingerprint": {
+              "global": {
+                "distinct-count": 1,
+                "nil%": 0
+              },
+              "type": {
+                "type/Number": {
+                  "min": 0,
+                  "q1": 0,
+                  "q3": 0,
+                  "max": 0,
+                  "sd": null,
+                  "avg": 0
+                }
+              }
+            }
+          }
+        ],
+        "database_id": 3,
+        "enable_embedding": false,
+        "collection_id": 3,
+        "query_type": "native",
+        "name": "prod_getLastAgreeingVotingPower",
+        "query_average_duration": 24,
+        "creator_id": 1,
+        "moderation_reviews": [],
+        "updated_at": "2023-10-23T06:32:46.686818Z",
+        "made_public_by_id": null,
+        "embedding_params": null,
+        "cache_ttl": null,
+        "dataset_query": {
+          "type": "native",
+          "native": {
+            "query": "WITH \"LatestConsensusState\" AS (\n    SELECT \"id\" AS \"consensusStateId\", \"validatorsGroupId\"\n    FROM \"ConsensusState\"\n    WHERE \"chainId\" = {{chainId}}\n    ORDER BY \"timestamp\" DESC\n    LIMIT 1\n),\n\"LastProposerVote\" AS (\n    SELECT \n        (SELECT \"vote\" FROM \"Votes\" WHERE \"validatorId\" = \"VG\".\"proposerId\" AND \"type\" = 'prevote') AS \"prevoteProposerVote\",\n        (SELECT \"vote\" FROM \"Votes\" WHERE \"validatorId\" = \"VG\".\"proposerId\" AND \"type\" = 'precommit') AS \"precommitProposerVote\"\n    FROM \"LatestConsensusState\" \"LCS\"\n    JOIN \"ValidatorsGroup\" \"VG\" ON \"LCS\".\"validatorsGroupId\" = \"VG\".\"id\"\n),\n\"LatestRound\" AS (\n    SELECT \"R\".\"id\" AS \"latestRoundId\"\n    FROM \"Round\" \"R\"\n    JOIN \"RoundsGroup\" \"RG\" ON \"R\".\"roundsGroupId\" = \"RG\".\"id\"\n    JOIN \"ConsensusState\" \"CS\" ON \"RG\".\"consensusStateId\" = \"CS\".\"id\"\n    WHERE \"CS\".\"id\" = (SELECT \"consensusStateId\" FROM \"LatestConsensusState\")\n    ORDER BY \"R\".\"roundNumber\" DESC\n    LIMIT 1\n),\n\"TotalAgreeingVotingPower\" AS (\n    SELECT \n        SUM(CASE WHEN \"VT\".\"type\" = 'prevote' THEN \"V\".\"voting_power\" ELSE 0 END) AS \"totalAgreeingVotingPowerForPrevote\",\n        SUM(CASE WHEN \"VT\".\"type\" = 'precommit' THEN \"V\".\"voting_power\" ELSE 0 END) AS \"totalAgreeingVotingPowerForPrecommit\"\n    FROM \"ValidatorsGroup\" \"VG\" \n    JOIN \"Validator\" \"V\" ON \"VG\".\"id\" = \"V\".\"validatorsGroupId\" \n    JOIN \"Votes\" \"VT\" ON \"V\".\"id\" = \"VT\".\"validatorId\" \n    JOIN \"LastProposerVote\" \"LPV\" ON (\"VT\".\"vote\" = \"LPV\".\"prevoteProposerVote\" OR \"VT\".\"vote\" = \"LPV\".\"precommitProposerVote\")\n    JOIN \"LatestRound\" \"LR\" ON \"VT\".\"roundId\" = \"LR\".\"latestRoundId\" \n    WHERE (\"VT\".\"type\" = 'prevote' OR \"VT\".\"type\" = 'precommit') AND \"VT\".\"vote\" != 'nil-Vote'\n),\n\"TotalVotingPower\" AS (\n    SELECT \n        SUM(CASE WHEN \"VT\".\"type\" = 'prevote' THEN \"V\".\"voting_power\" ELSE 0 END) AS \"totalVotingPowerForPrevote\",\n        SUM(CASE WHEN \"VT\".\"type\" = 'precommit' THEN \"V\".\"voting_power\" ELSE 0 END) AS \"totalVotingPowerForPrecommit\"\n    FROM \"ValidatorsGroup\" \"VG\" \n    JOIN \"Validator\" \"V\" ON \"VG\".\"id\" = \"V\".\"validatorsGroupId\" \n    JOIN \"Votes\" \"VT\" ON \"V\".\"id\" = \"VT\".\"validatorId\" \n    JOIN \"LatestRound\" \"LR\" ON \"VT\".\"roundId\" = \"LR\".\"latestRoundId\" \n    WHERE \"VT\".\"type\" = 'prevote' OR \"VT\".\"type\" = 'precommit'\n)\n\nSELECT \n    COALESCE(\n        (CAST((SELECT \"totalAgreeingVotingPowerForPrevote\" FROM \"TotalAgreeingVotingPower\") AS REAL) / \n        CAST((SELECT \"totalVotingPowerForPrevote\" FROM \"TotalVotingPower\") AS REAL)), 0\n    ) AS \"prevoteAgreePercentage\",\n    COALESCE(\n        (CAST((SELECT \"totalAgreeingVotingPowerForPrecommit\" FROM \"TotalAgreeingVotingPower\") AS REAL) / \n        CAST((SELECT \"totalVotingPowerForPrecommit\" FROM \"TotalVotingPower\") AS REAL)), 0\n    ) AS \"precommitAgreePercentage\"\nFROM \"LatestConsensusState\";\n",
+            "template-tags": {
+              "chainId": {
+                "type": "text",
+                "name": "chainId",
+                "id": "8c85e12a-af63-4ec5-8b5c-bab257ef1557",
+                "display-name": "ChainId",
+                "required": true,
+                "default": [
+                  "provider"
+                ]
+              }
+            }
+          },
+          "database": 3
+        },
+        "id": 57,
+        "parameter_mappings": [],
+        "display": "row",
+        "entity_id": "-QVABUKNyYiYjNj1rFRuB",
+        "collection_preview": true,
+        "visualization_settings": {
+          "graph.show_goal": true,
+          "graph.y_axis.title_text": "% of Voting Power",
+          "graph.show_values": true,
+          "graph.x_axis.labels_enabled": false,
+          "graph.goal_label": "66.67%",
+          "graph.y_axis.max": 1,
+          "graph.series_order_dimension": null,
+          "graph.x_axis.axis_enabled": false,
+          "graph.y_axis.labels_enabled": false,
+          "graph.goal_value": 0.6667,
+          "graph.y_axis.scale": "linear",
+          "graph.metrics": [
+            "prevoteAgreePercentage",
+            "precommitAgreePercentage"
+          ],
+          "graph.label_value_formatting": "full",
+          "graph.series_order": null,
+          "column_settings": {
+            "[\"name\",\"prevoteAgreePercentage\"]": {
+              "suffix": "",
+              "number_style": "percent"
+            },
+            "[\"name\",\"precommitAgreePercentage\"]": {
+              "number_style": "percent"
+            }
+          },
+          "series_settings": {
+            "prevoteAgreePercentage": {
+              "color": "#FBE499",
+              "show_series_values": false
+            },
+            "precommitAgreePercentage": {
+              "color": "#A7D07C"
+            }
+          },
+          "graph.y_axis.auto_range": false,
+          "graph.dimensions": [
+            "prevoteAgreePercentage"
+          ],
+          "graph.y_axis.min": 0
+        },
+        "parameters": [
+          {
+            "slug": "chainId",
+            "values_query_type": "list",
+            "default": [
+              "provider"
+            ],
+            "name": "ChainId",
+            "type": "category",
+            "values_source_type": "card",
+            "id": "8c85e12a-af63-4ec5-8b5c-bab257ef1557",
+            "target": [
+              "variable",
+              [
+                "template-tag",
+                "chainId"
+              ]
+            ],
+            "values_source_config": {
+              "card_id": 55,
+              "value_field": [
+                "field",
+                "chainId",
+                {
+                  "base-type": "type/Text"
+                }
+              ]
+            }
+          }
+        ],
+        "dataset": false,
+        "created_at": "2023-10-21T08:58:49.740577",
+        "public_uuid": null
+      },
+      "updated_at": "2023-10-22T14:39:28.811943",
+      "col": 10,
+      "id": 60,
+      "parameter_mappings": [
+        {
+          "parameter_id": "577801b0",
+          "card_id": 57,
+          "target": [
+            "variable",
+            [
+              "template-tag",
+              "chainId"
+            ]
+          ]
+        }
+      ],
+      "card_id": 57,
+      "entity_id": "fPlC1pB7abHL2TURA8U4b",
+      "visualization_settings": {
+        "graph.show_goal": true,
+        "graph.y_axis.title_text": "% of Voting Power",
+        "graph.show_values": true,
+        "graph.x_axis.labels_enabled": false,
+        "graph.goal_label": "66.67%",
+        "graph.y_axis.max": 1,
+        "graph.series_order_dimension": null,
+        "graph.x_axis.axis_enabled": false,
+        "graph.y_axis.labels_enabled": false,
+        "graph.goal_value": 0.6667,
+        "card.title": "",
+        "graph.y_axis.scale": "linear",
+        "graph.metrics": [
+          "prevoteAgreePercentage",
+          "precommitAgreePercentage"
+        ],
+        "graph.label_value_formatting": "full",
+        "graph.series_order": null,
+        "column_settings": {
+          "[\"name\",\"prevoteAgreePercentage\"]": {
+            "suffix": "",
+            "number_style": "percent"
+          },
+          "[\"name\",\"precommitAgreePercentage\"]": {
+            "number_style": "percent"
+          }
+        },
+        "series_settings": {
+          "prevoteAgreePercentage": {
+            "color": "#FBE499",
+            "show_series_values": false,
+            "title": "Prevote"
+          },
+          "precommitAgreePercentage": {
+            "color": "#A7D07C",
+            "title": "Precommit"
+          }
+        },
+        "graph.y_axis.auto_range": false,
+        "graph.dimensions": [
+          "prevoteAgreePercentage"
+        ],
+        "graph.y_axis.min": 0
+      },
+      "size_y": 3,
+      "dashboard_id": 4,
+      "created_at": "2023-10-22T12:44:14.708987",
+      "row": 0
+    },
+    {
+      "size_x": 6,
+      "dashboard_tab_id": 1,
+      "series": [],
+      "action_id": null,
+      "collection_authority_level": null,
+      "card": {
+        "description": null,
+        "archived": false,
+        "collection_position": null,
+        "table_id": null,
+        "result_metadata": [
+          {
+            "display_name": "proposerAddress",
+            "field_ref": [
+              "field",
+              "proposerAddress",
+              {
+                "base-type": "type/Text"
+              }
+            ],
+            "name": "proposerAddress",
+            "base_type": "type/Text",
+            "effective_type": "type/Text",
+            "semantic_type": null,
+            "fingerprint": {
+              "global": {
+                "distinct-count": 1,
+                "nil%": 0
+              },
+              "type": {
+                "type/Text": {
+                  "percent-json": 0,
+                  "percent-url": 0,
+                  "percent-email": 0,
+                  "percent-state": 0,
+                  "average-length": 40
+                }
+              }
+            }
+          },
+          {
+            "display_name": "proposerMoniker",
+            "field_ref": [
+              "field",
+              "proposerMoniker",
+              {
+                "base-type": "type/Text"
+              }
+            ],
+            "name": "proposerMoniker",
+            "base_type": "type/Text",
+            "effective_type": "type/Text",
+            "semantic_type": null,
+            "fingerprint": {
+              "global": {
+                "distinct-count": 1,
+                "nil%": 0
+              },
+              "type": {
+                "type/Text": {
+                  "percent-json": 0,
+                  "percent-url": 0,
+                  "percent-email": 0,
+                  "percent-state": 0,
+                  "average-length": 9
+                }
+              }
+            }
+          },
+          {
+            "display_name": "proposerLastCommitVote",
+            "field_ref": [
+              "field",
+              "proposerLastCommitVote",
+              {
+                "base-type": "type/Text"
+              }
+            ],
+            "name": "proposerLastCommitVote",
+            "base_type": "type/Text",
+            "effective_type": "type/Text",
+            "semantic_type": null,
+            "fingerprint": {
+              "global": {
+                "distinct-count": 1,
+                "nil%": 0
+              },
+              "type": {
+                "type/Text": {
+                  "percent-json": 0,
+                  "percent-url": 0,
+                  "percent-email": 0,
+                  "percent-state": 0,
+                  "average-length": 12
+                }
+              }
+            }
+          },
+          {
+            "display_name": "totalVotingPowerForLastCommit",
+            "field_ref": [
+              "field",
+              "totalVotingPowerForLastCommit",
+              {
+                "base-type": "type/Decimal"
+              }
+            ],
+            "name": "totalVotingPowerForLastCommit",
+            "base_type": "type/Decimal",
+            "effective_type": "type/Decimal",
+            "semantic_type": null,
+            "fingerprint": {
+              "global": {
+                "distinct-count": 1,
+                "nil%": 0
+              },
+              "type": {
+                "type/Number": {
+                  "min": 662299407,
+                  "q1": 662299407,
+                  "q3": 662299407,
+                  "max": 662299407,
+                  "sd": null,
+                  "avg": 662299407
+                }
+              }
+            }
+          },
+          {
+            "display_name": "totalAgreeingLastcommitVotingPower",
+            "field_ref": [
+              "field",
+              "totalAgreeingLastcommitVotingPower",
+              {
+                "base-type": "type/Decimal"
+              }
+            ],
+            "name": "totalAgreeingLastcommitVotingPower",
+            "base_type": "type/Decimal",
+            "effective_type": "type/Decimal",
+            "semantic_type": null,
+            "fingerprint": {
+              "global": {
+                "distinct-count": 1,
+                "nil%": 0
+              },
+              "type": {
+                "type/Number": {
+                  "min": 625622981,
+                  "q1": 625622981,
+                  "q3": 625622981,
+                  "max": 625622981,
+                  "sd": null,
+                  "avg": 625622981
+                }
+              }
+            }
+          },
+          {
+            "display_name": "totalNilvotingVotingPowerForLastCommit",
+            "field_ref": [
+              "field",
+              "totalNilvotingVotingPowerForLastCommit",
+              {
+                "base-type": "type/Decimal"
+              }
+            ],
+            "name": "totalNilvotingVotingPowerForLastCommit",
+            "base_type": "type/Decimal",
+            "effective_type": "type/Decimal",
+            "semantic_type": null,
+            "fingerprint": {
+              "global": {
+                "distinct-count": 1,
+                "nil%": 0
+              },
+              "type": {
+                "type/Number": {
+                  "min": 23068999,
+                  "q1": 23068999,
+                  "q3": 23068999,
+                  "max": 23068999,
+                  "sd": null,
+                  "avg": 23068999
+                }
+              }
+            }
+          },
+          {
+            "display_name": "totalZerovotingVotingPowerForLastCommit",
+            "field_ref": [
+              "field",
+              "totalZerovotingVotingPowerForLastCommit",
+              {
+                "base-type": "type/Decimal"
+              }
+            ],
+            "name": "totalZerovotingVotingPowerForLastCommit",
+            "base_type": "type/Decimal",
+            "effective_type": "type/Decimal",
+            "semantic_type": null,
+            "fingerprint": {
+              "global": {
+                "distinct-count": 1,
+                "nil%": 0
+              },
+              "type": {
+                "type/Number": {
+                  "min": 13607427,
+                  "q1": 13607427,
+                  "q3": 13607427,
+                  "max": 13607427,
+                  "sd": null,
+                  "avg": 13607427
+                }
+              }
+            }
+          },
+          {
+            "display_name": "consensusPercentage",
+            "field_ref": [
+              "field",
+              "consensusPercentage",
+              {
+                "base-type": "type/Decimal"
+              }
+            ],
+            "name": "consensusPercentage",
+            "base_type": "type/Decimal",
+            "effective_type": "type/Decimal",
+            "semantic_type": "type/Share",
+            "fingerprint": {
+              "global": {
+                "distinct-count": 1,
+                "nil%": 0
+              },
+              "type": {
+                "type/Number": {
+                  "min": 94.46225897043571,
+                  "q1": 94.46225897043571,
+                  "q3": 94.46225897043571,
+                  "max": 94.46225897043571,
+                  "sd": null,
+                  "avg": 94.46225897043571
+                }
+              }
+            }
+          }
+        ],
+        "database_id": 3,
+        "enable_embedding": false,
+        "collection_id": 3,
+        "query_type": "native",
+        "name": "prod_getLastCommitVotingPowerPerRound",
+        "query_average_duration": null,
+        "creator_id": 1,
+        "moderation_reviews": [],
+        "updated_at": "2023-10-23T06:32:46.795928Z",
+        "made_public_by_id": null,
+        "embedding_params": null,
+        "cache_ttl": null,
+        "dataset_query": {
+          "type": "native",
+          "native": {
+            "query": "WITH \"LatestConsensusState\" AS (\n    SELECT \"id\" AS \"consensusStateId\", \"lastValidatorsGroupId\"\n    FROM \"ConsensusState\"\n    WHERE \"chainId\" = {{chainId}}\n    ORDER BY \"timestamp\" DESC\n    LIMIT 1\n),\n\"LastProposerVote\" AS (\n    SELECT \n        \"V\".\"address\" AS \"proposerAddress\",\n        \"VT\".\"vote\" AS \"proposerLastCommitVote\",\n        \"SV\".\"moniker\" AS \"proposerMoniker\"\n    FROM \"LatestConsensusState\" \"LCS\"\n    JOIN \"ValidatorsGroup\" \"VG\" ON \"LCS\".\"lastValidatorsGroupId\" = \"VG\".\"id\"\n    JOIN \"Validator\" \"V\" ON \"VG\".\"proposerId\" = \"V\".\"id\"\n    JOIN \"Votes\" \"VT\" ON \"V\".\"id\" = \"VT\".\"validatorId\"\n    LEFT JOIN \"StakingValidator\" \"SV\" ON \n        (\n            (SELECT \"type\" FROM \"ChainInfo\" WHERE \"chainId\" = {{chainId}} LIMIT 1) = 'provider' \n            AND \"SV\".\"consensus_pubkey_key\" = (\"V\".\"pub_key\"::json)->>'value'\n        ) \n        OR\n        (\n            (SELECT \"type\" FROM \"ChainInfo\" WHERE \"chainId\" = {{chainId}} LIMIT 1) != 'provider' \n            AND (\"SV\".\"consumer_signing_keys\"::json)->>{{chainId}}::text = \"V\".\"consensusAddress\"\n        )\n    WHERE \"VT\".\"type\" = 'lastcommit'\n    LIMIT 1\n)\nSELECT \n    MIN(\"LPV\".\"proposerAddress\") AS \"proposerAddress\",\n    MIN(\"LPV\".\"proposerMoniker\") AS \"proposerMoniker\",\n    MIN(\"LPV\".\"proposerLastCommitVote\") AS \"proposerLastCommitVote\",\n    SUM(\"V\".\"voting_power\") AS \"totalVotingPowerForLastCommit\",\n    SUM(CASE WHEN \"VT\".\"vote\" = \"LPV\".\"proposerLastCommitVote\" AND \"VT\".\"vote\" NOT IN ('nil-Vote', '000000000000') THEN \"V\".\"voting_power\" ELSE 0 END) AS \"totalAgreeingLastcommitVotingPower\",\n    SUM(CASE WHEN \"VT\".\"vote\" = 'nil-Vote' THEN \"V\".\"voting_power\" ELSE 0 END) AS \"totalNilvotingVotingPowerForLastCommit\",\n    SUM(CASE WHEN \"VT\".\"vote\" = '000000000000' THEN \"V\".\"voting_power\" ELSE 0 END) AS \"totalZerovotingVotingPowerForLastCommit\",\n    100.0 * SUM(CASE WHEN \"VT\".\"vote\" = \"LPV\".\"proposerLastCommitVote\" AND \"VT\".\"vote\" NOT IN ('nil-Vote', '000000000000') THEN \"V\".\"voting_power\" ELSE 0 END) / SUM(\"V\".\"voting_power\") AS \"consensusPercentage\"\nFROM \"LatestConsensusState\" \"LCS\"\nJOIN \"ValidatorsGroup\" \"VG\" ON \"LCS\".\"lastValidatorsGroupId\" = \"VG\".\"id\"\nJOIN \"Validator\" \"V\" ON \"VG\".\"id\" = \"V\".\"validatorsGroupId\"\nJOIN \"Votes\" \"VT\" ON \"V\".\"id\" = \"VT\".\"validatorId\"\nLEFT JOIN \"LastProposerVote\" \"LPV\" ON \"VT\".\"vote\" = \"LPV\".\"proposerLastCommitVote\"\nWHERE \"VT\".\"type\" = 'lastcommit';\n",
+            "template-tags": {
+              "chainId": {
+                "type": "text",
+                "name": "chainId",
+                "id": "2d6b3366-9c90-401d-9f63-59090dfc5539",
+                "display-name": "ChainId",
+                "required": true,
+                "default": [
+                  "provider"
+                ]
+              }
+            }
+          },
+          "database": 3
+        },
+        "id": 59,
+        "parameter_mappings": [],
+        "display": "object",
+        "entity_id": "aBfosj7fhSKtRHLTl26xM",
+        "collection_preview": true,
+        "visualization_settings": {
+          "table.pivot_column": "proposerAddress",
+          "table.cell_column": "totalVotingPowerForLastCommit"
+        },
+        "parameters": [
+          {
+            "slug": "chainId",
+            "values_query_type": "list",
+            "default": [
+              "provider"
+            ],
+            "name": "ChainId",
+            "type": "category",
+            "values_source_type": "card",
+            "id": "2d6b3366-9c90-401d-9f63-59090dfc5539",
+            "target": [
+              "variable",
+              [
+                "template-tag",
+                "chainId"
+              ]
+            ],
+            "values_source_config": {
+              "card_id": 60,
+              "value_field": [
+                "field",
+                "chainId",
+                {
+                  "base-type": "type/Text"
+                }
+              ]
+            }
+          }
+        ],
+        "dataset": false,
+        "created_at": "2023-10-21T09:17:25.125402",
+        "public_uuid": null
+      },
+      "updated_at": "2023-10-22T14:39:28.811943",
+      "col": 0,
+      "id": 61,
+      "parameter_mappings": [
+        {
+          "parameter_id": "577801b0",
+          "card_id": 59,
+          "target": [
+            "variable",
+            [
+              "template-tag",
+              "chainId"
+            ]
+          ]
+        }
+      ],
+      "card_id": 59,
+      "entity_id": "Vsh9mg-afc9pZ0MKRrubs",
+      "visualization_settings": {
+        "table.columns": [
+          {
+            "name": "proposerAddress",
+            "fieldRef": [
+              "field",
+              "proposerAddress",
+              {
+                "base-type": "type/Text"
+              }
+            ],
+            "enabled": false
+          },
+          {
+            "name": "proposerMoniker",
+            "fieldRef": [
+              "field",
+              "proposerMoniker",
+              {
+                "base-type": "type/Text"
+              }
+            ],
+            "enabled": true
+          },
+          {
+            "name": "proposerLastCommitVote",
+            "fieldRef": [
+              "field",
+              "proposerLastCommitVote",
+              {
+                "base-type": "type/Text"
+              }
+            ],
+            "enabled": true
+          },
+          {
+            "name": "totalVotingPowerForLastCommit",
+            "fieldRef": [
+              "field",
+              "totalVotingPowerForLastCommit",
+              {
+                "base-type": "type/Decimal"
+              }
+            ],
+            "enabled": false
+          },
+          {
+            "name": "totalAgreeingLastcommitVotingPower",
+            "fieldRef": [
+              "field",
+              "totalAgreeingLastcommitVotingPower",
+              {
+                "base-type": "type/Decimal"
+              }
+            ],
+            "enabled": false
+          },
+          {
+            "name": "totalNilvotingVotingPowerForLastCommit",
+            "fieldRef": [
+              "field",
+              "totalNilvotingVotingPowerForLastCommit",
+              {
+                "base-type": "type/Decimal"
+              }
+            ],
+            "enabled": false
+          },
+          {
+            "name": "totalZerovotingVotingPowerForLastCommit",
+            "fieldRef": [
+              "field",
+              "totalZerovotingVotingPowerForLastCommit",
+              {
+                "base-type": "type/Decimal"
+              }
+            ],
+            "enabled": false
+          },
+          {
+            "name": "consensusPercentage",
+            "fieldRef": [
+              "field",
+              "consensusPercentage",
+              {
+                "base-type": "type/Decimal"
+              }
+            ],
+            "enabled": true
+          }
+        ],
+        "card.title": "Last Commit",
+        "card.hide_empty": false,
+        "column_settings": {
+          "[\"name\",\"proposerMoniker\"]": {
+            "column_title": "Proposer"
+          },
+          "[\"name\",\"proposerLastCommitVote\"]": {
+            "column_title": "Vote"
+          },
+          "[\"name\",\"consensusPercentage\"]": {
+            "column_title": "Consensus",
+            "suffix": "%"
+          }
+        }
+      },
+      "size_y": 3,
+      "dashboard_id": 4,
+      "created_at": "2023-10-22T12:44:14.708987",
+      "row": 3
+    },
+    {
+      "size_x": 9,
+      "dashboard_tab_id": 1,
+      "series": [],
+      "action_id": null,
+      "collection_authority_level": null,
+      "card": {
+        "description": null,
+        "archived": false,
+        "collection_position": null,
+        "table_id": null,
+        "result_metadata": [
+          {
+            "display_name": "roundNumber",
+            "field_ref": [
+              "field",
+              "roundNumber",
+              {
+                "base-type": "type/BigInteger"
+              }
+            ],
+            "name": "roundNumber",
+            "base_type": "type/BigInteger",
+            "effective_type": "type/BigInteger",
+            "semantic_type": "type/Quantity",
+            "fingerprint": {
+              "global": {
+                "distinct-count": 1,
+                "nil%": 0
+              },
+              "type": {
+                "type/Number": {
+                  "min": 0,
+                  "q1": 0,
+                  "q3": 0,
+                  "max": 0,
+                  "sd": null,
+                  "avg": 0
+                }
+              }
+            }
+          },
+          {
+            "display_name": "totalVotingPowerForPrevote",
+            "field_ref": [
+              "field",
+              "totalVotingPowerForPrevote",
+              {
+                "base-type": "type/Decimal"
+              }
+            ],
+            "name": "totalVotingPowerForPrevote",
+            "base_type": "type/Decimal",
+            "effective_type": "type/Decimal",
+            "semantic_type": null,
+            "fingerprint": {
+              "global": {
+                "distinct-count": 1,
+                "nil%": 0
+              },
+              "type": {
+                "type/Number": {
+                  "min": 662299407,
+                  "q1": 662299407,
+                  "q3": 662299407,
+                  "max": 662299407,
+                  "sd": null,
+                  "avg": 662299407
+                }
+              }
+            }
+          },
+          {
+            "display_name": "totalAgreeingVotingPowerForPrevote",
+            "field_ref": [
+              "field",
+              "totalAgreeingVotingPowerForPrevote",
+              {
+                "base-type": "type/Decimal"
+              }
+            ],
+            "name": "totalAgreeingVotingPowerForPrevote",
+            "base_type": "type/Decimal",
+            "effective_type": "type/Decimal",
+            "semantic_type": null,
+            "fingerprint": {
+              "global": {
+                "distinct-count": 1,
+                "nil%": 0
+              },
+              "type": {
+                "type/Number": {
+                  "min": 0,
+                  "q1": 0,
+                  "q3": 0,
+                  "max": 0,
+                  "sd": null,
+                  "avg": 0
+                }
+              }
+            }
+          },
+          {
+            "display_name": "totalNilvotingVotingPowerForPrevote",
+            "field_ref": [
+              "field",
+              "totalNilvotingVotingPowerForPrevote",
+              {
+                "base-type": "type/Decimal"
+              }
+            ],
+            "name": "totalNilvotingVotingPowerForPrevote",
+            "base_type": "type/Decimal",
+            "effective_type": "type/Decimal",
+            "semantic_type": null,
+            "fingerprint": {
+              "global": {
+                "distinct-count": 1,
+                "nil%": 0
+              },
+              "type": {
+                "type/Number": {
+                  "min": 662299407,
+                  "q1": 662299407,
+                  "q3": 662299407,
+                  "max": 662299407,
+                  "sd": null,
+                  "avg": 662299407
+                }
+              }
+            }
+          },
+          {
+            "display_name": "totalZerovotingVotingPowerForPrevote",
+            "field_ref": [
+              "field",
+              "totalZerovotingVotingPowerForPrevote",
+              {
+                "base-type": "type/Decimal"
+              }
+            ],
+            "name": "totalZerovotingVotingPowerForPrevote",
+            "base_type": "type/Decimal",
+            "effective_type": "type/Decimal",
+            "semantic_type": null,
+            "fingerprint": {
+              "global": {
+                "distinct-count": 1,
+                "nil%": 0
+              },
+              "type": {
+                "type/Number": {
+                  "min": 0,
+                  "q1": 0,
+                  "q3": 0,
+                  "max": 0,
+                  "sd": null,
+                  "avg": 0
+                }
+              }
+            }
+          },
+          {
+            "display_name": "consensusPercentage",
+            "field_ref": [
+              "field",
+              "consensusPercentage",
+              {
+                "base-type": "type/Decimal"
+              }
+            ],
+            "name": "consensusPercentage",
+            "base_type": "type/Decimal",
+            "effective_type": "type/Decimal",
+            "semantic_type": "type/Share",
+            "fingerprint": {
+              "global": {
+                "distinct-count": 1,
+                "nil%": 0
+              },
+              "type": {
+                "type/Number": {
+                  "min": 0,
+                  "q1": 0,
+                  "q3": 0,
+                  "max": 0,
+                  "sd": null,
+                  "avg": 0
+                }
+              }
+            }
+          }
+        ],
+        "database_id": 3,
+        "enable_embedding": false,
+        "collection_id": 3,
+        "query_type": "native",
+        "name": "prod_getPrevoteVotingPowerPerRound",
+        "query_average_duration": 15,
+        "creator_id": 1,
+        "moderation_reviews": [],
+        "updated_at": "2023-10-23T06:32:46.799827Z",
+        "made_public_by_id": null,
+        "embedding_params": null,
+        "cache_ttl": null,
+        "dataset_query": {
+          "type": "native",
+          "native": {
+            "query": "WITH \"LatestConsensusState\" AS (\n    SELECT \"id\" AS \"consensusStateId\", \"validatorsGroupId\"\n    FROM \"ConsensusState\"\n    WHERE \"chainId\" = {{chainId}}\n    ORDER BY \"timestamp\" DESC\n    LIMIT 1\n),\n\"ProposerVote\" AS (\n    SELECT \"R\".\"id\" AS \"roundId\", \"V\".\"vote\" AS \"proposerVote\"\n    FROM \"Votes\" \"V\"\n    JOIN \"Validator\" \"VL\" ON \"V\".\"validatorId\" = \"VL\".\"id\"\n    JOIN \"ValidatorsGroup\" \"VG\" ON \"VL\".\"validatorsGroupId\" = \"VG\".\"id\"\n    JOIN \"Round\" \"R\" ON \"V\".\"roundId\" = \"R\".\"id\"\n    WHERE \"VG\".\"id\" = (SELECT \"validatorsGroupId\" FROM \"LatestConsensusState\")\n    AND \"V\".\"type\" = 'prevote'\n    AND \"V\".\"validatorId\" = \"VG\".\"proposerId\"\n)\nSELECT \n    \"R\".\"roundNumber\",\n    SUM(CASE WHEN \"VT\".\"type\" = 'prevote' THEN \"V\".\"voting_power\" ELSE 0 END) AS \"totalVotingPowerForPrevote\",\n    SUM(CASE WHEN \"VT\".\"type\" = 'prevote' AND \"VT\".\"vote\" = \"PV\".\"proposerVote\" AND \"VT\".\"vote\" NOT IN ('nil-Vote', '000000000000') THEN \"V\".\"voting_power\" ELSE 0 END) AS \"totalAgreeingVotingPowerForPrevote\",\n    SUM(CASE WHEN \"VT\".\"type\" = 'prevote' AND \"VT\".\"vote\" = 'nil-Vote' THEN \"V\".\"voting_power\" ELSE 0 END) AS \"totalNilvotingVotingPowerForPrevote\",\n    SUM(CASE WHEN \"VT\".\"type\" = 'prevote' AND \"VT\".\"vote\" = '000000000000' THEN \"V\".\"voting_power\" ELSE 0 END) AS \"totalZerovotingVotingPowerForPrevote\",\n    (SUM(CASE WHEN \"VT\".\"type\" = 'prevote' AND \"VT\".\"vote\" = \"PV\".\"proposerVote\" AND \"VT\".\"vote\" NOT IN ('nil-Vote', '000000000000') THEN \"V\".\"voting_power\" ELSE 0 END) * 100.0 / NULLIF(SUM(CASE WHEN \"VT\".\"type\" = 'prevote' THEN \"V\".\"voting_power\" ELSE 0 END), 0)) AS \"consensusPercentage\"\nFROM \"ValidatorsGroup\" \"VG\" \nJOIN \"Validator\" \"V\" ON \"VG\".\"id\" = \"V\".\"validatorsGroupId\" \nJOIN \"Votes\" \"VT\" ON \"V\".\"id\" = \"VT\".\"validatorId\" \nJOIN \"Round\" \"R\" ON \"VT\".\"roundId\" = \"R\".\"id\"\nLEFT JOIN \"ProposerVote\" \"PV\" ON \"R\".\"id\" = \"PV\".\"roundId\"\nWHERE \"R\".\"roundNumber\" != -1\nAND \"VG\".\"id\" = (SELECT \"validatorsGroupId\" FROM \"LatestConsensusState\")\nGROUP BY \"R\".\"roundNumber\", \"PV\".\"proposerVote\"\nORDER BY \"R\".\"roundNumber\";\n",
+            "template-tags": {
+              "chainId": {
+                "type": "text",
+                "name": "chainId",
+                "id": "4eea0763-bfd9-4500-a18a-24495cb33775",
+                "display-name": "ChainId",
+                "required": true,
+                "default": [
+                  "provider"
+                ]
+              }
+            }
+          },
+          "database": 3
+        },
+        "id": 58,
+        "parameter_mappings": [],
+        "display": "table",
+        "entity_id": "6sPZZeSHS_seG8Y6hbyio",
+        "collection_preview": true,
+        "visualization_settings": {
+          "table.pivot_column": "roundNumber",
+          "table.cell_column": "totalVotingPowerForPrevote"
+        },
+        "parameters": [
+          {
+            "slug": "chainId",
+            "values_query_type": "list",
+            "default": [
+              "provider"
+            ],
+            "name": "ChainId",
+            "type": "category",
+            "values_source_type": "card",
+            "id": "4eea0763-bfd9-4500-a18a-24495cb33775",
+            "target": [
+              "variable",
+              [
+                "template-tag",
+                "chainId"
+              ]
+            ],
+            "values_source_config": {
+              "card_id": 55,
+              "value_field": [
+                "field",
+                "chainId",
+                {
+                  "base-type": "type/Text"
+                }
+              ]
+            }
+          }
+        ],
+        "dataset": false,
+        "created_at": "2023-10-21T09:09:29.098738",
+        "public_uuid": null
+      },
+      "updated_at": "2023-10-22T14:39:28.811943",
+      "col": 15,
+      "id": 62,
+      "parameter_mappings": [
+        {
+          "parameter_id": "577801b0",
+          "card_id": 58,
+          "target": [
+            "variable",
+            [
+              "template-tag",
+              "chainId"
+            ]
+          ]
+        }
+      ],
+      "card_id": 58,
+      "entity_id": "OcAYlmUC65vQ13CQ6WgKH",
+      "visualization_settings": {
+        "table.pivot_column": "roundNumber",
+        "table.cell_column": "totalVotingPowerForPrevote",
+        "card.title": "Prevote",
+        "table.column_formatting": [
+          {
+            "columns": [
+              "consensusPercentage"
+            ],
+            "type": "single",
+            "operator": ">=",
+            "value": 66.67,
+            "color": "#A7D07C",
+            "highlight_row": true
+          }
+        ],
+        "column_settings": {
+          "[\"name\",\"roundNumber\"]": {
+            "column_title": "Round"
+          },
+          "[\"name\",\"totalVotingPowerForPrevote\"]": {
+            "column_title": "Total"
+          },
+          "[\"name\",\"totalAgreeingVotingPowerForPrevote\"]": {
+            "column_title": "Agreeing"
+          },
+          "[\"name\",\"totalNilvotingVotingPowerForPrevote\"]": {
+            "column_title": "nil-Vote"
+          },
+          "[\"name\",\"totalZerovotingVotingPowerForPrevote\"]": {
+            "column_title": "000000000000"
+          },
+          "[\"name\",\"consensusPercentage\"]": {
+            "column_title": "Consensus"
+          }
+        }
+      },
+      "size_y": 3,
+      "dashboard_id": 4,
+      "created_at": "2023-10-22T12:44:14.708987",
+      "row": 0
+    },
+    {
+      "size_x": 6,
+      "dashboard_tab_id": 1,
+      "series": [],
+      "action_id": null,
+      "collection_authority_level": null,
+      "card": {
+        "description": null,
+        "archived": false,
+        "collection_position": null,
+        "table_id": null,
+        "result_metadata": [
+          {
+            "display_name": "validatorId",
+            "field_ref": [
+              "field",
+              "validatorId",
+              {
+                "base-type": "type/Integer"
+              }
+            ],
+            "name": "validatorId",
+            "base_type": "type/Integer",
+            "effective_type": "type/Integer",
+            "semantic_type": null,
+            "fingerprint": {
+              "global": {
+                "distinct-count": 33,
+                "nil%": 0
+              },
+              "type": {
+                "type/Number": {
+                  "min": 744219,
+                  "q1": 744226.75,
+                  "q3": 744243.25,
+                  "max": 744251,
+                  "sd": 9.669539802906858,
+                  "avg": 744235
+                }
+              }
+            }
+          },
+          {
+            "display_name": "voting_power",
+            "field_ref": [
+              "field",
+              "voting_power",
+              {
+                "base-type": "type/BigInteger"
+              }
+            ],
+            "name": "voting_power",
+            "base_type": "type/BigInteger",
+            "effective_type": "type/BigInteger",
+            "semantic_type": null,
+            "fingerprint": {
+              "global": {
+                "distinct-count": 33,
+                "nil%": 0
+              },
+              "type": {
+                "type/Number": {
+                  "min": 9,
+                  "q1": 7797676,
+                  "q3": 12050273.5,
+                  "max": 133157444,
+                  "sd": 35660028.85868322,
+                  "avg": 20069679
+                }
+              }
+            }
+          },
+          {
+            "display_name": "address",
+            "field_ref": [
+              "field",
+              "address",
+              {
+                "base-type": "type/Text"
+              }
+            ],
+            "name": "address",
+            "base_type": "type/Text",
+            "effective_type": "type/Text",
+            "semantic_type": null,
+            "fingerprint": {
+              "global": {
+                "distinct-count": 33,
+                "nil%": 0
+              },
+              "type": {
+                "type/Text": {
+                  "percent-json": 0,
+                  "percent-url": 0,
+                  "percent-email": 0,
+                  "percent-state": 0,
+                  "average-length": 40
+                }
+              }
+            }
+          },
+          {
+            "display_name": "pub_key",
+            "field_ref": [
+              "field",
+              "pub_key",
+              {
+                "base-type": "type/Text"
+              }
+            ],
+            "name": "pub_key",
+            "base_type": "type/Text",
+            "effective_type": "type/Text",
+            "semantic_type": null,
+            "fingerprint": {
+              "global": {
+                "distinct-count": 33,
+                "nil%": 0
+              },
+              "type": {
+                "type/Text": {
+                  "percent-json": 1,
+                  "percent-url": 0,
+                  "percent-email": 0,
+                  "percent-state": 0,
+                  "average-length": 90
+                }
+              }
+            }
+          },
+          {
+            "display_name": "consensusAddress",
+            "field_ref": [
+              "field",
+              "consensusAddress",
+              {
+                "base-type": "type/Text"
+              }
+            ],
+            "name": "consensusAddress",
+            "base_type": "type/Text",
+            "effective_type": "type/Text",
+            "semantic_type": null,
+            "fingerprint": {
+              "global": {
+                "distinct-count": 33,
+                "nil%": 0
+              },
+              "type": {
+                "type/Text": {
+                  "percent-json": 0,
+                  "percent-url": 0,
+                  "percent-email": 0,
+                  "percent-state": 0,
+                  "average-length": 52
+                }
+              }
+            }
+          },
+          {
+            "display_name": "proposer_priority",
+            "field_ref": [
+              "field",
+              "proposer_priority",
+              {
+                "base-type": "type/BigInteger"
+              }
+            ],
+            "name": "proposer_priority",
+            "base_type": "type/BigInteger",
+            "effective_type": "type/BigInteger",
+            "semantic_type": null,
+            "fingerprint": {
+              "global": {
+                "distinct-count": 33,
+                "nil%": 0
+              },
+              "type": {
+                "type/Number": {
+                  "min": -515219755,
+                  "q1": -134115089.25,
+                  "q3": 161874246.25,
+                  "max": 332014025,
+                  "sd": 216907553.09381026,
+                  "avg": 0.06060604615644975
+                }
+              }
+            }
+          },
+          {
+            "display_name": "moniker",
+            "field_ref": [
+              "field",
+              "moniker",
+              {
+                "base-type": "type/Text"
+              }
+            ],
+            "name": "moniker",
+            "base_type": "type/Text",
+            "effective_type": "type/Text",
+            "semantic_type": null,
+            "fingerprint": {
+              "global": {
+                "distinct-count": 33,
+                "nil%": 0
+              },
+              "type": {
+                "type/Text": {
+                  "percent-json": 0,
+                  "percent-url": 0,
+                  "percent-email": 0,
+                  "percent-state": 0,
+                  "average-length": 11.575757575757576
+                }
+              }
+            }
+          },
+          {
+            "display_name": "tokens",
+            "field_ref": [
+              "field",
+              "tokens",
+              {
+                "base-type": "type/BigInteger"
+              }
+            ],
+            "name": "tokens",
+            "base_type": "type/BigInteger",
+            "effective_type": "type/BigInteger",
+            "semantic_type": null,
+            "fingerprint": {
+              "global": {
+                "distinct-count": 33,
+                "nil%": 0
+              },
+              "type": {
+                "type/Number": {
+                  "min": 9000000,
+                  "q1": 7797676390988.75,
+                  "q3": 12050274190975.25,
+                  "max": 133157444945709,
+                  "sd": 35660028903041.21,
+                  "avg": 20069679565169.453
+                }
+              }
+            }
+          }
+        ],
+        "database_id": 3,
+        "enable_embedding": false,
+        "collection_id": 3,
+        "query_type": "native",
+        "name": "prod_matchedVotingPowerDistributionPiechart",
+        "query_average_duration": 25,
+        "creator_id": 1,
+        "moderation_reviews": [],
+        "updated_at": "2023-10-23T06:32:46.899798Z",
+        "made_public_by_id": null,
+        "embedding_params": null,
+        "cache_ttl": null,
+        "dataset_query": {
+          "type": "native",
+          "native": {
+            "query": "WITH \"LatestConsensusState\" AS (\n    SELECT \"id\" AS \"latestConsensusStateId\"\n    FROM \"ConsensusState\"\n    WHERE \"chainId\" = {{chainId}}\n    ORDER BY \"timestamp\" DESC\n    LIMIT 1\n),\n\"LatestRoundsGroup\" AS (\n    SELECT \"id\" AS \"latestRoundsGroupId\"\n    FROM \"RoundsGroup\"\n    WHERE \"consensusStateId\" = (SELECT \"latestConsensusStateId\" FROM \"LatestConsensusState\")\n    LIMIT 1\n),\n\"LatestRound\" AS (\n    SELECT MAX(\"id\") AS \"latestRoundId\"\n    FROM \"Round\"\n    WHERE \"roundsGroupId\" = (SELECT \"latestRoundsGroupId\" FROM \"LatestRoundsGroup\")\n),\n\"LatestValidatorsGroupId\" AS (\n    SELECT \"validatorsGroupId\"\n    FROM \"ConsensusState\"\n    WHERE \"id\" = (SELECT \"latestConsensusStateId\" FROM \"LatestConsensusState\")\n),\n\"ChainType\" AS (\n    SELECT \"type\"\n    FROM \"ChainInfo\"\n    WHERE \"chainId\" = {{chainId}}\n    LIMIT 1\n)\n\nSELECT \n    \"V\".\"id\" AS \"validatorId\",\n    \"V\".\"voting_power\",\n    \"V\".\"address\",\n    \"V\".\"pub_key\",\n    \"V\".\"consensusAddress\",\n    \"V\".\"proposer_priority\",\n    \"SV\".\"moniker\", \n    \"SV\".\"tokens\"\nFROM \"Validator\" \"V\"\nJOIN \"LatestValidatorsGroupId\" \"LVG\" ON \"V\".\"validatorsGroupId\" = \"LVG\".\"validatorsGroupId\"\nLEFT JOIN \"StakingValidator\" \"SV\" ON \n    CASE \n        WHEN (SELECT \"type\" FROM \"ChainType\") = 'provider' THEN \"SV\".\"consensus_pubkey_key\" = (\"V\".\"pub_key\"::json)->>'value'\n        ELSE (\"SV\".\"consumer_signing_keys\"::json)->>{{chainId}}::text = \"V\".\"consensusAddress\"\n    END\nWHERE \"V\".\"id\" IN (\n    SELECT DISTINCT \"validatorId\"\n    FROM \"Votes\"\n    WHERE \"type\" = 'prevote' AND \"roundId\" = (SELECT \"latestRoundId\" FROM \"LatestRound\")\n)\nGROUP BY \"V\".\"id\", \"SV\".\"moniker\", \"SV\".\"tokens\"\nORDER BY \"V\".\"voting_power\" DESC;\n",
+            "template-tags": {
+              "chainId": {
+                "type": "text",
+                "name": "chainId",
+                "id": "35f78334-9f68-4702-aa88-d9d6a0977421",
+                "display-name": "ChainId",
+                "required": true,
+                "default": [
+                  "provider"
+                ]
+              }
+            }
+          },
+          "database": 3
+        },
+        "id": 62,
+        "parameter_mappings": [],
+        "display": "pie",
+        "entity_id": "EWJ76ZVwN-k8QydYCrbq7",
+        "collection_preview": true,
+        "visualization_settings": {
+          "pie.dimension": "moniker",
+          "pie.metric": "voting_power",
+          "pie.slice_threshold": 0.1,
+          "pie.show_legend": false,
+          "pie.show_total": true,
+          "pie.percent_visibility": "inside"
+        },
+        "parameters": [
+          {
+            "slug": "chainId",
+            "values_query_type": "list",
+            "default": [
+              "provider"
+            ],
+            "name": "ChainId",
+            "type": "category",
+            "values_source_type": "card",
+            "id": "35f78334-9f68-4702-aa88-d9d6a0977421",
+            "target": [
+              "variable",
+              [
+                "template-tag",
+                "chainId"
+              ]
+            ],
+            "values_source_config": {
+              "card_id": 60,
+              "value_field": [
+                "field",
+                "chainId",
+                {
+                  "base-type": "type/Text"
+                }
+              ]
+            }
+          }
+        ],
+        "dataset": false,
+        "created_at": "2023-10-22T13:06:36.279308",
+        "public_uuid": null
+      },
+      "updated_at": "2023-10-22T13:20:35.678461",
+      "col": 0,
+      "id": 63,
+      "parameter_mappings": [
+        {
+          "parameter_id": "577801b0",
+          "card_id": 62,
+          "target": [
+            "variable",
+            [
+              "template-tag",
+              "chainId"
+            ]
+          ]
+        }
+      ],
+      "card_id": 62,
+      "entity_id": "KMcoiz6983kDu9JFim_Qn",
+      "visualization_settings": {
+        "pie.dimension": "moniker",
+        "pie.metric": "voting_power",
+        "pie.slice_threshold": 0.1,
+        "pie.show_legend": false,
+        "pie.show_total": true,
+        "pie.percent_visibility": "inside",
+        "card.title": ""
+      },
+      "size_y": 5,
+      "dashboard_id": 4,
+      "created_at": "2023-10-22T13:08:35.334264",
+      "row": 6
+    },
+    {
+      "size_x": 9,
+      "dashboard_tab_id": 1,
+      "series": [],
+      "action_id": null,
+      "collection_authority_level": null,
+      "card": {
+        "description": null,
+        "archived": false,
+        "collection_position": null,
+        "table_id": null,
+        "result_metadata": [
+          {
+            "display_name": "proposer_address",
+            "field_ref": [
+              "field",
+              "proposer_address",
+              {
+                "base-type": "type/Text"
+              }
+            ],
+            "name": "proposer_address",
+            "base_type": "type/Text",
+            "effective_type": "type/Text",
+            "semantic_type": null,
+            "fingerprint": {
+              "global": {
+                "distinct-count": 1,
+                "nil%": 0
+              },
+              "type": {
+                "type/Text": {
+                  "percent-json": 0,
+                  "percent-url": 0,
+                  "percent-email": 0,
+                  "percent-state": 0,
+                  "average-length": 40
+                }
+              }
+            }
+          },
+          {
+            "display_name": "proposer_operator_address",
+            "field_ref": [
+              "field",
+              "proposer_operator_address",
+              {
+                "base-type": "type/Text"
+              }
+            ],
+            "name": "proposer_operator_address",
+            "base_type": "type/Text",
+            "effective_type": "type/Text",
+            "semantic_type": null,
+            "fingerprint": {
+              "global": {
+                "distinct-count": 1,
+                "nil%": 0
+              },
+              "type": {
+                "type/Text": {
+                  "percent-json": 0,
+                  "percent-url": 0,
+                  "percent-email": 0,
+                  "percent-state": 0,
+                  "average-length": 52
+                }
+              }
+            }
+          },
+          {
+            "display_name": "proposer_moniker",
+            "field_ref": [
+              "field",
+              "proposer_moniker",
+              {
+                "base-type": "type/Text"
+              }
+            ],
+            "name": "proposer_moniker",
+            "base_type": "type/Text",
+            "effective_type": "type/Text",
+            "semantic_type": null,
+            "fingerprint": {
+              "global": {
+                "distinct-count": 1,
+                "nil%": 0
+              },
+              "type": {
+                "type/Text": {
+                  "percent-json": 0,
+                  "percent-url": 0,
+                  "percent-email": 0,
+                  "percent-state": 0,
+                  "average-length": 10
+                }
+              }
+            }
+          },
+          {
+            "display_name": "prevote_vote",
+            "field_ref": [
+              "field",
+              "prevote_vote",
+              {
+                "base-type": "type/Text"
+              }
+            ],
+            "name": "prevote_vote",
+            "base_type": "type/Text",
+            "effective_type": "type/Text",
+            "semantic_type": null,
+            "fingerprint": {
+              "global": {
+                "distinct-count": 1,
+                "nil%": 0
+              },
+              "type": {
+                "type/Text": {
+                  "percent-json": 0,
+                  "percent-url": 0,
+                  "percent-email": 0,
+                  "percent-state": 0,
+                  "average-length": 8
+                }
+              }
+            }
+          },
+          {
+            "display_name": "precommit_vote",
+            "field_ref": [
+              "field",
+              "precommit_vote",
+              {
+                "base-type": "type/Text"
+              }
+            ],
+            "name": "precommit_vote",
+            "base_type": "type/Text",
+            "effective_type": "type/Text",
+            "semantic_type": null,
+            "fingerprint": {
+              "global": {
+                "distinct-count": 1,
+                "nil%": 0
+              },
+              "type": {
+                "type/Text": {
+                  "percent-json": 0,
+                  "percent-url": 0,
+                  "percent-email": 0,
+                  "percent-state": 0,
+                  "average-length": 8
+                }
+              }
+            }
+          }
+        ],
+        "database_id": 3,
+        "enable_embedding": false,
+        "collection_id": 3,
+        "query_type": "native",
+        "name": "prod_getCurrentRoundProposer",
+        "query_average_duration": 13,
+        "creator_id": 1,
+        "moderation_reviews": [],
+        "updated_at": "2023-10-23T06:32:46.792571Z",
+        "made_public_by_id": null,
+        "embedding_params": null,
+        "cache_ttl": null,
+        "dataset_query": {
+          "type": "native",
+          "native": {
+            "query": "WITH \"LatestConsensusState\" AS (\n    SELECT MAX(\"id\") AS \"id\"\n    FROM \"ConsensusState\"\n    WHERE \"chainId\" = {{ chainId }}\n)\nSELECT \n    \"V\".\"address\" AS \"proposer_address\",\n    \"SV\".\"operator_address\" AS \"proposer_operator_address\",\n    \"SV\".\"moniker\" AS \"proposer_moniker\",\n    \"VT\".\"vote\" AS \"prevote_vote\",\n    \"VT2\".\"vote\" AS \"precommit_vote\"\nFROM \n    \"LatestConsensusState\" \"LCS\"\nJOIN \"ConsensusState\" \"CS\" ON \"LCS\".\"id\" = \"CS\".\"id\"\nJOIN \"ValidatorsGroup\" \"VG\" ON \"CS\".\"id\" = \"VG\".\"consensusStateId\"\nJOIN \"Validator\" \"V\" ON \"VG\".\"proposerId\" = \"V\".\"id\"\nLEFT JOIN \"StakingValidator\" \"SV\" ON \n    CASE \n        WHEN (SELECT \"type\" FROM \"ChainInfo\" WHERE \"chainId\" = {{ chainId }} LIMIT 1) = 'provider' THEN \"SV\".\"consensus_pubkey_key\" = (\"V\".\"pub_key\"::json)->>'value'\n        ELSE (\"SV\".\"consumer_signing_keys\"::json)->>{{chainId}}::text = \"V\".\"consensusAddress\"\n    END\nLEFT JOIN \"Votes\" \"VT\" ON \"V\".\"id\" = \"VT\".\"validatorId\" AND \"VT\".\"type\" = 'prevote'\nLEFT JOIN \"Votes\" \"VT2\" ON \"V\".\"id\" = \"VT2\".\"validatorId\" AND \"VT2\".\"type\" = 'precommit'\nWHERE \n    \"VG\".\"type\" = 'current'\nLIMIT 1;",
+            "template-tags": {
+              "chainId": {
+                "type": "text",
+                "name": "chainId",
+                "id": "f26fac78-fe12-4b24-8d67-363eb65109cb",
+                "display-name": "ChainId",
+                "required": true,
+                "default": [
+                  "provider"
+                ]
+              }
+            }
+          },
+          "database": 3
+        },
+        "id": 63,
+        "parameter_mappings": [],
+        "display": "object",
+        "entity_id": "PjpkRosiIYA3ebLJG6yEq",
+        "collection_preview": true,
+        "visualization_settings": {
+          "table.pivot_column": "proposer_address",
+          "table.cell_column": "precommit_vote"
+        },
+        "parameters": [
+          {
+            "slug": "chainId",
+            "values_query_type": "list",
+            "default": [
+              "provider"
+            ],
+            "name": "ChainId",
+            "type": "category",
+            "values_source_type": "card",
+            "id": "f26fac78-fe12-4b24-8d67-363eb65109cb",
+            "target": [
+              "variable",
+              [
+                "template-tag",
+                "chainId"
+              ]
+            ],
+            "values_source_config": {
+              "card_id": 60,
+              "value_field": [
+                "field",
+                "chainId",
+                {
+                  "base-type": "type/Text"
+                }
+              ]
+            }
+          }
+        ],
+        "dataset": false,
+        "created_at": "2023-10-22T13:15:07.232253",
+        "public_uuid": null
+      },
+      "updated_at": "2023-10-22T14:39:28.811943",
+      "col": 6,
+      "id": 64,
+      "parameter_mappings": [
+        {
+          "parameter_id": "577801b0",
+          "card_id": 63,
+          "target": [
+            "variable",
+            [
+              "template-tag",
+              "chainId"
+            ]
+          ]
+        }
+      ],
+      "card_id": 63,
+      "entity_id": "fNzXDYHw1tA43FWzPAbov",
+      "visualization_settings": {
+        "table.pivot_column": "proposer_address",
+        "table.cell_column": "precommit_vote",
+        "card.title": "Current Round",
+        "table.columns": [
+          {
+            "name": "proposer_address",
+            "fieldRef": [
+              "field",
+              "proposer_address",
+              {
+                "base-type": "type/Text"
+              }
+            ],
+            "enabled": false
+          },
+          {
+            "name": "proposer_operator_address",
+            "fieldRef": [
+              "field",
+              "proposer_operator_address",
+              {
+                "base-type": "type/Text"
+              }
+            ],
+            "enabled": false
+          },
+          {
+            "name": "proposer_moniker",
+            "fieldRef": [
+              "field",
+              "proposer_moniker",
+              {
+                "base-type": "type/Text"
+              }
+            ],
+            "enabled": true
+          },
+          {
+            "name": "prevote_vote",
+            "fieldRef": [
+              "field",
+              "prevote_vote",
+              {
+                "base-type": "type/Text"
+              }
+            ],
+            "enabled": true
+          },
+          {
+            "name": "precommit_vote",
+            "fieldRef": [
+              "field",
+              "precommit_vote",
+              {
+                "base-type": "type/Text"
+              }
+            ],
+            "enabled": true
+          }
+        ],
+        "column_settings": {
+          "[\"name\",\"proposer_moniker\"]": {
+            "column_title": "Proposer"
+          },
+          "[\"name\",\"prevote_vote\"]": {
+            "column_title": "Prevote"
+          },
+          "[\"name\",\"precommit_vote\"]": {
+            "column_title": "Precommit"
+          }
+        }
+      },
+      "size_y": 3,
+      "dashboard_id": 4,
+      "created_at": "2023-10-22T13:16:22.835634",
+      "row": 3
+    },
+    {
+      "size_x": 9,
+      "dashboard_tab_id": 1,
+      "series": [],
+      "action_id": null,
+      "collection_authority_level": null,
+      "card": {
+        "description": null,
+        "archived": false,
+        "collection_position": null,
+        "table_id": null,
+        "result_metadata": [
+          {
+            "display_name": "roundNumber",
+            "field_ref": [
+              "field",
+              "roundNumber",
+              {
+                "base-type": "type/BigInteger"
+              }
+            ],
+            "name": "roundNumber",
+            "base_type": "type/BigInteger",
+            "effective_type": "type/BigInteger",
+            "semantic_type": "type/Quantity",
+            "fingerprint": {
+              "global": {
+                "distinct-count": 1,
+                "nil%": 0
+              },
+              "type": {
+                "type/Number": {
+                  "min": 0,
+                  "q1": 0,
+                  "q3": 0,
+                  "max": 0,
+                  "sd": null,
+                  "avg": 0
+                }
+              }
+            }
+          },
+          {
+            "display_name": "totalVotingPowerForPrecommit",
+            "field_ref": [
+              "field",
+              "totalVotingPowerForPrecommit",
+              {
+                "base-type": "type/Decimal"
+              }
+            ],
+            "name": "totalVotingPowerForPrecommit",
+            "base_type": "type/Decimal",
+            "effective_type": "type/Decimal",
+            "semantic_type": null,
+            "fingerprint": {
+              "global": {
+                "distinct-count": 1,
+                "nil%": 0
+              },
+              "type": {
+                "type/Number": {
+                  "min": 662299407,
+                  "q1": 662299407,
+                  "q3": 662299407,
+                  "max": 662299407,
+                  "sd": null,
+                  "avg": 662299407
+                }
+              }
+            }
+          },
+          {
+            "display_name": "totalAgreeingVotingPowerForPrecommit",
+            "field_ref": [
+              "field",
+              "totalAgreeingVotingPowerForPrecommit",
+              {
+                "base-type": "type/Decimal"
+              }
+            ],
+            "name": "totalAgreeingVotingPowerForPrecommit",
+            "base_type": "type/Decimal",
+            "effective_type": "type/Decimal",
+            "semantic_type": null,
+            "fingerprint": {
+              "global": {
+                "distinct-count": 1,
+                "nil%": 0
+              },
+              "type": {
+                "type/Number": {
+                  "min": 0,
+                  "q1": 0,
+                  "q3": 0,
+                  "max": 0,
+                  "sd": null,
+                  "avg": 0
+                }
+              }
+            }
+          },
+          {
+            "display_name": "totalNilvotingVotingPowerForPrecommit",
+            "field_ref": [
+              "field",
+              "totalNilvotingVotingPowerForPrecommit",
+              {
+                "base-type": "type/Decimal"
+              }
+            ],
+            "name": "totalNilvotingVotingPowerForPrecommit",
+            "base_type": "type/Decimal",
+            "effective_type": "type/Decimal",
+            "semantic_type": null,
+            "fingerprint": {
+              "global": {
+                "distinct-count": 1,
+                "nil%": 0
+              },
+              "type": {
+                "type/Number": {
+                  "min": 662299407,
+                  "q1": 662299407,
+                  "q3": 662299407,
+                  "max": 662299407,
+                  "sd": null,
+                  "avg": 662299407
+                }
+              }
+            }
+          },
+          {
+            "display_name": "totalZerovotingVotingPowerForPrecommit",
+            "field_ref": [
+              "field",
+              "totalZerovotingVotingPowerForPrecommit",
+              {
+                "base-type": "type/Decimal"
+              }
+            ],
+            "name": "totalZerovotingVotingPowerForPrecommit",
+            "base_type": "type/Decimal",
+            "effective_type": "type/Decimal",
+            "semantic_type": null,
+            "fingerprint": {
+              "global": {
+                "distinct-count": 1,
+                "nil%": 0
+              },
+              "type": {
+                "type/Number": {
+                  "min": 0,
+                  "q1": 0,
+                  "q3": 0,
+                  "max": 0,
+                  "sd": null,
+                  "avg": 0
+                }
+              }
+            }
+          },
+          {
+            "display_name": "consensusPercentage",
+            "field_ref": [
+              "field",
+              "consensusPercentage",
+              {
+                "base-type": "type/Decimal"
+              }
+            ],
+            "name": "consensusPercentage",
+            "base_type": "type/Decimal",
+            "effective_type": "type/Decimal",
+            "semantic_type": "type/Share",
+            "fingerprint": {
+              "global": {
+                "distinct-count": 1,
+                "nil%": 0
+              },
+              "type": {
+                "type/Number": {
+                  "min": 0,
+                  "q1": 0,
+                  "q3": 0,
+                  "max": 0,
+                  "sd": null,
+                  "avg": 0
+                }
+              }
+            }
+          }
+        ],
+        "database_id": 3,
+        "enable_embedding": false,
+        "collection_id": 3,
+        "query_type": "native",
+        "name": "prod_getPrecommitVotingPowerPerRound",
+        "query_average_duration": 12,
+        "creator_id": 1,
+        "moderation_reviews": [],
+        "updated_at": "2023-10-23T06:32:46.855371Z",
+        "made_public_by_id": null,
+        "embedding_params": null,
+        "cache_ttl": null,
+        "dataset_query": {
+          "type": "native",
+          "native": {
+            "query": "WITH \"LatestConsensusState\" AS (\n    SELECT \"id\" AS \"consensusStateId\", \"validatorsGroupId\"\n    FROM \"ConsensusState\"\n    WHERE \"chainId\" = {{chainId}}\n    ORDER BY \"timestamp\" DESC\n    LIMIT 1\n)\n\nSELECT \n    \"R\".\"roundNumber\",\n    SUM(CASE WHEN \"VT\".\"type\" = 'precommit' THEN \"V\".\"voting_power\" ELSE 0 END) AS \"totalVotingPowerForPrecommit\",\n    SUM(CASE WHEN \"VT\".\"type\" = 'precommit' AND \"VT\".\"vote\" = (SELECT \"vote\" FROM \"Votes\" WHERE \"validatorId\" = \"VG\".\"proposerId\" AND \"type\" = 'precommit' AND \"roundId\" = \"R\".\"id\") AND \"VT\".\"vote\" NOT IN ('nil-Vote', '000000000000') THEN \"V\".\"voting_power\" ELSE 0 END) AS \"totalAgreeingVotingPowerForPrecommit\",\n    SUM(CASE WHEN \"VT\".\"type\" = 'precommit' AND \"VT\".\"vote\" = 'nil-Vote' THEN \"V\".\"voting_power\" ELSE 0 END) AS \"totalNilvotingVotingPowerForPrecommit\",\n    SUM(CASE WHEN \"VT\".\"type\" = 'precommit' AND \"VT\".\"vote\" = '000000000000' THEN \"V\".\"voting_power\" ELSE 0 END) AS \"totalZerovotingVotingPowerForPrecommit\",\n    (SUM(CASE WHEN \"VT\".\"type\" = 'precommit' AND \"VT\".\"vote\" = (SELECT \"vote\" FROM \"Votes\" WHERE \"validatorId\" = \"VG\".\"proposerId\" AND \"type\" = 'precommit' AND \"roundId\" = \"R\".\"id\") AND \"VT\".\"vote\" NOT IN ('nil-Vote', '000000000000') THEN \"V\".\"voting_power\" ELSE 0 END) * 100.0 / NULLIF(SUM(CASE WHEN \"VT\".\"type\" = 'precommit' THEN \"V\".\"voting_power\" ELSE 0 END), 0)) AS \"consensusPercentage\"\nFROM \"ValidatorsGroup\" \"VG\" \nJOIN \"Validator\" \"V\" ON \"VG\".\"id\" = \"V\".\"validatorsGroupId\" \nJOIN \"Votes\" \"VT\" ON \"V\".\"id\" = \"VT\".\"validatorId\" \nJOIN \"Round\" \"R\" ON \"VT\".\"roundId\" = \"R\".\"id\"\nWHERE \"R\".\"roundNumber\" != -1\nAND \"VG\".\"id\" = (SELECT \"validatorsGroupId\" FROM \"LatestConsensusState\")\nGROUP BY \"R\".\"roundNumber\"\nORDER BY \"R\".\"roundNumber\";\n",
+            "template-tags": {
+              "chainId": {
+                "type": "text",
+                "name": "chainId",
+                "id": "fabfc560-0269-40a2-9d73-8bbfc4ea816f",
+                "display-name": "ChainId",
+                "required": true,
+                "default": [
+                  "provider"
+                ]
+              }
+            }
+          },
+          "database": 3
+        },
+        "id": 64,
+        "parameter_mappings": [],
+        "display": "table",
+        "entity_id": "-FIe8oZpt6Y8M_r0692m5",
+        "collection_preview": true,
+        "visualization_settings": {
+          "table.pivot_column": "roundNumber",
+          "table.cell_column": "totalVotingPowerForPrecommit"
+        },
+        "parameters": [
+          {
+            "slug": "chainId",
+            "values_query_type": "list",
+            "default": [
+              "provider"
+            ],
+            "name": "ChainId",
+            "type": "category",
+            "values_source_type": "card",
+            "id": "fabfc560-0269-40a2-9d73-8bbfc4ea816f",
+            "target": [
+              "variable",
+              [
+                "template-tag",
+                "chainId"
+              ]
+            ],
+            "values_source_config": {
+              "card_id": 60,
+              "value_field": [
+                "field",
+                "chainId",
+                {
+                  "base-type": "type/Text"
+                }
+              ]
+            }
+          }
+        ],
+        "dataset": false,
+        "created_at": "2023-10-22T14:22:20.456786",
+        "public_uuid": null
+      },
+      "updated_at": "2023-10-22T14:39:28.811943",
+      "col": 15,
+      "id": 65,
+      "parameter_mappings": [],
+      "card_id": 64,
+      "entity_id": "uMsUsblofjKUB14pCYDgi",
+      "visualization_settings": {
+        "table.pivot_column": "roundNumber",
+        "table.cell_column": "totalVotingPowerForPrecommit",
+        "card.title": "Precommit",
+        "column_settings": {
+          "[\"name\",\"roundNumber\"]": {
+            "column_title": "Round"
+          },
+          "[\"name\",\"totalVotingPowerForPrecommit\"]": {
+            "column_title": "Total"
+          },
+          "[\"name\",\"totalAgreeingVotingPowerForPrecommit\"]": {
+            "column_title": "Agreeing"
+          },
+          "[\"name\",\"totalNilvotingVotingPowerForPrecommit\"]": {
+            "column_title": "nil-Vote"
+          },
+          "[\"name\",\"totalZerovotingVotingPowerForPrecommit\"]": {
+            "column_title": "000000000000"
+          },
+          "[\"name\",\"consensusPercentage\"]": {
+            "column_title": "Consensus",
+            "suffix": "%"
+          }
+        }
+      },
+      "size_y": 3,
+      "dashboard_id": 4,
+      "created_at": "2023-10-22T14:23:47.997988",
+      "row": 3
+    },
+    {
+      "size_x": 6,
+      "dashboard_tab_id": 1,
+      "series": [],
+      "action_id": null,
+      "collection_authority_level": null,
+      "card": {
+        "description": null,
+        "archived": false,
+        "collection_position": null,
+        "table_id": null,
+        "result_metadata": [
+          {
+            "display_name": "stakingValidatorMoniker",
+            "field_ref": [
+              "field",
+              "stakingValidatorMoniker",
+              {
+                "base-type": "type/Text"
+              }
+            ],
+            "name": "stakingValidatorMoniker",
+            "base_type": "type/Text",
+            "effective_type": "type/Text",
+            "semantic_type": null,
+            "fingerprint": {
+              "global": {
+                "distinct-count": 0,
+                "nil%": null
+              },
+              "type": {
+                "type/Text": {
+                  "percent-json": null,
+                  "percent-url": null,
+                  "percent-email": null,
+                  "percent-state": null,
+                  "average-length": null
+                }
+              }
+            }
+          },
+          {
+            "display_name": "updatedConsumerSigningKey",
+            "field_ref": [
+              "field",
+              "updatedConsumerSigningKey",
+              {
+                "base-type": "type/Text"
+              }
+            ],
+            "name": "updatedConsumerSigningKey",
+            "base_type": "type/Text",
+            "effective_type": "type/Text",
+            "semantic_type": null,
+            "fingerprint": {
+              "global": {
+                "distinct-count": 0,
+                "nil%": null
+              },
+              "type": {
+                "type/Text": {
+                  "percent-json": null,
+                  "percent-url": null,
+                  "percent-email": null,
+                  "percent-state": null,
+                  "average-length": null
+                }
+              }
+            }
+          }
+        ],
+        "database_id": 3,
+        "enable_embedding": false,
+        "collection_id": 3,
+        "query_type": "native",
+        "name": "prod_pendingConsumerSiginingKeyUpdates",
+        "query_average_duration": 22,
+        "creator_id": 1,
+        "moderation_reviews": [],
+        "updated_at": "2023-10-23T06:32:46.899355Z",
+        "made_public_by_id": null,
+        "embedding_params": null,
+        "cache_ttl": null,
+        "dataset_query": {
+          "type": "native",
+          "native": {
+            "query": "WITH \"LatestConsensusState\" AS (\n    SELECT \"id\" AS \"latestConsensusStateId\", \"validatorsGroupId\"\n    FROM \"ConsensusState\"\n    WHERE \"chainId\" = {{chainId}}\n    ORDER BY \"timestamp\" DESC\n    LIMIT 1\n),\n\"LatestRoundsGroup\" AS (\n    SELECT \"id\" AS \"latestRoundsGroupId\"\n    FROM \"RoundsGroup\"\n    WHERE \"consensusStateId\" = (SELECT \"latestConsensusStateId\" FROM \"LatestConsensusState\")\n    LIMIT 1\n),\n\"LatestRound\" AS (\n    SELECT MAX(\"id\") AS \"latestRoundId\"\n    FROM \"Round\"\n    WHERE \"roundsGroupId\" = (SELECT \"latestRoundsGroupId\" FROM \"LatestRoundsGroup\")\n),\n\"LatestValidatorsGroupId\" AS (\n    SELECT \"validatorsGroupId\"\n    FROM \"ConsensusState\"\n    WHERE \"id\" = (SELECT \"latestConsensusStateId\" FROM \"LatestConsensusState\")\n),\n\"ChainType\" AS (\n    SELECT \"type\"\n    FROM \"ChainInfo\"\n    WHERE \"chainId\" = {{chainId}}\n    LIMIT 1\n),\n\"LastProposerVote\" AS (\n    SELECT \n        (SELECT MAX(\"vote\") FROM \"Votes\" WHERE \"validatorId\" = \"VG\".\"proposerId\" AND \"type\" = 'prevote' AND \"roundId\" = (SELECT \"latestRoundId\" FROM \"LatestRound\")) AS \"prevoteProposerVote\",\n        (SELECT MAX(\"vote\") FROM \"Votes\" WHERE \"validatorId\" = \"VG\".\"proposerId\" AND \"type\" = 'precommit' AND \"roundId\" = (SELECT \"latestRoundId\" FROM \"LatestRound\")) AS \"precommitProposerVote\"\n    FROM \"LatestConsensusState\" \"LCS\"\n    JOIN \"ValidatorsGroup\" \"VG\" ON \"LCS\".\"validatorsGroupId\" = \"VG\".\"id\"\n)\nSELECT \n    \"SV\".\"moniker\" AS \"stakingValidatorMoniker\",\n    CASE \n        WHEN \"SV\".\"consumer_signing_keys\" IS NULL THEN 'Consumer signing key not found'\n        ELSE (\"SV\".\"consumer_signing_keys\"::json)->>{{chainId}}::text\n    END AS \"updatedConsumerSigningKey\"\nFROM \"StakingValidator\" \"SV\"\nLEFT JOIN \"Validator\" \"V\" ON \n    CASE \n        WHEN (SELECT \"type\" FROM \"ChainType\") = 'provider' THEN \"SV\".\"consensus_pubkey_key\" = (\"V\".\"pub_key\"::json)->>'value'\n        ELSE (\"SV\".\"consumer_signing_keys\"::json)->>{{chainId}}::text = \"V\".\"consensusAddress\"\n    END\nWHERE \"V\".\"id\" IS NULL\nAND \"SV\".\"id\" IN (\n    SELECT DISTINCT \"validatorId\"\n    FROM \"Votes\"\n    WHERE \"type\" = 'prevote' AND \"roundId\" = (SELECT \"latestRoundId\" FROM \"LatestRound\")\n);\n",
+            "template-tags": {
+              "chainId": {
+                "type": "text",
+                "name": "chainId",
+                "id": "3a3ce40e-5a7b-41a6-a271-453be71bb95a",
+                "display-name": "ChainId",
+                "required": true,
+                "default": [
+                  "provider"
+                ]
+              }
+            }
+          },
+          "database": 3
+        },
+        "id": 65,
+        "parameter_mappings": [],
+        "display": "table",
+        "entity_id": "xJ3ULrXz3P_7vidWHDur5",
+        "collection_preview": true,
+        "visualization_settings": {
+          "table.pivot_column": "stakingValidatorMoniker",
+          "table.cell_column": "pendingConsumerSiginingKeyUpdates"
+        },
+        "parameters": [
+          {
+            "slug": "chainId",
+            "values_query_type": "list",
+            "default": [
+              "provider"
+            ],
+            "name": "ChainId",
+            "type": "category",
+            "values_source_type": "card",
+            "id": "3a3ce40e-5a7b-41a6-a271-453be71bb95a",
+            "target": [
+              "variable",
+              [
+                "template-tag",
+                "chainId"
+              ]
+            ],
+            "values_source_config": {
+              "card_id": 60,
+              "value_field": [
+                "field",
+                "chainId",
+                {
+                  "base-type": "type/Text"
+                }
+              ]
+            }
+          }
+        ],
+        "dataset": false,
+        "created_at": "2023-10-22T14:38:10.299607",
+        "public_uuid": null
+      },
+      "updated_at": "2023-10-22T14:39:28.811943",
+      "col": 0,
+      "id": 66,
+      "parameter_mappings": [],
+      "card_id": 65,
+      "entity_id": "H8Y7JC6RS1Fzt9nkdHRPB",
+      "visualization_settings": {
+        "table.pivot_column": "stakingValidatorMoniker",
+        "table.cell_column": "pendingConsumerSiginingKeyUpdates",
+        "card.title": "Pending Consumer-Signing-Key Updates"
+      },
+      "size_y": 5,
+      "dashboard_id": 4,
+      "created_at": "2023-10-22T14:39:28.811943",
+      "row": 11
+    }
+  ],
+  "param_values": null,
+  "can_write": true,
+  "enable_embedding": false,
+  "collection_id": 3,
+  "show_in_getting_started": false,
+  "name": "ics-valset-monitoring - PROD",
+  "caveats": null,
+  "collection_authority_level": null,
+  "creator_id": 1,
+  "updated_at": "2023-10-22T14:42:11.714179",
+  "made_public_by_id": null,
+  "embedding_params": null,
+  "cache_ttl": null,
+  "ordered_tabs": [
+    {
+      "id": 1,
+      "dashboard_id": 4,
+      "name": "Tab 1",
+      "position": 0,
+      "entity_id": "FVb9UaOfWQzODCaydsuks",
+      "created_at": "2023-10-21T08:33:59.43485Z",
+      "updated_at": "2023-10-21T08:33:59.43485Z"
+    }
+  ],
+  "id": 4,
+  "position": null,
+  "entity_id": "F4WXurRoOe24AEPBMO0cU",
+  "param_fields": null,
+  "last-edit-info": {
+    "id": 1,
+    "email": "cs@ccvalidators.com",
+    "first_name": "Clemens",
+    "last_name": "Scarpatetti",
+    "timestamp": "2023-10-22T14:42:11.733955Z"
+  },
+  "collection": {
+    "authority_level": null,
+    "description": null,
+    "archived": false,
+    "slug": "prod_ics_valset_monitoring",
+    "color": "#509EE3",
+    "name": "prod-ics-valset-monitoring",
+    "personal_owner_id": null,
+    "type": null,
+    "id": 3,
+    "entity_id": "RTkC0eM6zZUTbXny-2ogP",
+    "location": "/",
+    "namespace": null,
+    "created_at": "2023-10-21T08:36:00.506055Z"
+  },
+  "parameters": [
+    {
+      "slug": "select_chain_id",
+      "values_query_type": "list",
+      "default": [
+        "provider"
+      ],
+      "name": "Select Chain ID",
+      "type": "string/=",
+      "sectionId": "string",
+      "values_source_type": "card",
+      "id": "577801b0",
+      "values_source_config": {
+        "card_id": 17,
+        "value_field": [
+          "field",
+          "chainId",
+          {
+            "base-type": "type/Text"
+          }
+        ]
+      }
+    }
+  ],
+  "auto_apply_filters": true,
+  "created_at": "2023-10-21T08:27:34.898442",
+  "public_uuid": null,
+  "points_of_interest": null
+}
