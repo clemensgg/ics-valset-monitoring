@@ -30,6 +30,11 @@ services:
       - postgres-icsvalset
     networks:
       - icsvalset_network
+    volumes:
+      - ./grafana-provisioning/:/home/service/.grafana/provisioning
+      - ./grafana-provisioning/:/home/service/.grafana/grafana.ini
+    environment:
+      - GF_DASHBOARDS_MIN_REFRESH_INTERVAL="1s"
 
   indexer-icsvalset:
     build: . 
@@ -45,8 +50,6 @@ services:
       - SOVEREIGN_RPC
       - CONSUMER_RPCS
       - NUM_WORKERS
-      - GF_USERS_DEFAULT_THEME="dark"
-      - GF_DASHBOARDS_MIN_REFRESH_INTERVAL="1s"
 
 networks:
   icsvalset_network:
