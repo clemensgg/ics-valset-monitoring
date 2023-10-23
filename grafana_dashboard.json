@@ -91,7 +91,7 @@
       "options": {
         "colorMode": "none",
         "graphMode": "area",
-        "justifyMode": "center",
+        "justifyMode": "auto",
         "orientation": "horizontal",
         "reduceOptions": {
           "calcs": [
@@ -104,7 +104,7 @@
           "titleSize": 14,
           "valueSize": 24
         },
-        "textMode": "value"
+        "textMode": "value_and_name"
       },
       "pluginVersion": "10.1.5",
       "targets": [
@@ -1503,6 +1503,6 @@
   "timezone": "",
   "title": "icsValsetMonitoring - TEST",
   "uid": "ae2d1868-c009-472b-b094-55b69a70cda0",
-  "version": 5,
+  "version": 6,
   "weekStart": ""
 }
