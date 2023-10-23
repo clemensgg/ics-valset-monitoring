@@ -3,7 +3,7 @@ import Joi from 'joi';
 const CONFIGSchema = Joi.object({
     PROVIDER_RPC: Joi.string().required(),
     PROVIDER_REST: Joi.string().required(),
-    SOVEREIGN_REST: Joi.string().required(),
+    SOVEREIGN_REST: Joi.string(),
     CONSUMER_RPCS: Joi.array().items(Joi.string()).required(),
     RPC_DELAY_MS: Joi.number().required(),
     UPDATE_DB_FREQUENCY_MS: Joi.number().required(),
