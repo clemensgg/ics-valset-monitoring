@@ -4,7 +4,7 @@ import { CONFIG } from '../config.js'
 const { Client } = pkg;
 
 const client = new Client({
-  host: 'localhost',
+  host: 'postgres-icsvalset',
   port: CONFIG.pg.port ?? 5432,
   user: CONFIG.pg.user ?? "monitoring",
   password: CONFIG.pg.password ?? "monitoring",
