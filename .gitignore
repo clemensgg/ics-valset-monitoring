@@ -2,3 +2,5 @@ node_modules
 *.sqlite
 *.db
 .notes*
+./indexer/config.js
+./src/config.js
