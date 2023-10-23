@@ -2,8 +2,8 @@ import { Worker } from 'worker_threads';
 import { fileURLToPath } from 'url';
 import path from 'path';
 
-import {loadConfig } from './configLoader.js'
-await loadConfig()
+import { loadConfig } from './configLoader.js'
+await loadConfig();
 
 const currentFilePath = fileURLToPath(import.meta.url);
 const workerFilePath = path.resolve(path.dirname(currentFilePath), './db/updateStakingDatabaseWorker.js');
