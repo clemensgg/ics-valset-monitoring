@@ -14,4 +14,4 @@ RUN npm install
 COPY . .
 
 # Launch indexer
-CMD [ "npm", "indexer" ]
+CMD npm run indexer

@@ -8,8 +8,6 @@ services:
       POSTGRES_DB: icsValsetMonitoring
       POSTGRES_USER: monitoring
       POSTGRES_PASSWORD: monitoring
-    ports:
-      - "5432:5432"
     networks:
       - icsvalset_network
 
@@ -36,12 +34,8 @@ services:
   indexer-icsvalset:
     build: . 
     container_name: indexer-icsvalset
-    ports:
-      - "3019:3019"
     depends_on:
       - postgres-icsvalset
-    environment:
-      - SOME_ENV_VAR=value
     networks:
       - icsvalset_network
 

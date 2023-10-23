@@ -7,28 +7,24 @@ API_URL="http://localhost:3000"
 install-docker:
 ifndef DOCKER
 	@echo "Installing Docker..."
-	sudo apt-get update
-	sudo apt-get install -y docker.io
+	sudo apt update
+	sudo apt install -y docker.io docker-compose jq
 	sudo usermod -aG docker $$USER
 endif
+
+install-npm:
+	@echo "Installing NPM..."
+	sudo apt install -y npm
 
 install-node:
 ifndef NODE
 	@echo "Installing NVM and Node.js..."
 	curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.0/install.sh | bash
-	export NVM_DIR="$$HOME/.nvm"
-	[ -s "$$NVM_DIR/nvm.sh" ] && \. "$$NVM_DIR/nvm.sh"
-	nvm install 18 --lts
+	export NVM_DIR="$$HOME/.nvm" ;\
+	[ -s "$$NVM_DIR/nvm.sh" ] && \. "$$NVM_DIR/nvm.sh" ;\
+	nvm install 18 --lts ;\
 	nvm use 18
 endif
-
-install-npm:
-	@echo "Installing NPM..."
-	npm install -g npm
-
-update-npm:
-	@echo "Updating NPM..."
-	npm install -g npm@latest
 
 docker-compose:
 	@echo "Running Docker Compose..."
@@ -36,7 +32,16 @@ docker-compose:
 
 docker-up:
 	@echo "Running Docker Compose Up..."
-	docker-compose up
+	docker-compose up -d
+
+wait-for-containers:
+	@echo "Waiting for Docker containers to be up..."
+	@while [ "$$(docker-compose ps | awk '/Up/ {print $$0}' | wc -l)" -ne 4 ]; do \
+		sleep 5; \
+	done
+	@echo "--- Setup complete! ---"
+	@echo "Create Admin user for Metabase: http://localhost:3000" and run ./setup_Metabase.sh afterwards to complete setup.
+	@echo "Grafana Access: http://localhost:3001"
 
 docker-destroy:
 	@echo "Destroying containers..."
@@ -50,58 +55,8 @@ config-validate:
 	@echo "Validating configuration..."
 	npm run config-validate
 
-setup: install-docker install-node install-npm update-npm docker-compose
-	@echo "Setup complete."
+run: install-docker install-npm install-node docker-compose docker-up wait-for-containers
 
-	@echo "Obtaining Metabase session ID..."
-	SESSION_ID=$(shell curl -s -X POST "$(API_URL)/api/session" \
-		-H "Content-Type: application/json" \
-		-d '{"username": "$(MB_USER)", "password": "$(MB_PASSWORD)"}' | jq -r '.id')
+.PHONY: install-docker install-node install-npm docker-compose docker-up docker-destroy npm-reset-db config-validate setup run
 
-	@echo "Adding PostgreSQL database to Metabase..."
-	curl -s -X POST "$(API_URL)/api/database" \
-		-H "Content-Type: application/json" \
-		-H "X-Metabase-Session: $$SESSION_ID" \
-		-d '{
-			"engine": "postgres",
-			"name": "prod",
-			"details": {
-				"host": "postgres-icsvalset",
-				"port": 5432,
-				"user": "monitoring",
-				"password": "monitoring",
-				"dbname": "prod"
-			},
-			"is_full_sync": true,
-			"is_on_demand": false
-		}'
 
-	@echo "Setting up Metabase Dashboard..."
-	curl -s -X POST "$(API_URL)/api/dashboard" \
-		-H "Content-Type: application/json" \
-		-H "X-Metabase-Session: $$SESSION_ID" \
-		-d @./metabase_dashboard.json
-
-	@echo "Disabling Dashboard Caching..."
-	curl -X PUT "$API_URL/api/dashboard/1" \
-		-H "Content-Type: application/json" \
-		-H "X-Metabase-Session: $$SESSION_ID" \
-		-d '{
-			"cache_ttl": null
-		}'
-
-	@echo "--- Setup complete! ---"
-
-ifeq ($(DOCKER)$(NODE),)
-run: setup docker-up
-	@echo "Instances Up!"
-	@echo "Access Metabase --> http://localhost:3000"
-	@echo "Access Grafana --> http://localhost:3001"
-else
-run: docker-up
-	@echo "Instances Up!"
-	@echo "Access Metabase --> http://localhost:3000"
-	@echo "Access Grafana --> http://localhost:3001"
-endif
-
-.PHONY: install-docker install-node install-npm update-npm docker-compose docker-up docker-destroy npm-reset-db config-validate setup run
