@@ -2,5 +2,6 @@ node_modules
 *.sqlite
 *.db
 .notes*
-./indexer/config_test.js
-./src/config.js
+indexer/config_test.js
+src/config.js
+src/server.js
