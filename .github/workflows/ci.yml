@@ -41,8 +41,8 @@ jobs:
     - name: Run services
       run: make docker-up
 
-    - name: Wait for services to be up
-      run: make wait-for-containers
+    - name: Validate config
+      run: make config-validate
 
   cleanup:
     needs: build
