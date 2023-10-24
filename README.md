@@ -1,6 +1,6 @@
-# ICS Valset Monitoring
+# ICS Consensus Monitoring
 
-Monitor validator sets on ICS provider- and consumer-chains. Index consensus state date into postgres, display relational data on a grafana dashabord. 
+Monitor consensus of ICS provider- and consumer-chains. Index consensus state date into postgres, display relational data on a grafana dashabord. 
 
 ## Prerequisites
 - Node.js v18+
