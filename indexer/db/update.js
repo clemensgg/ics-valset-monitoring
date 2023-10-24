@@ -20,24 +20,39 @@ import {
   runDatabaseQuery
 } from './db.js';
 
-import { CONFIG } from '../config.js'
-
 async function initializeData() {
   let providerChainInfos, consumerChainInfos, stakingValidators;
 
   try {
     providerChainInfos = await getChainInfosFromDB('provider');
     consumerChainInfos = await getChainInfosFromDB('consumer');
-    
-    const stakingValidatorsMetaId = await getLastStakingValidatorsMetaFromDB(providerChainInfos.chainId);
-    stakingValidators = await getStakingValidatorsFromDB(stakingValidatorsMetaId);
+
+    if (providerChainInfos.length > 0) {
+      console.log(`[DEBUG] loaded providerChainInfos for chain ${providerChainInfos[0].chainId}`)
+
+      const stakingValidatorsMetaId = await getLastStakingValidatorsMetaFromDB(providerChainInfos[0].chainId);
+      if (stakingValidatorsMetaId) {
+        stakingValidators = await getStakingValidatorsFromDB(stakingValidatorsMetaId.id);
+        console.log(`[DEBUG] loaded ${stakingValidators.validators.length} stakingValidators for chain ${providerChainInfos[0].chainId}`)
+      } else {
+        stakingValidators = [];
+      }
+    } else { 
+      stakingValidators = [];
+    }
+
+    if (consumerChainInfos.length > 0) {
+      consumerChainInfos.forEach((chain) => {
+        console.log(`[DEBUG] loaded providerChainInfos for chain ${chain.chainId}`)
+      });
+    }
   } catch (error) {
     console.error('Error fetching data from DB:', error);
     throw error;
   }
 
   if (!providerChainInfos || !consumerChainInfos || !stakingValidators) {
-    throw new Error('Initialization failed due to missing data.');
+    throw new Error('Initialization failed!');
   }
 
   return [providerChainInfos, consumerChainInfos, stakingValidators];
@@ -54,8 +69,8 @@ function prepareChains(providerChainInfos, consumerChainInfos) {
 }
 
 async function validateEndpointsAndSaveChains() {
-  const providerChainInfos = await getProviderChainInfos(CONFIG.PROVIDER_RPC);
-  const consumerChainInfos = await validateConsumerRpcs(CONFIG.PROVIDER_RPC, CONFIG.CONSUMER_RPCS);
+  const providerChainInfos = await getProviderChainInfos(global.CONFIG.PROVIDER_RPC);
+  const consumerChainInfos = await validateConsumerRpcs(global.CONFIG.PROVIDER_RPC, global.CONFIG.CONSUMER_RPCS);
 
   if (providerChainInfos && providerChainInfos.chainId != '') {
     await saveChainInfos(providerChainInfos);
@@ -74,92 +89,109 @@ async function validateEndpointsAndSaveChains() {
 
 async function saveChainInfos(chainInfo) {
   try {
-  const type = chainInfo.type;
-  console.log(`Saving ${type} ChainInfo to DB:`, JSON.stringify(chainInfo));
+    const type = chainInfo.type;
+    console.log(`Saving ${type} ChainInfo to DB:`, JSON.stringify(chainInfo));
 
-  const insertQuery = 'INSERT OR REPLACE INTO ChainInfo (chainId, rpcEndpoint, type, clientIds) VALUES (?, ?, ?, ?)';
+    const insertQuery = `
+      INSERT INTO "ChainInfo" ("chainId", "rpcEndpoint", "type", "clientIds") 
+      VALUES ($1, $2, $3, $4)
+      ON CONFLICT ("chainId") 
+      DO UPDATE SET "rpcEndpoint" = EXCLUDED."rpcEndpoint", "type" = EXCLUDED."type", "clientIds" = EXCLUDED."clientIds"
+      RETURNING "id";
+    `;
 
-  const clientIdsString = JSON.stringify(chainInfo.clientIds);
-  const params = [chainInfo.chainId, chainInfo.rpcEndpoint, type, clientIdsString];
+    const clientIdsString = JSON.stringify(chainInfo.clientIds);
+    const params = [chainInfo.chainId, chainInfo.rpcEndpoint, type, clientIdsString];
 
-  await runDatabaseQuery(insertQuery, params);
+    await runDatabaseQuery(insertQuery, params, 'run');
 
-  console.log(`Successfully inserted or replaced ${type} ChainInfo with chainId ${chainInfo.chainId}`);
+    console.log(`Successfully inserted or replaced ${type} ChainInfo with chainId ${chainInfo.chainId}`);
   } catch (err) {
     console.error('Error saving ChainInfos to DB:', err);
   }
 }
 
-async function getChainInfosFromDB (type) {
+
+async function getChainInfosFromDB(type) {
   try {
-    const rows = await runDatabaseQuery('SELECT * FROM ChainInfo WHERE type = ?', [type], 'all');
+    const rows = await runDatabaseQuery('SELECT * FROM "ChainInfo" WHERE "type" = $1', [type], 'all');
     return rows;
   } catch (error) {
-    console.error('DB Error:',
-      error);
+    console.error('DB Error:', error);
     throw error;
   }
 }
 
-async function saveStakingValidators (stakingValidators) {
+async function saveStakingValidators(stakingValidators) {
   try {
     await runDatabaseQuery('BEGIN TRANSACTION');
-    console.log('Saving stakingValidators to DB:',
+    console.log('Saving "stakingValidators" to DB:',
       stakingValidators);
 
-      // First, insert into StakingValidatorsMeta table
-      const metaQuery = 'INSERT INTO StakingValidatorsMeta (chainId, timestamp, created_at, updated_at) VALUES (?, ?, ?, ?)';
-      const metaParams = [stakingValidators.chainId, stakingValidators.timestamp, stakingValidators.created_at, stakingValidators.updated_at];
-      const metaResult = await runDatabaseQuery(metaQuery,
-        metaParams);
+    const metaQuery = 'INSERT INTO "StakingValidatorsMeta" ("chainId", "timestamp", "created_at", "updated_at") VALUES ($1, $2, $3, $4) RETURNING "id"';
+    const metaParams = [stakingValidators.chainId, stakingValidators.timestamp, stakingValidators.created_at, stakingValidators.updated_at];
+    const metaResult = await runDatabaseQuery(metaQuery,
+      metaParams, 'run');
 
-      console.log('Inserted into StakingValidatorsMeta with ID:',
-        metaResult);
+    console.log('Inserted into "StakingValidatorsMeta" with ID:',
+      metaResult);
 
-      // Now, insert each validator into StakingValidator table
-      const validatorQuery = `
-            INSERT INTO StakingValidator (
-                stakingValidatorsMetaId, 
-                operator_address, 
-                consensus_pubkey_type, 
-                consensus_pubkey_key, 
-                consumer_signing_keys,
-                jailed, status, tokens, delegator_shares, moniker, 
-                identity, website, security_contact, details, 
-                unbonding_height, unbonding_time, commission_rate, 
-                commission_max_rate, commission_max_change_rate, 
-                min_self_delegation
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-        `;
+    const validatorQuery = `
+          INSERT INTO "StakingValidator" (
+              "stakingValidatorsMetaId", 
+              "operator_address", 
+              "consensus_pubkey_type", 
+              "consensus_pubkey_key", 
+              "consumer_signing_keys",
+              "jailed", "status", "tokens", "delegator_shares", "moniker", 
+              "identity", "website", "security_contact", "details", 
+              "unbonding_height", "unbonding_time", "commission_rate", 
+              "commission_max_rate", "commission_max_change_rate", 
+              "min_self_delegation"
+          ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20)
+          RETURNING "id"
+      `;
 
-      for (const validator of stakingValidators.validators) {
-        const validatorParams = [
-          metaResult,
-          validator.operator_address,
-          validator.consensus_pubkey.type,
-          validator.consensus_pubkey.key,
-          JSON.stringify(validator.consumer_signing_keys),
-          validator.jailed,
-          validator.status,
-          validator.tokens,
-          validator.delegator_shares,
-          validator.description.moniker,
-          validator.description.identity,
-          validator.description.website,
-          validator.description.security_contact,
-          validator.description.details,
-          validator.unbonding_height,
-          validator.unbonding_time,
-          validator.commission.commission_rates.rate,
-          validator.commission.commission_rates.max_rate,
-          validator.commission.commission_rates.max_change_rate,
-          validator.min_self_delegation
-        ];
-        await runDatabaseQuery(validatorQuery,
-          validatorParams);
-      }
-      await runDatabaseQuery('COMMIT');
-      console.log('All validators inserted successfully.');
+    for (const validator of stakingValidators.validators) {
+      const validatorParams = [
+        metaResult,
+        validator.operator_address,
+        validator.consensus_pubkey.type,
+        validator.consensus_pubkey.key,
+        JSON.stringify(validator.consumer_signing_keys),
+        validator.jailed,
+        validator.status,
+        validator.tokens,
+        validator.delegator_shares,
+        validator.description.moniker,
+        validator.description.identity,
+        validator.description.website,
+        validator.description.security_contact,
+        validator.description.details,
+        validator.unbonding_height,
+        validator.unbonding_time,
+        validator.commission.commission_rates.rate,
+        validator.commission.commission_rates.max_rate,
+        validator.commission.commission_rates.max_change_rate,
+        validator.min_self_delegation
+      ];
+      await runDatabaseQuery(validatorQuery, validatorParams, 'run');
+    }
+
+    // prune
+    const pruneOldMetaQuery = `
+      DELETE FROM "StakingValidatorsMeta" 
+      WHERE "id" NOT IN (
+        SELECT MAX("id") 
+        FROM "StakingValidatorsMeta" 
+        WHERE "chainId" = $1
+      ) 
+      AND "chainId" = $1;
+    `;
+    await runDatabaseQuery(pruneOldMetaQuery, [stakingValidators.chainId], 'run');
+
+    await runDatabaseQuery('COMMIT');
+    console.log('All validators inserted successfully.');
   } catch (err) {
     console.error('Error saving stakingValidators to DB:', err);
     console.error('attempting DB rollback...')
@@ -173,8 +205,8 @@ async function saveStakingValidators (stakingValidators) {
   }
 }
 
-async function getLastStakingValidatorsMetaFromDB (chainId) {
-    const stakingValidatorsMetaId  = await runDatabaseQuery('SELECT * FROM StakingValidatorsMeta WHERE chainId = ? ORDER BY id DESC LIMIT 1', [chainId], 'get');
+async function getLastStakingValidatorsMetaFromDB (chainId) { 
+  const stakingValidatorsMetaId  = await runDatabaseQuery('SELECT * FROM "StakingValidatorsMeta" WHERE "chainId" = $1 ORDER BY "id" DESC LIMIT 1', [chainId], 'get');
     if (!stakingValidatorsMetaId) {
       return null;
     } else return stakingValidatorsMetaId;
@@ -182,7 +214,7 @@ async function getLastStakingValidatorsMetaFromDB (chainId) {
 
 async function getStakingValidatorsFromDB (metaRowId) {
   try {
-    const validatorRows = await runDatabaseQuery('SELECT * FROM StakingValidator WHERE stakingValidatorsMetaId = ?', [metaRowId], 'all');
+    const validatorRows = await runDatabaseQuery('SELECT * FROM "StakingValidator" WHERE "stakingValidatorsMetaId" = $1', [metaRowId], 'all');
 
     const result = {
       validators: validatorRows
@@ -212,7 +244,7 @@ async function getStakingValidatorsFromDB (metaRowId) {
 
     return result;
   } catch (error) {
-    console.error('Error fetching stakingValidators from DB:',
+    console.error('Error fetching "stakingValidators" from DB:',
       error);
     throw error;
   }
@@ -224,17 +256,17 @@ async function saveMatchedValidators (matchedValidators) {
 
   try {
     // Insert into MatchedValidators table
-    const matchedQuery = 'INSERT INTO MatchedValidators (chainId, timestamp, created_at, updated_at) VALUES (?, ?, ?, ?)';
+    const matchedQuery = 'INSERT INTO "MatchedValidators" ("chainId", "timestamp", "created_at", "updated_at") VALUES ($1, $2, $3, $4) RETURNING "id"';
     const matchedParams = [matchedValidators.chainId, matchedValidators.timestamp, new Date().toISOString(), new Date().toISOString()];
     const matchedId = await runDatabaseQuery(matchedQuery,
-      matchedParams); // ID of the last inserted row
+      matchedParams, 'run'); // ID of the last inserted row
 
     // Now, insert each validator into MatchedValidatorDetail table
-    const detailQuery = 'INSERT INTO MatchedValidatorDetail (matchedValidatorsId, operator_address, consensus_address) VALUES (?, ?, ?)';
+    const detailQuery = 'INSERT INTO "MatchedValidatorDetail" ("matchedValidatorsId", "operator_address", "consensus_address") VALUES ($1, $2, $3, $4) RETURNING "id"';
     for (const validator of matchedValidators.validators) {
       const detailParams = [matchedId, validator.operator_address, validator.consensus_address];
       await runDatabaseQuery(detailQuery,
-        detailParams);
+        detailParams, 'run');
     }
 
     console.log('All matched validators inserted successfully.');
@@ -248,14 +280,14 @@ async function saveMatchedValidators (matchedValidators) {
 async function getMatchedValidatorsFromDB () {
   try {
     // Get the latest MatchedValidators entry
-    const matchedRow = await runDatabaseQuery('SELECT * FROM MatchedValidators ORDER BY id DESC LIMIT 1', [], 'get');
+    const matchedRow = await runDatabaseQuery('SELECT * FROM "MatchedValidators" ORDER BY "id" DESC LIMIT 1', [], 'get');
 
     if (!matchedRow) {
       return null;
     }
 
     // Get all MatchedValidatorDetail entries associated with the latest matched entry
-    const validatorRows = await runDatabaseQuery('SELECT * FROM MatchedValidatorDetail WHERE matchedValidatorsId = ?', [matchedRow.id], 'all');
+    const validatorRows = await runDatabaseQuery('SELECT * FROM "MatchedValidatorDetail" WHERE "matchedValidatorsId" = $1', [matchedRow], 'all');
 
     const result = {
       chainId: matchedRow.chainId,
@@ -265,7 +297,7 @@ async function getMatchedValidatorsFromDB () {
 
     return result;
   } catch (error) {
-    console.error('Error fetching matchedValidators from DB:',
+    console.error('Error fetching "matchedValidators" from DB:',
       error);
     throw error;
   }
@@ -279,12 +311,12 @@ async function updateConsensusStateDB(consensusState, retainStates = 0) {
 
       // Fetch the IDs of the states that are older than the `retainStates` count
       const selectPruneIdsQuery = `
-        SELECT id 
-        FROM ConsensusState 
-        WHERE chainId = ?
-        AND id != ?
-        ORDER BY id ASC
-        LIMIT -1 OFFSET ?
+        SELECT "id" 
+        FROM "ConsensusState" 
+        WHERE "chainId" = $1
+        AND "id" != $2
+        ORDER BY "id" ASC
+        OFFSET $3;
       `;
       const pruneIdsResult = await runDatabaseQuery(selectPruneIdsQuery, [consensusState.chainId, consensusStateId, retainStates], 'all');
       const pruneIds = pruneIdsResult.map(entry => entry.id);
@@ -316,11 +348,11 @@ async function updateConsensusStateDB(consensusState, retainStates = 0) {
 
 async function updateValidatorsGroupWithProposerId(validatorsGroupId, proposerId) {
   const query = `
-      UPDATE ValidatorsGroup
-      SET proposerId = ?
-      WHERE id = ?
+      UPDATE "ValidatorsGroup"
+      SET "proposerId" = $1
+      WHERE "id" = $2
   `;
-  await runDatabaseQuery(query, [proposerId, validatorsGroupId]);
+  await runDatabaseQuery(query, [proposerId, validatorsGroupId], 'run');
 }
 
 async function saveValidatorsAndVotes(consensusState, consensusStateId, type) {
@@ -412,24 +444,25 @@ async function saveValidatorsAndVotes(consensusState, consensusStateId, type) {
 
 async function saveConsensusState(consensusState) {
   const query = `
-      INSERT INTO ConsensusState (
-        chainId, 
-        timestamp, 
-        height, 
-        round, 
-        step, 
-        start_time, 
-        commit_time, 
-        validatorsGroupId, 
-        lastValidatorsGroupId, 
-        proposal, 
-        proposal_block_parts_header, 
-        locked_block_parts_header, 
-        valid_block_parts_header, 
-        votes, 
-        last_commit
+      INSERT INTO "ConsensusState" (
+        "chainId", 
+        "timestamp", 
+        "height", 
+        "round", 
+        "step", 
+        "start_time", 
+        "commit_time", 
+        "validatorsGroupId", 
+        "lastValidatorsGroupId", 
+        "proposal", 
+        "proposal_block_parts_header", 
+        "locked_block_parts_header", 
+        "valid_block_parts_header", 
+        "votes", 
+        "last_commit"
       )
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15)
+      RETURNING "id";
   `;
 
   const params = [
@@ -450,55 +483,59 @@ async function saveConsensusState(consensusState) {
       JSON.stringify(consensusState.last_commit),
   ];
 
-  const consensusStateId = await runDatabaseQuery(query, params);
+  const consensusStateId = await runDatabaseQuery(query, params, 'run');
 
   const validatorsGroupId = await saveValidatorsAndVotes(consensusState, consensusStateId, 'current');
   const lastValidatorsGroupId = await saveValidatorsAndVotes(consensusState, consensusStateId, 'last');
 
   const updateQuery = `
-      UPDATE ConsensusState
-      SET validatorsGroupId = ?, lastValidatorsGroupId = ?
-      WHERE id = ?;
+      UPDATE "ConsensusState"
+      SET "validatorsGroupId" = $1, 
+      "lastValidatorsGroupId" = $2
+      WHERE "id" = $3;
   `;
 
   const updateParams = [validatorsGroupId, lastValidatorsGroupId, consensusStateId];
-  await runDatabaseQuery(updateQuery, updateParams);
+  await runDatabaseQuery(updateQuery, updateParams, 'run');
 
   return consensusStateId;
 }
 
 async function saveRoundsGroup(consensusStateId, type = null) {
   const query = `
-      INSERT INTO RoundsGroup (consensusStateId, type)
-      VALUES (?, ?);
+      INSERT INTO "RoundsGroup" ("consensusStateId", "type")
+      VALUES ($1, $2)
+      RETURNING "id";
   `;
   const params = [
       consensusStateId,
       type
   ];
 
-  const roundsGroupId = await runDatabaseQuery(query, params);
+  const roundsGroupId = await runDatabaseQuery(query, params, 'run');
   return roundsGroupId;
 }
 
 async function saveRound(roundsGroupId, roundNumber = -1) {
   const query = `
-      INSERT INTO Round (roundsGroupId, roundNumber)
-      VALUES (?, ?);
+      INSERT INTO "Round" ("roundsGroupId", "roundNumber")
+      VALUES ($1, $2)
+      RETURNING "id";
   `;
   const params = [
     roundsGroupId,
     roundNumber
   ];
 
-  const roundId = await runDatabaseQuery(query, params);
+  const roundId = await runDatabaseQuery(query, params, 'run');
   return roundId;
 }
 
 async function saveValidatorsGroup(consensusStateId, proposerId = null, type) {
   const query = `
-      INSERT INTO ValidatorsGroup (type, consensusStateId, proposerId)
-      VALUES (?, ?, ?);
+      INSERT INTO "ValidatorsGroup" ("type", "consensusStateId", "proposerId")
+      VALUES ($1, $2, $3)
+      RETURNING "id";
   `;
   const params = [
       type,
@@ -506,7 +543,7 @@ async function saveValidatorsGroup(consensusStateId, proposerId = null, type) {
       proposerId
   ];
 
-  const validatorsGroupId = await runDatabaseQuery(query, params);
+  const validatorsGroupId = await runDatabaseQuery(query, params, 'run');
   return validatorsGroupId;
 }
 
@@ -514,8 +551,9 @@ async function saveValidatorsGroup(consensusStateId, proposerId = null, type) {
 async function saveValidator(validator, validatorsGroupId) {
   const valconsAddress = pubKeyToValcons(validator.pub_key.value, 'cosmos');
   const query = `
-      INSERT INTO Validator (validatorsGroupId, address, pub_key, consensusAddress, voting_power, proposer_priority)
-      VALUES (?, ?, ?, ?, ?, ?);
+      INSERT INTO "Validator" ("validatorsGroupId", "address", "pub_key", "consensusAddress", "voting_power", "proposer_priority")
+      VALUES ($1, $2, $3, $4, $5, $6)
+      RETURNING "id";
   `;
   const params = [
       validatorsGroupId,
@@ -526,7 +564,7 @@ async function saveValidator(validator, validatorsGroupId) {
       validator.proposer_priority
   ];
   
-  const validatorId = await runDatabaseQuery(query, params);
+  const validatorId = await runDatabaseQuery(query, params, 'run');
   
   return validatorId;
 }
@@ -541,8 +579,9 @@ async function saveVote(vote, type, validatorId, roundId) {
     voteHash = voteString;
   }
   const query = `
-      INSERT INTO Votes (validatorId, roundId, type, vote, voteString)
-      VALUES (?, ?, ?, ?, ?);
+      INSERT INTO "Votes" ("validatorId", "roundId", "type", "vote", "voteString")
+      VALUES ($1, $2, $3, $4, $5)
+      RETURNING "id";
   `;
 
   const params = [
@@ -553,13 +592,13 @@ async function saveVote(vote, type, validatorId, roundId) {
       voteString
   ];
 
-  await runDatabaseQuery(query, params);
+  await runDatabaseQuery(query, params, 'run');
 }
 
 async function getConsensusStateByConsensusStateId(consensusStateId) {
   const query = `
-      SELECT * FROM ConsensusState
-      WHERE id = ?;
+      SELECT * FROM "ConsensusState"
+      WHERE id = $1;
   `;
   const params = [consensusStateId];
   const result = await runDatabaseQuery(query, params, 'get');
@@ -591,15 +630,15 @@ async function loadConsensusStateFromDB(chainId) {
 }
 
 async function fetchConsensusState(chainId) {
-  const query = 'SELECT * FROM ConsensusState WHERE chainId = ?';
+  const query = 'SELECT * FROM "ConsensusState" WHERE "chainId" = $1';
   return await runDatabaseQuery(query, [chainId], 'get');
 }
 
 async function fetchValidatorsGroup(validatorsGroupId) {
-  const query = 'SELECT * FROM ValidatorsGroup WHERE id = ?';
+  const query = 'SELECT * FROM "ValidatorsGroup" WHERE "id" = $1';
   const validatorsGroupRow = await runDatabaseQuery(query, [validatorsGroupId], 'get');
 
-  const validatorsQuery = 'SELECT * FROM Validator WHERE validatorsGroupId = ?';
+  const validatorsQuery = 'SELECT * FROM "Validator" WHERE "validatorsGroupId" = $1';
   const validatorsRows = await runDatabaseQuery(validatorsQuery, [validatorsGroupId], 'all');
 
   const validators = validatorsRows.map(validatorRow => new Validator(validatorRow));
@@ -613,50 +652,58 @@ async function fetchValidatorsGroup(validatorsGroupId) {
 }
 
 async function pruneConsensusStateDB(pruneIds, chainId) {
+  const placeholders = pruneIds.map((_, i) => `$${i + 2}`).join(', ');
   const deleteConsensusStateQuery = `
-      DELETE FROM ConsensusState 
-      WHERE chainId = ? 
-      AND id IN (${pruneIds.map(() => '?').join(', ')})
+      DELETE FROM "ConsensusState" 
+      WHERE "chainId" = $1 
+      AND id IN (${placeholders})
   `;
   await runDatabaseQuery(deleteConsensusStateQuery, [chainId, ...pruneIds], 'delete');
   return true;
 }
 
-async function updateStakingValidatorsDB(providerChainInfos, consumerChainInfos) {
+async function updateStakingValidatorsDB(providerChainInfo, consumerChainInfos) {
   console.time('updateDatabaseData Execution Time');
-  const stakingValidators = await getStakingValidators(CONFIG.PROVIDER_REST);
+  const stakingValidators = await getStakingValidators(global.CONFIG.PROVIDER_REST);
+
   let sovereignStakingValidators;
 
   const hasSovereign = consumerChainInfos.some(obj => obj.type === 'sovereign');
   if (hasSovereign) {
-      sovereignStakingValidators = new StakingValidators(await getStakingValidators(CONFIG.SOVEREIGN_REST));
-      if (!sovereignStakingValidators) {
-          console.error(`ERROR fetching sovereign staking validators from ${CONFIG.SOVEREIGN_REST}! Check your config!`);
-          process.exit(1);
-      }
+    sovereignStakingValidators = new StakingValidators(await getStakingValidators(global.CONFIG.SOVEREIGN_REST));
+
+    const sovereignChainInfo = consumerChainInfos.find(obj => obj.type === 'sovereign');
+    const sovereignChainId = sovereignChainInfo ? sovereignChainInfo.chainId : null;
+
+    if (sovereignStakingValidators && sovereignChainId) {
+        sovereignStakingValidators.chainId = sovereignChainId;
+    } else {
+        console.error(`ERROR fetching sovereign staking validators from ${global.CONFIG.SOVEREIGN_REST}! Check your config!`);
+        return;
+    }
   }
 
-  if (providerChainInfos && providerChainInfos.chainId != '' && consumerChainInfos && consumerChainInfos.length > 0 && stakingValidators && stakingValidators.length > 0) {
-      console.log('No ChainInfos found, running startup...');
-      const allChainIds = consumerChainInfos.map(chain => chain.chainId);
-      const stakingValidatorsWithSigningKeys = await fetchConsumerSigningKeys(stakingValidators, CONFIG.PROVIDER_RPC, allChainIds, CONFIG.PREFIX, CONFIG.RPC_DELAY_MS);
+//  if (!providerChainInfo || !consumerChainInfos || consumerChainInfos.length == 0 || !stakingValidators || stakingValidators.length == 0) {
+    const allChainIds = consumerChainInfos.map(chain => chain.chainId);
+    const stakingValidatorsWithSigningKeys = await fetchConsumerSigningKeys(stakingValidators, global.CONFIG.PROVIDER_RPC, allChainIds, global.CONFIG.PREFIX, global.CONFIG.RPC_DELAY_MS);
+    stakingValidatorsWithSigningKeys.chainId = providerChainInfo.chainId;
 
-      await saveStakingValidators(stakingValidatorsWithSigningKeys, providerChainInfos.chainId);
-      console.log('Updated stakingValidators.');
+    await saveStakingValidators(stakingValidatorsWithSigningKeys);
+    console.log('Updated stakingValidators.');
 
-      if (hasSovereign) {
-          sovereignStakingValidators.validators.forEach(validator => {
-              validator.consumer_signing_keys = [];
-          });
-          await saveStakingValidators(sovereignStakingValidators);
-      }
-  }
+    if (hasSovereign) {
+        sovereignStakingValidators.validators.forEach(validator => {
+            validator.consumer_signing_keys = [];
+        });
+        await saveStakingValidators(sovereignStakingValidators);
+    }
+//   }
   console.log('Chain and validator data updated.');
   console.timeEnd('updateDatabaseData Execution Time');
+  return;
 }
 
 export {
-  saveStakingValidators,
   getStakingValidatorsFromDB,
   getLastStakingValidatorsMetaFromDB,
   saveMatchedValidators,
