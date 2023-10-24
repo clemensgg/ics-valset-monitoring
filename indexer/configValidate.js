@@ -8,7 +8,7 @@ const CONFIGSchema = Joi.object({
     RPC_DELAY_MS: Joi.number().required(),
     UPDATE_DB_FREQUENCY_MS: Joi.number().required(),
     CONSENSUS_POLL_FREQENCY_MS: Joi.number().required(),
-    NUM_WORKERS: Joi.number().required(),
+    NUM_WORKERS: Joi.number(),
     RETAIN_STATES: Joi.number().required(),
     PREFIX: Joi.string().required(),
     pg: Joi.object({
