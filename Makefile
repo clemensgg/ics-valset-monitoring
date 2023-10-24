@@ -4,6 +4,14 @@ DOCKER := $(shell command -v docker 2> /dev/null)
 NODE := $(shell command -v node 2> /dev/null)
 API_URL="http://localhost:3000"
 
+create-dirs:
+	@echo "Creating required directories..."
+	sudo mkdir -p data/.icsValsetMonitoring_data || true
+	sudo mkdir -p data/.grafana_data/data/alerting || true
+	sudo mkdir -p data/.grafana_data/data/csv || true
+	sudo mkdir -p data/.grafana_data/provisioning || true
+	sudo chown -R 472:472 data/.grafana_data
+
 install-docker:
 ifndef DOCKER
 	@echo "Installing Docker..."
@@ -36,12 +44,11 @@ docker-up:
 
 wait-for-containers:
 	@echo "Waiting for Docker containers to be up..."
-	@while [ "$$(docker-compose ps | awk '/Up/ {print $$0}' | wc -l)" -ne 4 ]; do \
+	@while [ "$$(docker-compose ps | awk '/Up/ {print $$0}' | wc -l)" -ne 3 ]; do \
 		sleep 5; \
 	done
 	@echo "--- Setup complete! ---"
-	@echo "Create Admin user for Metabase: http://localhost:3000" and run ./setup_Metabase.sh afterwards to complete setup.
-	@echo "Grafana Access: http://localhost:3001"
+	@echo "Access Grafana and create admin user: http://localhost:3001"
 
 docker-destroy:
 	@echo "Destroying containers..."
@@ -55,8 +62,8 @@ config-validate:
 	@echo "Validating configuration..."
 	npm run config-validate
 
-run: install-docker install-npm install-node docker-compose docker-up wait-for-containers
+setup: create-dirs
 
-.PHONY: install-docker install-node install-npm docker-compose docker-up docker-destroy npm-reset-db config-validate setup run
+run: install-docker install-npm install-node create-dirs docker-compose docker-up wait-for-containers
 
-
+.PHONY: install-docker install-node install-npm docker-compose docker-up docker-destroy npm-reset-db config-validate setup run create-dirs

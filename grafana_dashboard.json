@@ -25,7 +25,7 @@
     {
       "datasource": {
         "type": "postgres",
-        "uid": "b847f7eb-8f0b-483d-8f7c-782ff60b8799"
+        "uid": "<DATASOURCE_UID>"
       },
       "fieldConfig": {
         "defaults": {
@@ -111,7 +111,7 @@
         {
           "datasource": {
             "type": "postgres",
-            "uid": "b847f7eb-8f0b-483d-8f7c-782ff60b8799"
+            "uid": "<DATASOURCE_UID>"
           },
           "editorMode": "code",
           "format": "table",
@@ -144,7 +144,7 @@
     {
       "datasource": {
         "type": "postgres",
-        "uid": "b847f7eb-8f0b-483d-8f7c-782ff60b8799"
+        "uid": "<DATASOURCE_UID>"
       },
       "fieldConfig": {
         "defaults": {
@@ -263,7 +263,7 @@
         {
           "datasource": {
             "type": "postgres",
-            "uid": "b847f7eb-8f0b-483d-8f7c-782ff60b8799"
+            "uid": "<DATASOURCE_UID>"
           },
           "editorMode": "code",
           "format": "table",
@@ -294,7 +294,7 @@
     {
       "datasource": {
         "type": "postgres",
-        "uid": "b847f7eb-8f0b-483d-8f7c-782ff60b8799"
+        "uid": "<DATASOURCE_UID>"
       },
       "fieldConfig": {
         "defaults": {
@@ -371,7 +371,7 @@
         {
           "datasource": {
             "type": "postgres",
-            "uid": "b847f7eb-8f0b-483d-8f7c-782ff60b8799"
+            "uid": "<DATASOURCE_UID>"
           },
           "editorMode": "code",
           "format": "table",
@@ -420,7 +420,7 @@
     {
       "datasource": {
         "type": "postgres",
-        "uid": "b847f7eb-8f0b-483d-8f7c-782ff60b8799"
+        "uid": "<DATASOURCE_UID>"
       },
       "fieldConfig": {
         "defaults": {
@@ -503,7 +503,7 @@
         {
           "datasource": {
             "type": "postgres",
-            "uid": "b847f7eb-8f0b-483d-8f7c-782ff60b8799"
+            "uid": "<DATASOURCE_UID>"
           },
           "editorMode": "code",
           "format": "table",
@@ -535,7 +535,7 @@
     {
       "datasource": {
         "type": "postgres",
-        "uid": "b847f7eb-8f0b-483d-8f7c-782ff60b8799"
+        "uid": "<DATASOURCE_UID>"
       },
       "fieldConfig": {
         "defaults": {
@@ -654,7 +654,7 @@
         {
           "datasource": {
             "type": "postgres",
-            "uid": "b847f7eb-8f0b-483d-8f7c-782ff60b8799"
+            "uid": "<DATASOURCE_UID>"
           },
           "editorMode": "code",
           "format": "table",
@@ -685,75 +685,67 @@
     {
       "datasource": {
         "type": "postgres",
-        "uid": "b847f7eb-8f0b-483d-8f7c-782ff60b8799"
+        "uid": "<DATASOURCE_UID>"
       },
       "fieldConfig": {
         "defaults": {
           "color": {
-            "mode": "palette-classic"
+            "mode": "thresholds"
           },
           "custom": {
-            "hideFrom": {
-              "legend": false,
-              "tooltip": false,
-              "viz": false
-            }
-          },
-          "mappings": []
-        },
-        "overrides": [
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "voting_power"
+            "align": "auto",
+            "cellOptions": {
+              "type": "auto"
             },
-            "properties": [
+            "inspect": false
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
               {
-                "id": "unit",
-                "value": "locale"
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
               }
             ]
           }
-        ]
+        },
+        "overrides": []
       },
       "gridPos": {
-        "h": 6,
+        "h": 9,
         "w": 5,
         "x": 19,
         "y": 3
       },
-      "id": 9,
+      "id": 10,
       "options": {
-        "displayLabels": [],
-        "legend": {
-          "displayMode": "list",
-          "placement": "bottom",
-          "showLegend": false
-        },
-        "pieType": "pie",
-        "reduceOptions": {
-          "calcs": [
-            "lastNotNull"
+        "cellHeight": "sm",
+        "footer": {
+          "countRows": false,
+          "fields": "",
+          "reducer": [
+            "sum"
           ],
-          "fields": "/^voting_power$/",
-          "values": true
+          "show": false
         },
-        "tooltip": {
-          "mode": "single",
-          "sort": "none"
-        }
+        "showHeader": true
       },
       "pluginVersion": "10.1.5",
       "targets": [
         {
           "datasource": {
             "type": "postgres",
-            "uid": "b847f7eb-8f0b-483d-8f7c-782ff60b8799"
+            "uid": "<DATASOURCE_UID>"
           },
           "editorMode": "code",
           "format": "table",
           "rawQuery": true,
-          "rawSql": "WITH \"LatestConsensusState\" AS (\n    SELECT \"id\" AS \"latestConsensusStateId\"\n    FROM \"ConsensusState\"\n    WHERE \"chainId\" = '$chainId'\n    ORDER BY \"timestamp\" DESC\n    LIMIT 1\n),\n\"LatestRoundsGroup\" AS (\n    SELECT \"id\" AS \"latestRoundsGroupId\"\n    FROM \"RoundsGroup\"\n    WHERE \"consensusStateId\" = (SELECT \"latestConsensusStateId\" FROM \"LatestConsensusState\")\n    LIMIT 1\n),\n\"LatestRound\" AS (\n    SELECT MAX(\"id\") AS \"latestRoundId\"\n    FROM \"Round\"\n    WHERE \"roundsGroupId\" = (SELECT \"latestRoundsGroupId\" FROM \"LatestRoundsGroup\")\n),\n\"LatestValidatorsGroupId\" AS (\n    SELECT \"validatorsGroupId\"\n    FROM \"ConsensusState\"\n    WHERE \"id\" = (SELECT \"latestConsensusStateId\" FROM \"LatestConsensusState\")\n),\n\"ChainType\" AS (\n    SELECT \"type\"\n    FROM \"ChainInfo\"\n    WHERE \"chainId\" = '$chainId'\n    LIMIT 1\n)\n\nSELECT \n    -- \"V\".\"id\" AS \"validatorId\",\n    \"V\".\"voting_power\",\n--    \"V\".\"address\",\n--    \"V\".\"pub_key\",\n--    \"V\".\"consensusAddress\",\n--    \"V\".\"proposer_priority\",\n    \"SV\".\"moniker\", \n    \"SV\".\"tokens\"\nFROM \"Validator\" \"V\"\nJOIN \"LatestValidatorsGroupId\" \"LVG\" ON \"V\".\"validatorsGroupId\" = \"LVG\".\"validatorsGroupId\"\nLEFT JOIN \"StakingValidator\" \"SV\" ON \n    CASE \n        WHEN (SELECT \"type\" FROM \"ChainType\") = 'provider' THEN \"SV\".\"consensus_pubkey_key\" = (\"V\".\"pub_key\"::json)->>'value'\n        ELSE (\"SV\".\"consumer_signing_keys\"::json)->>'$chainId'::text = \"V\".\"consensusAddress\"\n    END\nWHERE \"V\".\"id\" IN (\n    SELECT DISTINCT \"validatorId\"\n    FROM \"Votes\"\n    WHERE \"type\" = 'prevote' AND \"roundId\" = (SELECT \"latestRoundId\" FROM \"LatestRound\")\n)\nGROUP BY \"V\".\"id\", \"SV\".\"moniker\", \"SV\".\"tokens\"\nORDER BY \"V\".\"voting_power\" DESC;\n",
+          "rawSql": "WITH \"LatestConsensusState\" AS (\n    SELECT \"id\" AS \"latestConsensusStateId\", \"validatorsGroupId\"\n    FROM \"ConsensusState\"\n    WHERE \"chainId\" = '$chainId'\n    ORDER BY \"timestamp\" DESC\n    LIMIT 1\n),\n\"LatestRoundsGroup\" AS (\n    SELECT \"id\" AS \"latestRoundsGroupId\"\n    FROM \"RoundsGroup\"\n    WHERE \"consensusStateId\" = (SELECT \"latestConsensusStateId\" FROM \"LatestConsensusState\")\n    LIMIT 1\n),\n\"LatestRound\" AS (\n    SELECT MAX(\"id\") AS \"latestRoundId\"\n    FROM \"Round\"\n    WHERE \"roundsGroupId\" = (SELECT \"latestRoundsGroupId\" FROM \"LatestRoundsGroup\")\n),\n\"LatestValidatorsGroupId\" AS (\n    SELECT \"validatorsGroupId\"\n    FROM \"ConsensusState\"\n    WHERE \"id\" = (SELECT \"latestConsensusStateId\" FROM \"LatestConsensusState\")\n),\n\"ChainType\" AS (\n    SELECT \"type\"\n    FROM \"ChainInfo\"\n    WHERE \"chainId\" = '$chainId'\n    LIMIT 1\n),\n\"LastProposerVote\" AS (\n    SELECT \n        (SELECT MAX(\"vote\") FROM \"Votes\" WHERE \"validatorId\" = \"VG\".\"proposerId\" AND \"type\" = 'prevote' AND \"roundId\" = (SELECT \"latestRoundId\" FROM \"LatestRound\")) AS \"prevoteProposerVote\",\n        (SELECT MAX(\"vote\") FROM \"Votes\" WHERE \"validatorId\" = \"VG\".\"proposerId\" AND \"type\" = 'precommit' AND \"roundId\" = (SELECT \"latestRoundId\" FROM \"LatestRound\")) AS \"precommitProposerVote\"\n    FROM \"LatestConsensusState\" \"LCS\"\n    JOIN \"ValidatorsGroup\" \"VG\" ON \"LCS\".\"validatorsGroupId\" = \"VG\".\"id\"\n)\nSELECT \n    \"SV\".\"moniker\" AS \"stakingValidatorMoniker\",\n    CASE \n        WHEN \"SV\".\"consumer_signing_keys\" IS NULL THEN 'Consumer signing key not found'\n        ELSE (\"SV\".\"consumer_signing_keys\"::json)->>'$chainId'::text\n    END AS \"updatedConsumerSigningKey\"\nFROM \"StakingValidator\" \"SV\"\nLEFT JOIN \"Validator\" \"V\" ON \n    CASE \n        WHEN (SELECT \"type\" FROM \"ChainType\") = 'provider' THEN \"SV\".\"consensus_pubkey_key\" = (\"V\".\"pub_key\"::json)->>'value'\n        ELSE (\"SV\".\"consumer_signing_keys\"::json)->>'$chainId'::text = \"V\".\"consensusAddress\"\n    END\nWHERE \"V\".\"id\" IS NULL\nAND \"SV\".\"id\" IN (\n    SELECT DISTINCT \"validatorId\"\n    FROM \"Votes\"\n    WHERE \"type\" = 'prevote' AND \"roundId\" = (SELECT \"latestRoundId\" FROM \"LatestRound\")\n);\n",
           "refId": "A",
           "sql": {
             "columns": [
@@ -774,12 +766,13 @@
           }
         }
       ],
-      "type": "piechart"
+      "title": "Pending Consumer-Signing-Key Updates",
+      "type": "table"
     },
     {
       "datasource": {
         "type": "postgres",
-        "uid": "b847f7eb-8f0b-483d-8f7c-782ff60b8799"
+        "uid": "<DATASOURCE_UID>"
       },
       "fieldConfig": {
         "defaults": {
@@ -870,7 +863,7 @@
         {
           "datasource": {
             "type": "postgres",
-            "uid": "b847f7eb-8f0b-483d-8f7c-782ff60b8799"
+            "uid": "<DATASOURCE_UID>"
           },
           "editorMode": "code",
           "format": "table",
@@ -903,7 +896,7 @@
     {
       "datasource": {
         "type": "postgres",
-        "uid": "b847f7eb-8f0b-483d-8f7c-782ff60b8799"
+        "uid": "<DATASOURCE_UID>"
       },
       "fieldConfig": {
         "defaults": {
@@ -980,7 +973,7 @@
         {
           "datasource": {
             "type": "postgres",
-            "uid": "b847f7eb-8f0b-483d-8f7c-782ff60b8799"
+            "uid": "<DATASOURCE_UID>"
           },
           "editorMode": "code",
           "format": "table",
@@ -1029,7 +1022,7 @@
     {
       "datasource": {
         "type": "postgres",
-        "uid": "b847f7eb-8f0b-483d-8f7c-782ff60b8799"
+        "uid": "<DATASOURCE_UID>"
       },
       "fieldConfig": {
         "defaults": {
@@ -1127,7 +1120,7 @@
         {
           "datasource": {
             "type": "postgres",
-            "uid": "b847f7eb-8f0b-483d-8f7c-782ff60b8799"
+            "uid": "<DATASOURCE_UID>"
           },
           "editorMode": "code",
           "format": "table",
@@ -1175,7 +1168,7 @@
     {
       "datasource": {
         "type": "postgres",
-        "uid": "b847f7eb-8f0b-483d-8f7c-782ff60b8799"
+        "uid": "<DATASOURCE_UID>"
       },
       "fieldConfig": {
         "defaults": {
@@ -1183,59 +1176,98 @@
             "mode": "thresholds"
           },
           "custom": {
-            "align": "auto",
-            "cellOptions": {
-              "type": "auto"
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "fillOpacity": 80,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
             },
-            "inspect": false
+            "lineWidth": 1,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
           },
           "mappings": [],
           "thresholds": {
             "mode": "absolute",
             "steps": [
               {
-                "color": "green",
+                "color": "blue",
                 "value": null
-              },
-              {
-                "color": "red",
-                "value": 80
               }
             ]
           }
         },
-        "overrides": []
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "voting_power"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "locale"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "moniker"
+            },
+            "properties": []
+          }
+        ]
       },
       "gridPos": {
-        "h": 3,
-        "w": 5,
-        "x": 19,
-        "y": 9
+        "h": 5,
+        "w": 24,
+        "x": 0,
+        "y": 12
       },
-      "id": 10,
+      "id": 9,
       "options": {
-        "cellHeight": "sm",
-        "footer": {
-          "countRows": false,
-          "fields": "",
-          "reducer": [
-            "sum"
-          ],
-          "show": false
+        "barRadius": 0,
+        "barWidth": 0.74,
+        "fullHighlight": false,
+        "groupWidth": 0.7,
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
         },
-        "showHeader": true
+        "orientation": "vertical",
+        "showValue": "never",
+        "stacking": "none",
+        "tooltip": {
+          "mode": "single",
+          "sort": "none"
+        },
+        "xField": "moniker",
+        "xTickLabelRotation": 0,
+        "xTickLabelSpacing": 200
       },
       "pluginVersion": "10.1.5",
       "targets": [
         {
           "datasource": {
             "type": "postgres",
-            "uid": "b847f7eb-8f0b-483d-8f7c-782ff60b8799"
+            "uid": "<DATASOURCE_UID>"
           },
           "editorMode": "code",
           "format": "table",
           "rawQuery": true,
-          "rawSql": "WITH \"LatestConsensusState\" AS (\n    SELECT \"id\" AS \"latestConsensusStateId\", \"validatorsGroupId\"\n    FROM \"ConsensusState\"\n    WHERE \"chainId\" = '$chainId'\n    ORDER BY \"timestamp\" DESC\n    LIMIT 1\n),\n\"LatestRoundsGroup\" AS (\n    SELECT \"id\" AS \"latestRoundsGroupId\"\n    FROM \"RoundsGroup\"\n    WHERE \"consensusStateId\" = (SELECT \"latestConsensusStateId\" FROM \"LatestConsensusState\")\n    LIMIT 1\n),\n\"LatestRound\" AS (\n    SELECT MAX(\"id\") AS \"latestRoundId\"\n    FROM \"Round\"\n    WHERE \"roundsGroupId\" = (SELECT \"latestRoundsGroupId\" FROM \"LatestRoundsGroup\")\n),\n\"LatestValidatorsGroupId\" AS (\n    SELECT \"validatorsGroupId\"\n    FROM \"ConsensusState\"\n    WHERE \"id\" = (SELECT \"latestConsensusStateId\" FROM \"LatestConsensusState\")\n),\n\"ChainType\" AS (\n    SELECT \"type\"\n    FROM \"ChainInfo\"\n    WHERE \"chainId\" = '$chainId'\n    LIMIT 1\n),\n\"LastProposerVote\" AS (\n    SELECT \n        (SELECT MAX(\"vote\") FROM \"Votes\" WHERE \"validatorId\" = \"VG\".\"proposerId\" AND \"type\" = 'prevote' AND \"roundId\" = (SELECT \"latestRoundId\" FROM \"LatestRound\")) AS \"prevoteProposerVote\",\n        (SELECT MAX(\"vote\") FROM \"Votes\" WHERE \"validatorId\" = \"VG\".\"proposerId\" AND \"type\" = 'precommit' AND \"roundId\" = (SELECT \"latestRoundId\" FROM \"LatestRound\")) AS \"precommitProposerVote\"\n    FROM \"LatestConsensusState\" \"LCS\"\n    JOIN \"ValidatorsGroup\" \"VG\" ON \"LCS\".\"validatorsGroupId\" = \"VG\".\"id\"\n)\nSELECT \n    \"SV\".\"moniker\" AS \"stakingValidatorMoniker\",\n    CASE \n        WHEN \"SV\".\"consumer_signing_keys\" IS NULL THEN 'Consumer signing key not found'\n        ELSE (\"SV\".\"consumer_signing_keys\"::json)->>'$chainId'::text\n    END AS \"updatedConsumerSigningKey\"\nFROM \"StakingValidator\" \"SV\"\nLEFT JOIN \"Validator\" \"V\" ON \n    CASE \n        WHEN (SELECT \"type\" FROM \"ChainType\") = 'provider' THEN \"SV\".\"consensus_pubkey_key\" = (\"V\".\"pub_key\"::json)->>'value'\n        ELSE (\"SV\".\"consumer_signing_keys\"::json)->>'$chainId'::text = \"V\".\"consensusAddress\"\n    END\nWHERE \"V\".\"id\" IS NULL\nAND \"SV\".\"id\" IN (\n    SELECT DISTINCT \"validatorId\"\n    FROM \"Votes\"\n    WHERE \"type\" = 'prevote' AND \"roundId\" = (SELECT \"latestRoundId\" FROM \"LatestRound\")\n);\n",
+          "rawSql": "WITH \"LatestConsensusState\" AS (\n    SELECT \"id\" AS \"latestConsensusStateId\"\n    FROM \"ConsensusState\"\n    WHERE \"chainId\" = '$chainId'\n    ORDER BY \"timestamp\" DESC\n    LIMIT 1\n),\n\"LatestRoundsGroup\" AS (\n    SELECT \"id\" AS \"latestRoundsGroupId\"\n    FROM \"RoundsGroup\"\n    WHERE \"consensusStateId\" = (SELECT \"latestConsensusStateId\" FROM \"LatestConsensusState\")\n    LIMIT 1\n),\n\"LatestRound\" AS (\n    SELECT MAX(\"id\") AS \"latestRoundId\"\n    FROM \"Round\"\n    WHERE \"roundsGroupId\" = (SELECT \"latestRoundsGroupId\" FROM \"LatestRoundsGroup\")\n),\n\"LatestValidatorsGroupId\" AS (\n    SELECT \"validatorsGroupId\"\n    FROM \"ConsensusState\"\n    WHERE \"id\" = (SELECT \"latestConsensusStateId\" FROM \"LatestConsensusState\")\n),\n\"ChainType\" AS (\n    SELECT \"type\"\n    FROM \"ChainInfo\"\n    WHERE \"chainId\" = '$chainId'\n    LIMIT 1\n)\n\nSELECT \n    -- \"V\".\"id\" AS \"validatorId\",\n    \"V\".\"voting_power\",\n--    \"V\".\"address\",\n--    \"V\".\"pub_key\",\n--    \"V\".\"consensusAddress\",\n--    \"V\".\"proposer_priority\",\n    \"SV\".\"moniker\"\nFROM \"Validator\" \"V\"\nJOIN \"LatestValidatorsGroupId\" \"LVG\" ON \"V\".\"validatorsGroupId\" = \"LVG\".\"validatorsGroupId\"\nLEFT JOIN \"StakingValidator\" \"SV\" ON \n    CASE \n        WHEN (SELECT \"type\" FROM \"ChainType\") = 'provider' THEN \"SV\".\"consensus_pubkey_key\" = (\"V\".\"pub_key\"::json)->>'value'\n        ELSE (\"SV\".\"consumer_signing_keys\"::json)->>'$chainId'::text = \"V\".\"consensusAddress\"\n    END\nWHERE \"V\".\"id\" IN (\n    SELECT DISTINCT \"validatorId\"\n    FROM \"Votes\"\n    WHERE \"type\" = 'prevote' AND \"roundId\" = (SELECT \"latestRoundId\" FROM \"LatestRound\")\n)\nGROUP BY \"V\".\"id\", \"SV\".\"moniker\", \"SV\".\"tokens\"\nORDER BY \"V\".\"voting_power\" DESC;\n",
           "refId": "A",
           "sql": {
             "columns": [
@@ -1256,13 +1288,25 @@
           }
         }
       ],
-      "title": "Pending Consumer-Signing-Key Updates",
-      "type": "table"
+      "transformations": [
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {
+              "moniker": false,
+              "voting_power": false
+            },
+            "indexByName": {},
+            "renameByName": {}
+          }
+        }
+      ],
+      "type": "barchart"
     },
     {
       "datasource": {
         "type": "postgres",
-        "uid": "b847f7eb-8f0b-483d-8f7c-782ff60b8799"
+        "uid": "<DATASOURCE_UID>"
       },
       "fieldConfig": {
         "defaults": {
@@ -1358,7 +1402,7 @@
         "h": 24,
         "w": 24,
         "x": 0,
-        "y": 12
+        "y": 17
       },
       "id": 1,
       "options": {
@@ -1379,7 +1423,7 @@
         {
           "datasource": {
             "type": "postgres",
-            "uid": "b847f7eb-8f0b-483d-8f7c-782ff60b8799"
+            "uid": "<DATASOURCE_UID>"
           },
           "editorMode": "code",
           "format": "table",
@@ -1430,11 +1474,11 @@
             },
             "indexByName": {
               "consumer_signing_key": 5,
-              "moniker": 4,
-              "operator_address": 2,
-              "precommitDotColor": 1,
-              "prevoteDotColor": 0,
-              "voting_power": 3
+              "moniker": 3,
+              "operator_address": 4,
+              "precommitDotColor": 2,
+              "prevoteDotColor": 1,
+              "voting_power": 0
             },
             "renameByName": {
               "consumer_signing_key": "Current Consumer-Signing-Key",
@@ -1464,7 +1508,7 @@
         },
         "datasource": {
           "type": "postgres",
-          "uid": "b847f7eb-8f0b-483d-8f7c-782ff60b8799"
+          "uid": "<DATASOURCE_UID>"
         },
         "definition": "SELECT \"chainId\" FROM \"ChainInfo\";",
         "hide": 0,
@@ -1503,6 +1547,6 @@
   "timezone": "",
   "title": "icsValsetMonitoring - TEST",
   "uid": "ae2d1868-c009-472b-b094-55b69a70cda0",
-  "version": 6,
+  "version": 3,
   "weekStart": ""
 }
