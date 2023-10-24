@@ -1,45 +1,38 @@
 # ICS Valset Monitoring
 
-Monitor and index validator sets in a blockchain network via Metabase dashboards. 
+Monitor and validator sets on ICS provider- and consumer-chains. Index consensus state date into postgres, display relational data on a grafana dashabord. 
 
 ## Prerequisites
 - Node.js v18+
 - Docker
 - PostgreSQL
 
-## Auto-Setup
+## Setup
 
-### Environment Variables
-Set `$MB_USER` and `$MB_PASSWORD` to configure Metabase credentials.
-
+Configure via environment variables:
 ```bash
-# Install dependencies and run setup
-make setup
+export DEPLOYMENT="production"
+export PROVIDER_RPC="<PROVIDER-RPC-ENDPOINT>"
+export PROVIDER_REST="<PROVIDER-REST-ENDPOINT>"
+export SOVEREIGN_REST="<SOVEREIGN_REST-ENDPOINT>"
+export CONSUMER_RPCS='["<CONSUMER1-RPC-ENDPOINT>","<CONSUMER2-RPC-ENDPOINT>"]'
+export NUM_WORKERS=<NUMBER-OF-INDEXER-WORKERS>
+```
 
-# Start the project
+Setup only:
+```
+make setup
+```
+
+Config validation:
+```
+make config-validate
+```
+
+Install prerequisites, setup and run:
+```
 make run
 ```
 
-This will install Docker, Node.js, set up a PostgreSQL database, Metabase, and run the services.
-
-## Manual Setup
-
-### Prerequisites
-- [docker.io](https://docs.docker.com/engine/install)
-- Node 18 via [nvm (Node Version Manager)](https://github.com/nvm-sh/nvm#installing-and-updating)
-- [npm](https://nodejs.org/en/download/package-manager)
-
-### Build and Run Docker Containers
-```bash
-docker-compose build
-docker-compose up
-```
-
-### Database and Dashboard Setup
-```bash
-bash setup_Metabase.sh
-```
-
-## Access Dashboards:
-- Metabase: http://localhost:3000
+### Access Dashboards
 - Grafana: http://localhost:3001
