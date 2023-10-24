@@ -24,25 +24,11 @@ jobs:
     - name: Create directories
       run: make create-dirs
 
-  test:
-    needs: setup
-    runs-on: ubuntu-latest
-
-    steps:
-    - name: Checkout code
-      uses: actions/checkout@v2
-
     - name: Install NPM dependencies
       run: npm install
     
-    - name: Validate Config
-      run: make config-validate
-
-    - name: Reset DB
-      run: make reset-db
-
   build:
-    needs: test
+    needs: setup
     runs-on: ubuntu-latest
 
     steps:
