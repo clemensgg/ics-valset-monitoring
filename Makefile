@@ -54,7 +54,7 @@ docker-destroy:
 	@echo "Destroying containers..."
 	docker-compose down
 
-npm-reset-db:
+reset-db:
 	@echo "Running npm run reset-db in indexer-icsvalset container..."
 	docker exec -it indexer-icsvalset npm run reset-db
 
