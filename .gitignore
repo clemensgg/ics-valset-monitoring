@@ -3,6 +3,5 @@ data
 dump_metabase_dashboard.sh
 .notes*
 
-indexer/config_test.js
 src/config.js
 src/server.js
