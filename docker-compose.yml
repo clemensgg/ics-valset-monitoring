@@ -13,16 +13,6 @@ services:
     volumes:
       - ./.icsValsetMonitoring_data:/var/lib/postgresql/data
 
-  metabase-icsvalset:
-    image: metabase/metabase:latest
-    container_name: metabase-icsvalset
-    ports:
-      - "3000:3000"
-    depends_on:
-      - postgres-icsvalset
-    networks:
-      - icsvalset_network
-
   grafana-icsvalset:
     image: grafana/grafana-oss:latest
     container_name: grafana-icsvalset

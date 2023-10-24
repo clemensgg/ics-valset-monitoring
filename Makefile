@@ -36,12 +36,11 @@ docker-up:
 
 wait-for-containers:
 	@echo "Waiting for Docker containers to be up..."
-	@while [ "$$(docker-compose ps | awk '/Up/ {print $$0}' | wc -l)" -ne 4 ]; do \
+	@while [ "$$(docker-compose ps | awk '/Up/ {print $$0}' | wc -l)" -ne 3 ]; do \
 		sleep 5; \
 	done
 	@echo "--- Setup complete! ---"
-	@echo "Create Admin user for Metabase: http://localhost:3000" and run ./setup_Metabase.sh afterwards to complete setup.
-	@echo "Grafana Access: http://localhost:3001"
+	@echo "Access Grafana and create admin user: http://localhost:3001"
 
 docker-destroy:
 	@echo "Destroying containers..."
