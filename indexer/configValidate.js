@@ -3,12 +3,12 @@ import Joi from 'joi';
 const CONFIGSchema = Joi.object({
     PROVIDER_RPC: Joi.string().required(),
     PROVIDER_REST: Joi.string().required(),
-    SOVEREIGN_REST: Joi.string(),
+    SOVEREIGN_REST: Joi.string().allow('', null),
     CONSUMER_RPCS: Joi.array().items(Joi.string()).required(),
     RPC_DELAY_MS: Joi.number().required(),
     UPDATE_DB_FREQUENCY_MS: Joi.number().required(),
     CONSENSUS_POLL_FREQENCY_MS: Joi.number().required(),
-    NUM_WORKERS: Joi.number(),
+    NUM_WORKERS: Joi.number().allow('', null),
     RETAIN_STATES: Joi.number().required(),
     PREFIX: Joi.string().required(),
     pg: Joi.object({
