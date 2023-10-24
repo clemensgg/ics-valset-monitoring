@@ -1,0 +1,70 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  setup:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v2
+
+    - name: Install Docker
+      run: sudo apt update && sudo apt install -y docker.io docker-compose
+
+    - name: Install Node.js
+      uses: actions/setup-node@v2
+      with:
+        node-version: '18'
+
+    - name: Create directories
+      run: make create-dirs
+
+  test:
+    needs: setup
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v2
+
+    - name: Install NPM dependencies
+      run: npm install
+    
+    - name: Validate Config
+      run: make config-validate
+
+    - name: Reset DB
+      run: make reset-db
+
+  build:
+    needs: test
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v2
+
+    - name: Build services
+      run: make docker-compose
+
+    - name: Run services
+      run: make docker-up
+
+    - name: Wait for services to be up
+      run: make wait-for-containers
+
+  cleanup:
+    needs: build
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v2
+
+    - name: Destroy containers
+      run: make docker-destroy
