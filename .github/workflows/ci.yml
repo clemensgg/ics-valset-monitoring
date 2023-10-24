@@ -6,7 +6,7 @@ on:
       - main
 
 jobs:
-  setup:
+  setup-build:
     runs-on: ubuntu-latest
 
     steps:
@@ -26,14 +26,6 @@ jobs:
 
     - name: Install NPM dependencies
       run: npm install
-    
-  build:
-    needs: setup
-    runs-on: ubuntu-latest
-
-    steps:
-    - name: Checkout code
-      uses: actions/checkout@v2
 
     - name: Build services
       run: make docker-compose
@@ -45,7 +37,7 @@ jobs:
       run: make config-validate
 
   cleanup:
-    needs: build
+    needs: setup-build
     runs-on: ubuntu-latest
 
     steps:
