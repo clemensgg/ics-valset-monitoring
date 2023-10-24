@@ -39,13 +39,10 @@ make run
 
 ## License
 
-```
 This project is licensed under the Apache 2.0 License - see the [LICENSE](LICENSE) file for details.
-```
 
 ## Contributing
 
-```
 We welcome contributions from the community. Here are some ways you can contribute:
 
 1. Report Issues: If you find bugs or issues, please create an issue explaining the problem and any steps to reproduce it.
@@ -54,4 +51,3 @@ We welcome contributions from the community. Here are some ways you can contribu
 4. Documentation: Improvements to the documentation, tutorials, and examples are always welcome.
 
 Please read our [CONTRIBUTING.md](CONTRIBUTING.md) for more details on our code of conduct and development process.
-```
