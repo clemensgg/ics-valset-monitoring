@@ -25,12 +25,12 @@ services:
     volumes:
       - ./.grafana_data/provisioning:/etc/grafana/provisioning
       - ./.grafana_data/data:/var/lib/grafana
-#      - ./grafana.ini:/etc/grafana/grafana.ini
-    environment:
-      - GF_DASHBOARDS_MIN_REFRESH_INTERVAL=1s
-      - GF_AUTH_ANONYMOUS_ENABLED=true
-      - GF_AUTH_ANONYMOUS_ORG_NAME=ccvalidators
-      - GF_AUTH_ANONYMOUS_ORG_ROLE=Viewer
+      - ./grafana.ini:/etc/grafana/grafana.ini
+#    environment:
+#      - GF_DASHBOARDS_MIN_REFRESH_INTERVAL=1s
+#      - GF_AUTH_ANONYMOUS_ENABLED=true
+#      - GF_AUTH_ANONYMOUS_ORG_NAME=ccvalidators
+#      - GF_AUTH_ANONYMOUS_ORG_ROLE=Viewer
 
   indexer-icsvalset:
     build: . 
