@@ -6,9 +6,10 @@ API_URL="http://localhost:3000"
 
 create-dirs:
 	@echo "Creating required directories..."
-	mkdir -p .icsValsetMonitoring_data
-	mkdir -p .grafana_data/data
-	mkdir -p .grafana_data/provisioning
+	mkdir -p .icsValsetMonitoring_data || true
+	mkdir -p .grafana_data/data/alerting || true
+	mkdir -p .grafana_data/provisioning || true
+	sudo chown -R 472:472 .grafana_data
 
 install-docker:
 ifndef DOCKER
