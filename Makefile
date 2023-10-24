@@ -4,6 +4,12 @@ DOCKER := $(shell command -v docker 2> /dev/null)
 NODE := $(shell command -v node 2> /dev/null)
 API_URL="http://localhost:3000"
 
+create-dirs:
+	@echo "Creating required directories..."
+	mkdir -p .icsValsetMonitoring_data
+	mkdir -p .grafana_data/data
+	mkdir -p .grafana_data/provisioning
+
 install-docker:
 ifndef DOCKER
 	@echo "Installing Docker..."
@@ -54,8 +60,8 @@ config-validate:
 	@echo "Validating configuration..."
 	npm run config-validate
 
-run: install-docker install-npm install-node docker-compose docker-up wait-for-containers
+setup: create-dirs
 
-.PHONY: install-docker install-node install-npm docker-compose docker-up docker-destroy npm-reset-db config-validate setup run
+run: install-docker install-npm install-node create-dirs docker-compose docker-up wait-for-containers
 
-
+.PHONY: install-docker install-node install-npm docker-compose docker-up docker-destroy npm-reset-db config-validate setup run create-dirs
