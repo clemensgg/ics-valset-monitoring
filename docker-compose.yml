@@ -10,6 +10,8 @@ services:
       POSTGRES_PASSWORD: monitoring
     networks:
       - icsvalset_network
+    volumes:
+      - ./.icsValsetMonitoring_data:/var/lib/postgresql/data
 
   metabase-icsvalset:
     image: metabase/metabase:latest
@@ -31,10 +33,14 @@ services:
     networks:
       - icsvalset_network
     volumes:
-      - ./grafana-provisioning/:/home/service/.grafana/provisioning
-      - ./grafana-provisioning/:/home/service/.grafana/grafana.ini
+      - ./.grafana_data/provisioning:/etc/grafana/provisioning
+      - ./.grafana_data/data:/var/lib/grafana
+#      - ./grafana.ini:/etc/grafana/grafana.ini
     environment:
       - GF_DASHBOARDS_MIN_REFRESH_INTERVAL=1s
+      - GF_AUTH_ANONYMOUS_ENABLED=true
+      - GF_AUTH_ANONYMOUS_ORG_NAME=ccvalidators
+      - GF_AUTH_ANONYMOUS_ORG_ROLE=Viewer
 
   indexer-icsvalset:
     build: . 
@@ -44,12 +50,12 @@ services:
     networks:
       - icsvalset_network
     environment:
-      - DEPLOYMENT
-      - PROVIDER_REST
-      - PROVIDER_RPC
-      - SOVEREIGN_RPC
-      - CONSUMER_RPCS
-      - NUM_WORKERS
+      - DEPLOYMENT=${DEPLOYMENT}
+      - PROVIDER_REST=${PROVIDER_REST}
+      - PROVIDER_RPC=${PROVIDER_RPC}
+      - SOVEREIGN_RPC=${SOVEREIGN_RPC}
+      - CONSUMER_RPCS=${CONSUMER_RPCS}
+      - NUM_WORKERS=${NUM_WORKERS}
 
 networks:
   icsvalset_network:

@@ -3,6 +3,8 @@ dump_metabase_dashboard.sh
 *.sqlite
 *.db
 .notes*
+.grafana_data/*
+.icsValsetMonitoring_data/*
 
 indexer/config_test.js
 src/config.js
