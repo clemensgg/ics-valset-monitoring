@@ -11,7 +11,7 @@ services:
     networks:
       - icsvalset_network
     volumes:
-      - ./.icsValsetMonitoring_data:/var/lib/postgresql/data
+      - ./data/.icsValsetMonitoring_data:/var/lib/postgresql/data
 
   grafana-icsvalset:
     image: grafana/grafana-oss:latest
@@ -23,8 +23,8 @@ services:
     networks:
       - icsvalset_network
     volumes:
-      - ./.grafana_data/provisioning:/etc/grafana/provisioning
-      - ./.grafana_data/data:/var/lib/grafana
+      - ./data/.grafana_data/provisioning:/etc/grafana/provisioning
+      - ./data/.grafana_data/data:/var/lib/grafana
       - ./grafana.ini:/etc/grafana/grafana.ini
 #    environment:
 #      - GF_DASHBOARDS_MIN_REFRESH_INTERVAL=1s
