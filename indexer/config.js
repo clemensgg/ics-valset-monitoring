@@ -10,10 +10,11 @@ export const CONFIG = {
     RETAIN_STATES: 0,
     PREFIX: 'cosmos',
     pg: {
-        port: 5432,
-        user: 'monitoring',
-        password: 'monitoring',
-        database: 'icsValsetMonitoring',
+        host: process.env.PG_HOST,
+        port: process.env.PG_PORT,
+        user: process.env.PG_USER,
+        password: process.env.PG_PWD,
+        database: process.env.PG_DBNAME,
         statement_timeout_ms: 2000
     }
 };

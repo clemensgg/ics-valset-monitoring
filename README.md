@@ -11,12 +11,17 @@ Monitor consensus of ICS provider- and consumer-chains. Index consensus state da
 
 Configure via environment variables:
 ```bash
-export DEPLOYMENT="production"
+export DEPLOYMENT="production" # "test"
 export PROVIDER_RPC="<PROVIDER-RPC-ENDPOINT>"
 export PROVIDER_REST="<PROVIDER-REST-ENDPOINT>"
 export SOVEREIGN_REST="<SOVEREIGN_REST-ENDPOINT>"
 export CONSUMER_RPCS='["<CONSUMER1-RPC-ENDPOINT>","<CONSUMER2-RPC-ENDPOINT>"]'
 export NUM_WORKERS=<NUMBER-OF-INDEXER-WORKERS>
+export PG_HOST="<POSTGRES-HOSTNAME>"
+export PG_PORT="<POSTGRES-PG_PORT>"
+export PG_USER="<POSTGRES-PG_USER>"
+export PG_PWD="<POSTGRES-PASSWORD>"
+export PG_DBNAME="<POSTGRES-DATABASE-NAME>"
 ```
 
 Setup only:

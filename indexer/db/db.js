@@ -4,12 +4,12 @@ import { CONFIG } from '../config.js'
 const { Client } = pkg;
 
 const client = new Client({
-  host: 'postgres-icsvalset',
-  port: CONFIG.pg.port ?? 5432,
-  user: CONFIG.pg.user ?? "monitoring",
-  password: CONFIG.pg.password ?? "monitoring",
-  database: CONFIG.pg.database ?? 'icsValsetMonitoring',
-  statement_timeout: CONFIG.pg.statement_timeout_ms ?? 2000
+  host: CONFIG.pg.host,
+  port: CONFIG.pg.port,
+  user: CONFIG.pg.user,
+  password: CONFIG.pg.password,
+  database: CONFIG.pg.database,
+  statement_timeout: CONFIG.pg.statement_timeout_ms
 });
 
 client.connect()
