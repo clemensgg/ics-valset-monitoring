@@ -12,6 +12,7 @@ const CONFIGSchema = Joi.object({
     RETAIN_STATES: Joi.number().required(),
     PREFIX: Joi.string().required(),
     pg: Joi.object({
+        host: Joi.number().required(),
         port: Joi.number().required(),
         user: Joi.string().required(),
         password: Joi.string().required(),
