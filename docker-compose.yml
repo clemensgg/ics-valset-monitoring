@@ -16,7 +16,7 @@ services:
   grafana-icsvalset:
     image: grafana/grafana-oss:latest
     container_name: grafana-icsvalset
-    entrypoint: /bin/sh -c "envsubst < /etc/grafana/provisioning/datasources/postgres-template.yaml > /etc/grafana/provisioning/datasources/postgres.yaml && exec /run.sh"
+    entrypoint: /init-grafana.sh
     environment:
       - DB_HOST=${PG_HOST}:${PG_PORT}
       - DB_USER=${PG_USER}
@@ -32,6 +32,7 @@ services:
       - ./grafana/provisioning:/etc/grafana/provisioning
       - ./data/.grafana_data/data:/var/lib/grafana
       - ./grafana/grafana.ini:/etc/grafana/grafana.ini
+      - ./grafana/init-grafana.sh:/init-grafana.sh
 #    environment:
 #      - GF_DASHBOARDS_MIN_REFRESH_INTERVAL=1s
 #      - GF_AUTH_ANONYMOUS_ENABLED=true
