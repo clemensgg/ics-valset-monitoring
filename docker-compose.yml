@@ -46,6 +46,11 @@ services:
       - SOVEREIGN_RPC=${SOVEREIGN_RPC}
       - CONSUMER_RPCS=${CONSUMER_RPCS}
       - NUM_WORKERS=${NUM_WORKERS}
+      - PG_HOST=${PG_HOST}
+      - PG_USER=${PG_USER}
+      - PG_PORT=${PG_PORT}
+      - PG_PWD=${PG_PWD}
+      - PG_DBNAME=${PG_DBNAME}
 
 networks:
   icsvalset_network:
