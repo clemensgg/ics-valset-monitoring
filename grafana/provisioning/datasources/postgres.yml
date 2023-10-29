@@ -1,0 +1,14 @@
+apiVersion: 1
+datasources:
+  - name: PostgreSQL
+    orgId: 1
+    type: postgres
+    typeLogoUrl: public/app/plugins/datasource/postgres/img/postgresql_logo.svg
+    access: proxy
+    url: postgres-icsvalset:5432
+    password:
+      secureJsonData:
+        password: monitoring
+    user: monitoring
+    database: icsValsetMonitoring
+    basicAuth: false

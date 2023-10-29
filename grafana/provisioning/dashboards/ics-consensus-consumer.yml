@@ -1,0 +1,10 @@
+apiVersion: 1
+providers:
+  - name: 'ics-consensus-consumer'
+    orgId: 1
+    folder: 'General'
+    type: file
+    disableDeletion: false
+    editable: true
+    options:
+      path: /etc/grafana/provisioning/grafana_dashboard_consumer.json

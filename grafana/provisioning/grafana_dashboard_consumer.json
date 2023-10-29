@@ -3,10 +3,7 @@
     "list": [
       {
         "builtIn": 1,
-        "datasource": {
-          "type": "grafana",
-          "uid": "-- Grafana --"
-        },
+        "datasource": "PostgreSQL",
         "enable": true,
         "hide": true,
         "iconColor": "rgba(0, 211, 255, 1)",
@@ -23,10 +20,7 @@
   "liveNow": false,
   "panels": [
     {
-      "datasource": {
-        "type": "postgres",
-        "uid": "<DB-UUID>"
-      },
+      "datasource": "PostgreSQL",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -109,10 +103,7 @@
       "pluginVersion": "10.1.5",
       "targets": [
         {
-          "datasource": {
-            "type": "postgres",
-            "uid": "<DB-UUID>"
-          },
+          "datasource": "PostgreSQL",
           "editorMode": "code",
           "format": "table",
           "rawQuery": true,
@@ -142,10 +133,7 @@
       "type": "stat"
     },
     {
-      "datasource": {
-        "type": "postgres",
-        "uid": "<DB-UUID>"
-      },
+      "datasource": "PostgreSQL",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -261,10 +249,7 @@
       "pluginVersion": "10.1.5",
       "targets": [
         {
-          "datasource": {
-            "type": "postgres",
-            "uid": "<DB-UUID>"
-          },
+          "datasource": "PostgreSQL",
           "editorMode": "code",
           "format": "table",
           "rawQuery": true,
@@ -292,10 +277,7 @@
       "type": "stat"
     },
     {
-      "datasource": {
-        "type": "postgres",
-        "uid": "<DB-UUID>"
-      },
+      "datasource": "PostgreSQL",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -369,10 +351,7 @@
       "pluginVersion": "10.1.5",
       "targets": [
         {
-          "datasource": {
-            "type": "postgres",
-            "uid": "<DB-UUID>"
-          },
+          "datasource": "PostgreSQL",
           "editorMode": "code",
           "format": "table",
           "rawQuery": true,
@@ -418,10 +397,7 @@
       "type": "table"
     },
     {
-      "datasource": {
-        "type": "postgres",
-        "uid": "<DB-UUID>"
-      },
+      "datasource": "PostgreSQL",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -501,10 +477,7 @@
       "pluginVersion": "10.1.5",
       "targets": [
         {
-          "datasource": {
-            "type": "postgres",
-            "uid": "<DB-UUID>"
-          },
+          "datasource": "PostgreSQL",
           "editorMode": "code",
           "format": "table",
           "rawQuery": true,
@@ -533,10 +506,7 @@
       "type": "bargauge"
     },
     {
-      "datasource": {
-        "type": "postgres",
-        "uid": "<DB-UUID>"
-      },
+      "datasource": "PostgreSQL",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -652,10 +622,7 @@
       "pluginVersion": "10.1.5",
       "targets": [
         {
-          "datasource": {
-            "type": "postgres",
-            "uid": "<DB-UUID>"
-          },
+          "datasource": "PostgreSQL",
           "editorMode": "code",
           "format": "table",
           "rawQuery": true,
@@ -683,10 +650,7 @@
       "type": "stat"
     },
     {
-      "datasource": {
-        "type": "postgres",
-        "uid": "<DB-UUID>"
-      },
+      "datasource": "PostgreSQL",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -738,10 +702,7 @@
       "pluginVersion": "10.1.5",
       "targets": [
         {
-          "datasource": {
-            "type": "postgres",
-            "uid": "<DB-UUID>"
-          },
+          "datasource": "PostgreSQL",
           "editorMode": "code",
           "format": "table",
           "rawQuery": true,
@@ -770,10 +731,7 @@
       "type": "table"
     },
     {
-      "datasource": {
-        "type": "postgres",
-        "uid": "<DB-UUID>"
-      },
+      "datasource": "PostgreSQL",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -861,10 +819,7 @@
       "pluginVersion": "10.1.5",
       "targets": [
         {
-          "datasource": {
-            "type": "postgres",
-            "uid": "<DB-UUID>"
-          },
+          "datasource": "PostgreSQL",
           "editorMode": "code",
           "format": "table",
           "rawQuery": true,
@@ -894,10 +849,7 @@
       "type": "stat"
     },
     {
-      "datasource": {
-        "type": "postgres",
-        "uid": "<DB-UUID>"
-      },
+      "datasource": "PostgreSQL",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -971,10 +923,7 @@
       "pluginVersion": "10.1.5",
       "targets": [
         {
-          "datasource": {
-            "type": "postgres",
-            "uid": "<DB-UUID>"
-          },
+          "datasource": "PostgreSQL",
           "editorMode": "code",
           "format": "table",
           "rawQuery": true,
@@ -1020,10 +969,7 @@
       "type": "table"
     },
     {
-      "datasource": {
-        "type": "postgres",
-        "uid": "<DB-UUID>"
-      },
+      "datasource": "PostgreSQL",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -1118,10 +1064,7 @@
       "pluginVersion": "10.1.5",
       "targets": [
         {
-          "datasource": {
-            "type": "postgres",
-            "uid": "<DB-UUID>"
-          },
+          "datasource": "PostgreSQL",
           "editorMode": "code",
           "format": "table",
           "rawQuery": true,
@@ -1166,10 +1109,7 @@
       "type": "stat"
     },
     {
-      "datasource": {
-        "type": "postgres",
-        "uid": "<DB-UUID>"
-      },
+      "datasource": "PostgreSQL",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -1253,10 +1193,7 @@
       "pluginVersion": "10.1.5",
       "targets": [
         {
-          "datasource": {
-            "type": "postgres",
-            "uid": "<DB-UUID>"
-          },
+          "datasource": "PostgreSQL",
           "editorMode": "code",
           "format": "table",
           "rawQuery": true,
@@ -1297,10 +1234,7 @@
       "type": "barchart"
     },
     {
-      "datasource": {
-        "type": "postgres",
-        "uid": "<DB-UUID>"
-      },
+      "datasource": "PostgreSQL",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -1453,10 +1387,7 @@
       "repeatDirection": "v",
       "targets": [
         {
-          "datasource": {
-            "type": "postgres",
-            "uid": "<DB-UUID>"
-          },
+          "datasource": "PostgreSQL",
           "editorMode": "code",
           "format": "table",
           "rawQuery": true,
@@ -1537,13 +1468,10 @@
       {
         "current": {
           "selected": false,
-          "text": "stride-1",
-          "value": "stride-1"
+          "text": "neutron-1",
+          "value": "neutron-1"
         },
-        "datasource": {
-          "type": "postgres",
-          "uid": "<DB-UUID>"
-        },
+        "datasource": "PostgreSQL",
         "definition": "SELECT \"chainId\" FROM \"ChainInfo\";",
         "hide": 0,
         "includeAll": false,
