@@ -4,11 +4,11 @@ datasources:
     orgId: 1
     type: postgres
     typeLogoUrl: public/app/plugins/datasource/postgres/img/postgresql_logo.svg
-    url: postgres-icsvalset:5432
-    user: monitoring
-    database: icsValsetMonitoring
+    url: ${DB_HOST}
+    user: ${DB_USER}
+    database: ${DB_DBNAME}
     basicAuth: false
     jsonData:
       sslmode: "disable"
     secureJsonData:
-      password: monitoring
+      password: ${DB_PWD}

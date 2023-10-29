@@ -16,6 +16,12 @@ services:
   grafana-icsvalset:
     image: grafana/grafana-oss:latest
     container_name: grafana-icsvalset
+    entrypoint: /bin/sh -c "envsubst < /etc/grafana/provisioning/datasources/postgres-template.yaml > /etc/grafana/provisioning/datasources/postgres.yaml && exec /run.sh"
+    environment:
+      - DB_HOST=${PG_HOST}:${PG_PORT}
+      - DB_USER=${PG_USER}
+      - DB_DBNAME=${PG_DBNAME}
+      - DB_PWD=${PG_PWD}
     ports:
       - "3001:3000"
     depends_on:
