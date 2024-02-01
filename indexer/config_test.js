@@ -10,6 +10,7 @@ export const CONFIG = {
     RETAIN_STATES: 0,
     PREFIX: 'cosmos',
     pg: {
+        host: 'localhost',
         port: 5432,
         user: 'monitoring',
         password: 'monitoring',

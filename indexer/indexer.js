@@ -4,8 +4,10 @@ import { updateConsensusStateDB,
   validateEndpointsAndSaveChains,
   updateStakingValidatorsDB
 } from './db/update.js';
+import { initializeDb } from './db/db.js';
 import { getConsensusState } from './utils/utils.js';
 import { workers } from './setupWorkers.js'
+import { loadConfig } from './configLoader.js';
 
 async function updateChainAndValidatorData() {
   setInterval(() => {
@@ -33,8 +35,9 @@ async function consensusStateMonitor(chains, stakingValidators) {
 
 // Main Function
 async function main() {
-  // await loadConfig();
-
+  await loadConfig();
+  console.log(JSON.stringify(CONFIG));
+  await initializeDb(CONFIG);
   console.log('Starting ics-valset-monitoring');
 
   // Initialize Data

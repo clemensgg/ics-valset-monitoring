@@ -1,26 +1,29 @@
 import pkg from 'pg';
-import { CONFIG } from '../config.js'
+let client;
 
-const { Client } = pkg;
-
-const client = new Client({
-  host: CONFIG.pg.host,
-  port: CONFIG.pg.port,
-  user: CONFIG.pg.user,
-  password: CONFIG.pg.password,
-  database: CONFIG.pg.database,
-  statement_timeout: CONFIG.pg.statement_timeout_ms
-});
-
-client.connect()
-  .then(() => {
-    console.log('Connected to PostgreSQL database.');
-    return client.query('SET CONSTRAINTS ALL IMMEDIATE;'); 
-  })
-  .catch(err => {
-    console.error('Database connection failed:', err);
-    process.exit(1); 
+const createClient = () => {
+  return new pkg.Client({
+    host: CONFIG.pg.host,
+    port: CONFIG.pg.port,
+    user: CONFIG.pg.user,
+    password: CONFIG.pg.password,
+    database: CONFIG.pg.database,
+    statement_timeout: CONFIG.pg.statement_timeout_ms
   });
+};
+
+const initializeClient = async () => {
+  client = createClient();
+  await client.connect()
+    .then(() => {
+      console.log('Connected to PostgreSQL database.');
+      return client.query('SET CONSTRAINTS ALL IMMEDIATE;');
+    })
+    .catch(err => {
+      console.error('Database connection failed:', err);
+      process.exit(1);
+    });
+};
 
 const runDatabaseQuery = async (query, params = [], type = 'get') => {
   try {
@@ -162,6 +165,19 @@ const createTables = async () => {
       );
     `);
 
+    // HistoricSignatures Table
+    await runDatabaseQuery(`
+      CREATE TABLE IF NOT EXISTS "HistoricSignatures" (
+        "id" SERIAL PRIMARY KEY,
+        "validatorId" BIGINT REFERENCES "Validator"("id") ON DELETE CASCADE,
+        "chainId" TEXT REFERENCES "ChainInfo"("chainId") ON DELETE CASCADE,
+        "height" BIGINT NOT NULL,
+        "signed" BOOLEAN NOT NULL,
+        "timestamp" TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        UNIQUE ("validatorId", "chainId", "height")
+      );
+    `);
+
     // StakingValidator Table
     await runDatabaseQuery(`
       CREATE TABLE IF NOT EXISTS "StakingValidator" (
@@ -189,11 +205,15 @@ const createTables = async () => {
       );
     `);
 
-    await runDatabaseQuery(`ALTER TABLE "ConsensusState" ADD CONSTRAINT fk_validatorsgroup1
-      FOREIGN KEY ("validatorsGroupId") REFERENCES "ValidatorsGroup"("id") ON DELETE CASCADE;`);
-
-    await runDatabaseQuery(`ALTER TABLE "ConsensusState" ADD CONSTRAINT fk_validatorsgroup2
-      FOREIGN KEY ("lastValidatorsGroupId") REFERENCES "ValidatorsGroup"("id") ON DELETE CASCADE;`);
+  await addConstraintIfNotExists('fk_validatorsgroup1', 'ConsensusState', `
+    ALTER TABLE "ConsensusState" ADD CONSTRAINT fk_validatorsgroup1
+    FOREIGN KEY ("validatorsGroupId") REFERENCES "ValidatorsGroup"("id") ON DELETE CASCADE;
+  `);
+  
+  await addConstraintIfNotExists('fk_validatorsgroup2', 'ConsensusState', `
+    ALTER TABLE "ConsensusState" ADD CONSTRAINT fk_validatorsgroup2
+    FOREIGN KEY ("lastValidatorsGroupId") REFERENCES "ValidatorsGroup"("id") ON DELETE CASCADE;
+  `);
 
     console.log('All tables created successfully!');
   } catch (err) {
@@ -212,7 +232,8 @@ const tableNames = [
   'Validator',
   'Votes',
   'StakingValidatorsMeta',
-  'StakingValidator'
+  'StakingValidator',
+  'historicSignatures'
 ];
 
 const checkTablesExist = async () => {
@@ -226,8 +247,44 @@ const checkTablesExist = async () => {
   return existingTables.map(row => row.table_name);
 };
 
+const doesConstraintExist = async (constraintName, tableName, schemaName = 'public') => {
+  const query = `
+    SELECT EXISTS (
+        SELECT 1
+        FROM pg_constraint con
+        INNER JOIN pg_class rel ON rel.oid = con.conrelid
+        INNER JOIN pg_namespace nsp ON nsp.oid = connamespace
+        WHERE nsp.nspname = $1
+        AND rel.relname = $2
+        AND con.conname = $3
+    );
+  `;
+  try {
+    const result = await runDatabaseQuery(query, [schemaName, tableName, constraintName]);
+    if (result && result.hasOwnProperty('exists')) {
+      return result.exists;
+    } else {
+      console.error('No result returned from query');
+      return false;
+    }
+  } catch (error) {
+    console.error('Error checking constraint existence:', error);
+    throw error;
+  }
+};
+
+const addConstraintIfNotExists = async (constraintName, tableName, constraintSql) => {
+  const exists = await doesConstraintExist(constraintName, tableName);
+  if (!exists) {
+    await runDatabaseQuery(constraintSql);
+  }
+};
+
 // Create Tables
-await createTables().catch(err => console.error('Failed to create tables:', err));
+async function initializeDb() {
+  await initializeClient()
+  await createTables().catch(err => console.error('Failed to create tables:', err));
+}
 
 const deleteAllTables = async () => {
   const dropTablesQuery = `
@@ -262,6 +319,7 @@ process.on('exit', (code) => {
 });
 
 export {
+  initializeDb,
   deleteAllTables,
   runDatabaseQuery
 };

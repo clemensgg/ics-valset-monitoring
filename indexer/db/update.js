@@ -326,6 +326,7 @@ async function updateConsensusStateDB(consensusState, retainStates = 0) {
       if (currentConsensusState.validatorsGroupId && currentConsensusState.lastValidatorsGroupId) {
         if (pruneIds.length > 0) {
           await pruneConsensusStateDB(pruneIds, consensusState.chainId);
+          await pruneHistoricSignatures(consensusState.chainId);
         }
       } else {
         console.error('Error: lastcommit data is not correctly associated with the current state.');
@@ -427,15 +428,23 @@ async function saveValidatorsAndVotes(consensusState, consensusStateId, type) {
 
     // Continue with the rest of the logic for saving other validators and last_commit votes
     for (let i = 0; i < consensusState.last_validators.validators.length; i++) {
-        const validator = consensusState.last_validators.validators[i];
-        let validatorId;
-        if (validator.address !== consensusState.last_validators.proposer.address) {
-          validatorId = await saveValidator(validator, validatorsGroupId);
-        } else if (validator.address === consensusState.last_validators.proposer.address) {
-          validatorId = proposerId;
-        }
-
-        await saveVote(consensusState.last_commit.votes[i], 'lastcommit', validatorId, roundId);
+      const validator = consensusState.last_validators.validators[i];
+      let validatorId;
+      if (validator.address !== consensusState.last_validators.proposer.address) {
+        validatorId = await saveValidator(validator, validatorsGroupId);
+      } else if (validator.address === consensusState.last_validators.proposer.address) {
+        validatorId = proposerId;
+      }
+  
+      // Save the vote
+      const vote = consensusState.last_commit.votes[i];
+      await saveVote(vote, 'lastcommit', validatorId, roundId);
+  
+      // Determine if the validator signed the last commit
+      const signed = vote != 'nil-Vote';
+  
+      // Update the HistoricSignatures table with the signing information
+      await updateHistoricSignature(validatorId, consensusState.chain_id, consensusState.height, signed);
     }
   }
 
@@ -453,15 +462,15 @@ async function saveConsensusState(consensusState) {
         "start_time", 
         "commit_time", 
         "validatorsGroupId", 
-        "lastValidatorsGroupId", 
-        "proposal", 
-        "proposal_block_parts_header", 
-        "locked_block_parts_header", 
-        "valid_block_parts_header", 
-        "votes", 
-        "last_commit"
+        "lastValidatorsGroupId" 
+--        "proposal", 
+--        "proposal_block_parts_header", 
+--        "locked_block_parts_header", 
+--        "valid_block_parts_header", 
+--        "votes", 
+--        "last_commit"
       )
-      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15)
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
       RETURNING "id";
   `;
 
@@ -475,12 +484,12 @@ async function saveConsensusState(consensusState) {
       consensusState.commit_time,
       null,
       null,
-      JSON.stringify(consensusState.proposal),
-      JSON.stringify(consensusState.proposal_block_parts_header),
-      JSON.stringify(consensusState.locked_block_parts_header),
-      JSON.stringify(consensusState.valid_block_parts_header),
-      JSON.stringify(consensusState.votes),
-      JSON.stringify(consensusState.last_commit),
+//      JSON.stringify(consensusState.proposal),
+//      JSON.stringify(consensusState.proposal_block_parts_header),
+//      JSON.stringify(consensusState.locked_block_parts_header),
+//      JSON.stringify(consensusState.valid_block_parts_header),
+//      JSON.stringify(consensusState.votes),
+//      JSON.stringify(consensusState.last_commit),
   ];
 
   const consensusStateId = await runDatabaseQuery(query, params, 'run');
@@ -661,6 +670,39 @@ async function pruneConsensusStateDB(pruneIds, chainId) {
   await runDatabaseQuery(deleteConsensusStateQuery, [chainId, ...pruneIds], 'delete');
   return true;
 }
+
+const updateHistoricSignature = async (validatorId, chainId, height, signed) => {
+  const query = `
+    INSERT INTO "HistoricSignatures" ("validatorId", "chainId", "height", "signed")
+    VALUES ($1, $2, $3, $4)
+    ON CONFLICT ("validatorId", "chainId", "height")
+    DO UPDATE SET "signed" = EXCLUDED.signed;
+  `;
+  try {
+    await runDatabaseQuery(query, [validatorId, chainId, height, signed]);
+    console.log(`Historic signature updated for validator ${validatorId} at height ${height}`);
+  } catch (err) {
+    console.error('Error updating historic signature:', err);
+    throw err;
+  }
+};
+
+async function pruneHistoricSignatures(chainId) {
+  const query = `
+    DELETE FROM "HistoricSignatures"
+    WHERE "id" NOT IN (
+      SELECT "id"
+      FROM "HistoricSignatures"
+      WHERE "chainId" = $1
+      ORDER BY "height" DESC
+      LIMIT 100
+    )
+    AND "chainId" = $1;
+  `;
+
+  await runDatabaseQuery(query, [chainId]);
+  return true;
+};
 
 async function updateStakingValidatorsDB(providerChainInfo, consumerChainInfos) {
   console.time('updateDatabaseData Execution Time');
