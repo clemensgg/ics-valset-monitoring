@@ -8,6 +8,7 @@ import { initializeDb } from './db/db.js';
 import { getConsensusState } from './utils/utils.js';
 import { workers } from './setupWorkers.js'
 import { loadConfig } from './configLoader.js';
+import { initializeTriggerClient } from './middleware/trigger.js';
 
 async function updateChainAndValidatorData() {
   setInterval(() => {
@@ -38,6 +39,7 @@ async function main() {
   await loadConfig();
   console.log(JSON.stringify(CONFIG));
   await initializeDb(CONFIG);
+  await initializeTriggerClient();
   console.log('Starting ics-valset-monitoring');
 
   // Initialize Data

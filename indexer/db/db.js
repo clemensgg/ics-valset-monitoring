@@ -1,5 +1,8 @@
 import pkg from 'pg';
+import fs from 'fs';
+import WebSocket from 'ws';
 let client;
+
 
 const createClient = () => {
   return new pkg.Client({
@@ -23,6 +26,45 @@ const initializeClient = async () => {
       console.error('Database connection failed:', err);
       process.exit(1);
     });
+  // client.query('LISTEN data_change_channel');
+
+  // // WebSocket connection to Grafana Live
+  // const ws = new WebSocket('ws://grafana-icsvalset:3000/api/live/push/ws');
+
+  // ws.on('open', function open() {
+  //   console.log('Connected to Grafana Live');
+
+  //   // Listen for notifications from PostgreSQL
+  //   client.on('notification', async (msg) => {
+  //     const payload = JSON.parse(msg.payload);
+  //     console.log('Received notification:', payload);
+      
+  //     // Write the JSON payload to a file
+  //     fs.writeFile('payload.json', JSON.stringify(payload, null, 2), (err) => {
+  //       if (err) {
+  //         console.error('Error writing to file:', err);
+  //       } else {
+  //         console.log('Payload saved to payload.json');
+  //       }
+  //     });
+
+  //     // Push the data to Grafana Live
+  //     ws.send(JSON.stringify({
+  //       stream: 'your_stream',
+  //       data: payload
+  //     }));
+  //   });
+  // });
+
+  // ws.on('error', function error(err) {
+  //   console.log('WebSocket Error:', err);
+  // });
+  
+  // // Handle WebSocket closures
+  // ws.on('close', function close() {
+  //   console.log('Disconnected from Grafana Live');
+  //   // Reconnect or handle closure
+  // });
 };
 
 const runDatabaseQuery = async (query, params = [], type = 'get') => {
@@ -215,12 +257,77 @@ const createTables = async () => {
     FOREIGN KEY ("lastValidatorsGroupId") REFERENCES "ValidatorsGroup"("id") ON DELETE CASCADE;
   `);
 
+  // //Create notify_change function
+  // await runDatabaseQuery(`
+  // CREATE OR REPLACE FUNCTION notify_change() RETURNS TRIGGER AS $$
+  // BEGIN
+  //   PERFORM pg_notify('data_change_channel', row_to_json(NEW)::text);
+  //   RETURN NEW;
+  // END;
+  // $$ LANGUAGE plpgsql;
+  // `);
+
+  // //Create change
+  // await runDatabaseQuery(`
+  // DROP TRIGGER IF EXISTS ConsensusState_after_insert ON ConsensusState;
+  // CREATE TRIGGER ConsensusState_after_insert
+  // AFTER INSERT ON ConsensusState
+  // FOR EACH ROW EXECUTE FUNCTION notify_change();
+  // `)
+
+
     console.log('All tables created successfully!');
   } catch (err) {
     console.error('Table creation failed:', err);
     throw err;
   }
   return true;
+};
+
+// client.on('notification', async (msg) => {
+//   const payload = JSON.parse(msg.payload);
+//   console.log('Received notification:', payload);
+
+//   // Write the JSON payload to a file
+//   fs.writeFile('payload.json', JSON.stringify(payload, null, 2), (err) => {
+//     if (err) {
+//       console.error('Error writing to file:', err);
+//     } else {
+//       console.log('Payload saved to payload.json');
+//     }
+//   });
+// });
+
+const createFunctionAndTrigger = async () => {
+  try {
+    // SQL to create a function that notifies on data change
+    const createFunctionSQL = `
+      CREATE OR REPLACE FUNCTION notify_change() RETURNS TRIGGER AS $$
+      BEGIN
+        PERFORM pg_notify('data_change_channel', row_to_json(NEW)::text);
+        RETURN NEW;
+      END;
+      $$ LANGUAGE plpgsql;
+    `;
+
+    // SQL to create a trigger that calls the notify_change function after an insert operation
+    const createTriggerSQL = `
+      DROP TRIGGER IF EXISTS ConsensusState_after_insert ON "ConsensusState";
+      CREATE TRIGGER ConsensusState_after_insert
+      AFTER INSERT ON "ConsensusState"
+      FOR EACH ROW EXECUTE FUNCTION notify_change();
+    `;
+
+    // Execute the SQL to create the function
+    await client.query(createFunctionSQL);
+    console.log('Function created successfully.');
+
+    // Execute the SQL to create the trigger
+    await client.query(createTriggerSQL);
+    console.log('Trigger created successfully.');
+  } catch (err) {
+    console.error('Error creating function and trigger:', err);
+  }
 };
 
 const tableNames = [
@@ -284,6 +391,7 @@ const addConstraintIfNotExists = async (constraintName, tableName, constraintSql
 async function initializeDb() {
   await initializeClient()
   await createTables().catch(err => console.error('Failed to create tables:', err));
+  await createFunctionAndTrigger()
 }
 
 const deleteAllTables = async () => {
@@ -321,5 +429,6 @@ process.on('exit', (code) => {
 export {
   initializeDb,
   deleteAllTables,
-  runDatabaseQuery
+  runDatabaseQuery,
+  createFunctionAndTrigger
 };
