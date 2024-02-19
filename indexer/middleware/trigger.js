@@ -1,7 +1,7 @@
 import pkg from 'pg';
 import fs from 'fs';
 import WebSocket from 'ws';
-import { createGrafanaApiToken } from './middleware.js';
+import { createNewGrafanaApiToken } from './middleware.js';
 let client;
 
 
@@ -17,14 +17,6 @@ const createClient = () => {
 };
 
 const initializeTriggerClient = async () => {
-//   const apiKey = await createGrafanaApiToken();
-//   if (apiKey) {
-//     // Use the API key as needed
-//     console.log('Retrieved API key:', apiKey);
-//   } else {
-//     console.log('Failed to retrieve API key.');
-//   }
-
   client = createClient();
   await client.connect()
     .then(() => {
@@ -37,14 +29,17 @@ const initializeTriggerClient = async () => {
     });
   client.query('LISTEN data_change_channel');
   
-  const apiKey = await createGrafanaApiToken();
+  const apiKey = await createNewGrafanaApiToken();
 
   // WebSocket connection to Grafana Live
-  const ws = new WebSocket(`ws://grafana-icsvalset:3000/api/live/push/ws?api_token=${apiKey}`);
+  const ws = new WebSocket('ws://127.0.0.1:3001/api/live/push/ws', {
+  headers: {
+      'Authorization': 'Bearer ' + apiKey
+    }
+  });
+
 
   ws.on('open', function open() {
-    // const authMessage = JSON.stringify({ token: apiKey });
-    // ws.send(authMessage);
     console.log('Connected to Grafana Live');
 
     // Listen for notifications from PostgreSQL

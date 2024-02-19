@@ -1,18 +1,45 @@
 import axios from 'axios';
 
-async function createGrafanaApiToken() {
-  const grafanaUrl = 'http://172.19.0.3:3000';
+
+  
+async function createNewGrafanaApiToken() {
+  // const grafanaUrl = 'http://127.0.0.1:3001'; // TEST
+  const grafanaUrl = 'http://grafana-icsvalset:3000';
+  
   const username = 'admin';
   const password = 'admin';
   const apiEndpoint = `${grafanaUrl}/api/auth/keys`;
-
-  const data = {
-    name: "grafana_live_key_199", // Name your key
-    role: "Admin", // Assign a role: Admin, Editor, or Viewer
-    // secondsToLive: 3600 // Optional: Time in seconds for the key to be valid (omit or set to 0 for no expiration)
-  };
+  const keyName = "grafana_live_key_199"; // Name your key
 
   try {
+    // Step 1: List existing API keys
+    const keysResponse = await axios.get(apiEndpoint, {
+      auth: {
+        username: username,
+        password: password,
+      },
+    });
+
+    // Step 2: Check for the existence of the key
+    const existingKey = keysResponse.data.find(key => key.name === keyName);
+    if (existingKey) {
+      // Step 3: Delete the existing key
+      await axios.delete(`${apiEndpoint}/${existingKey.id}`, {
+        auth: {
+          username: username,
+          password: password,
+        },
+      });
+      console.log(`Existing key '${keyName}' deleted.`);
+    }
+
+    // Step 4: Create the new API key
+    const data = {
+      name: keyName,
+      role: "Admin", // Assign a role: Admin, Editor, or Viewer
+      // secondsToLive: 3600 // Optional: Time in seconds for the key to be valid (omit or set to 0 for no expiration)
+    };
+
     const response = await axios.post(apiEndpoint, data, {
       auth: {
         username: username,
@@ -36,7 +63,7 @@ async function createGrafanaApiToken() {
       console.error('Error', error.message);
     }
     console.error(error.config);
-    return null; 
+    return null;
   }
 }
 
@@ -60,5 +87,5 @@ async function checkGrafanaHealth(retryCount = 0) {
 }
 
 export {
-  createGrafanaApiToken
+  createNewGrafanaApiToken
 };
