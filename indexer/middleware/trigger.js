@@ -32,7 +32,10 @@ const initializeTriggerClient = async () => {
   const apiKey = await createNewGrafanaApiToken();
 
   // WebSocket connection to Grafana Live
-  const ws = new WebSocket('ws://127.0.0.1:3001/api/live/push/ws', {
+  // const wsUrl = 'ws://127.0.0.1:3001/api/live/push/ws' // TEST
+  const wsUrl = 'ws://grafana-icsvalset:3000/api/live/push/ws'
+
+  const ws = new WebSocket(wsUrl, {
   headers: {
       'Authorization': 'Bearer ' + apiKey
     }
