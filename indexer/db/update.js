@@ -7,7 +7,7 @@ import {
   Validators,
   Validator
 } from '../../src/models/ConsensusState.js';
-import { 
+import {
   pubKeyToValcons,
   decodeVoteData,
   fetchConsumerSigningKeys,
@@ -37,7 +37,7 @@ async function initializeData() {
       } else {
         stakingValidators = [];
       }
-    } else { 
+    } else {
       stakingValidators = [];
     }
 
@@ -76,7 +76,7 @@ async function validateEndpointsAndSaveChains() {
     await saveChainInfos(providerChainInfos);
     console.log('Updated ChainInfos for provider chain.');
   }
-  
+
   if (consumerChainInfos && consumerChainInfos.length > 0) {
     for (const consumerChainInfo of consumerChainInfos) {
       await saveChainInfos(consumerChainInfo);
@@ -196,23 +196,23 @@ async function saveStakingValidators(stakingValidators) {
     console.error('Error saving stakingValidators to DB:', err);
     console.error('attempting DB rollback...')
     try {
-        await runDatabaseQuery('ROLLBACK');
+      await runDatabaseQuery('ROLLBACK');
     } catch (rollbackErr) {
-        console.error('Error on ROLLBACK', rollbackErr);
-        throw rollbackErr;
+      console.error('Error on ROLLBACK', rollbackErr);
+      throw rollbackErr;
     }
-//  throw err;
+    //  throw err;
   }
 }
 
-async function getLastStakingValidatorsMetaFromDB (chainId) { 
-  const stakingValidatorsMetaId  = await runDatabaseQuery('SELECT * FROM "StakingValidatorsMeta" WHERE "chainId" = $1 ORDER BY "id" DESC LIMIT 1', [chainId], 'get');
-    if (!stakingValidatorsMetaId) {
-      return null;
-    } else return stakingValidatorsMetaId;
+async function getLastStakingValidatorsMetaFromDB(chainId) {
+  const stakingValidatorsMetaId = await runDatabaseQuery('SELECT * FROM "StakingValidatorsMeta" WHERE "chainId" = $1 ORDER BY "id" DESC LIMIT 1', [chainId], 'get');
+  if (!stakingValidatorsMetaId) {
+    return null;
+  } else return stakingValidatorsMetaId;
 }
 
-async function getStakingValidatorsFromDB (metaRowId) {
+async function getStakingValidatorsFromDB(metaRowId) {
   try {
     const validatorRows = await runDatabaseQuery('SELECT * FROM "StakingValidator" WHERE "stakingValidatorsMetaId" = $1', [metaRowId], 'all');
 
@@ -250,7 +250,7 @@ async function getStakingValidatorsFromDB (metaRowId) {
   }
 }
 
-async function saveMatchedValidators (matchedValidators) {
+async function saveMatchedValidators(matchedValidators) {
   console.log('Saving matchedValidators to DB:',
     matchedValidators);
 
@@ -277,7 +277,7 @@ async function saveMatchedValidators (matchedValidators) {
   }
 }
 
-async function getMatchedValidatorsFromDB () {
+async function getMatchedValidatorsFromDB() {
   try {
     // Get the latest MatchedValidators entry
     const matchedRow = await runDatabaseQuery('SELECT * FROM "MatchedValidators" ORDER BY "id" DESC LIMIT 1', [], 'get');
@@ -305,12 +305,12 @@ async function getMatchedValidatorsFromDB () {
 
 async function updateConsensusStateDB(consensusState, retainStates = 0) {
   try {
-      await runDatabaseQuery('BEGIN TRANSACTION');
+    await runDatabaseQuery('BEGIN TRANSACTION');
 
-      const consensusStateId = await saveConsensusState(consensusState);
+    const consensusStateId = await saveConsensusState(consensusState);
 
-      // Fetch the IDs of the states that are older than the `retainStates` count
-      const selectPruneIdsQuery = `
+    // Fetch the IDs of the states that are older than the `retainStates` count
+    const selectPruneIdsQuery = `
         SELECT "id" 
         FROM "ConsensusState" 
         WHERE "chainId" = $1
@@ -318,31 +318,31 @@ async function updateConsensusStateDB(consensusState, retainStates = 0) {
         ORDER BY "id" ASC
         OFFSET $3;
       `;
-      const pruneIdsResult = await runDatabaseQuery(selectPruneIdsQuery, [consensusState.chainId, consensusStateId, retainStates], 'all');
-      const pruneIds = pruneIdsResult.map(entry => entry.id);
+    const pruneIdsResult = await runDatabaseQuery(selectPruneIdsQuery, [consensusState.chainId, consensusStateId, retainStates], 'all');
+    const pruneIds = pruneIdsResult.map(entry => entry.id);
 
-      // Before pruning, ensure that the lastcommit data is correctly associated with the current state
-      const currentConsensusState = await getConsensusStateByConsensusStateId(consensusStateId);
-      if (currentConsensusState.validatorsGroupId && currentConsensusState.lastValidatorsGroupId) {
-        if (pruneIds.length > 0) {
-          await pruneConsensusStateDB(pruneIds, consensusState.chainId);
-          await pruneHistoricSignatures(consensusState.chainId);
-        }
-      } else {
-        console.error('Error: lastcommit data is not correctly associated with the current state.');
+    // Before pruning, ensure that the lastcommit data is correctly associated with the current state
+    const currentConsensusState = await getConsensusStateByConsensusStateId(consensusStateId);
+    if (currentConsensusState.validatorsGroupId && currentConsensusState.lastValidatorsGroupId) {
+      if (pruneIds.length > 0) {
+        await pruneConsensusStateDB(pruneIds, consensusState.chainId);
+        await pruneHistoricSignatures(consensusState.chainId);
       }
+    } else {
+      console.error('Error: lastcommit data is not correctly associated with the current state.');
+    }
 
-      await runDatabaseQuery('COMMIT');
+    await runDatabaseQuery('COMMIT');
   } catch (err) {
-      console.error('Error in updateConsensusStateDB:', err);
-      console.error('attempting DB rollback...')
-      try {
-          await runDatabaseQuery('ROLLBACK');
-      } catch (rollbackErr) {
-          console.error('Error on ROLLBACK', rollbackErr);
-          throw rollbackErr;
-      }
-//      throw err;
+    console.error('Error in updateConsensusStateDB:', err);
+    console.error('attempting DB rollback...')
+    try {
+      await runDatabaseQuery('ROLLBACK');
+    } catch (rollbackErr) {
+      console.error('Error on ROLLBACK', rollbackErr);
+      throw rollbackErr;
+    }
+    //      throw err;
   }
 }
 
@@ -361,56 +361,56 @@ async function saveValidatorsAndVotes(consensusState, consensusStateId, type) {
   let proposer;
 
   if (type === 'current') {
-      // Identify the proposer but don't save yet
+    // Identify the proposer but don't save yet
+    for (let i = 0; i < consensusState.validators.validators.length; i++) {
+      const validator = consensusState.validators.validators[i];
+      if (validator.address === consensusState.validators.proposer.address) {
+        proposer = validator;
+      }
+    }
+
+    // Save the validators group without the proposerId
+    validatorsGroupId = await saveValidatorsGroup(consensusStateId, null, 'current');
+
+    // Now, save the proposer with the correct validators group ID
+    const proposerId = await saveValidator(proposer, validatorsGroupId);
+
+    // Update the validators group with the correct proposerId
+    await updateValidatorsGroupWithProposerId(validatorsGroupId, proposerId);
+
+    // Save Rounds Group
+    const roundsGroupId = await saveRoundsGroup(consensusStateId, 'current');
+
+    for (let f = 0; f < consensusState.votes.length; f++) {
+
+      // Save Round with roundsGroupId reference
+      const roundId = await saveRound(roundsGroupId, f);
+
+      // Continue with the rest of the logic for saving other validators and votes.
+      // Votes reference validatorId and roundId
       for (let i = 0; i < consensusState.validators.validators.length; i++) {
-          const validator = consensusState.validators.validators[i];
-          if (validator.address === consensusState.validators.proposer.address) {
-              proposer = validator;
-          }
-      }
-
-      // Save the validators group without the proposerId
-      validatorsGroupId = await saveValidatorsGroup(consensusStateId, null, 'current');
-
-      // Now, save the proposer with the correct validators group ID
-      const proposerId = await saveValidator(proposer, validatorsGroupId);
-
-      // Update the validators group with the correct proposerId
-      await updateValidatorsGroupWithProposerId(validatorsGroupId, proposerId);
-
-      // Save Rounds Group
-      const roundsGroupId = await saveRoundsGroup(consensusStateId, 'current');
-
-      for (let f = 0; f < consensusState.votes.length; f++) {
-        
-        // Save Round with roundsGroupId reference
-        const roundId = await saveRound(roundsGroupId, f);
-
-        // Continue with the rest of the logic for saving other validators and votes.
-        // Votes reference validatorId and roundId
-        for (let i = 0; i < consensusState.validators.validators.length; i++) {
-          const validator = consensusState.validators.validators[i];
-          let validatorId;
-          if (validator.address !== consensusState.validators.proposer.address) {
-            validatorId = await saveValidator(validator, validatorsGroupId);
-          } else {
-            validatorId = proposerId;
-          }
-
-          const votes = consensusState.votes[f];
-          await saveVote(votes.prevotes[i], 'prevote', validatorId, roundId);
-          await saveVote(votes.precommits[i], 'precommit', validatorId, roundId); 
+        const validator = consensusState.validators.validators[i];
+        let validatorId;
+        if (validator.address !== consensusState.validators.proposer.address) {
+          validatorId = await saveValidator(validator, validatorsGroupId);
+        } else {
+          validatorId = proposerId;
         }
+
+        const votes = consensusState.votes[f];
+        await saveVote(votes.prevotes[i], 'prevote', validatorId, roundId);
+        await saveVote(votes.precommits[i], 'precommit', validatorId, roundId);
       }
+    }
   }
 
   if (type === 'last') {
     // Identify the last proposer but don't save yet
     for (let i = 0; i < consensusState.last_validators.validators.length; i++) {
-        const validator = consensusState.last_validators.validators[i];
-        if (validator.address === consensusState.last_validators.proposer.address) {
-            proposer = validator;
-        }
+      const validator = consensusState.last_validators.validators[i];
+      if (validator.address === consensusState.last_validators.proposer.address) {
+        proposer = validator;
+      }
     }
 
     // Save the last validators group without the proposerId
@@ -435,14 +435,14 @@ async function saveValidatorsAndVotes(consensusState, consensusStateId, type) {
       } else if (validator.address === consensusState.last_validators.proposer.address) {
         validatorId = proposerId;
       }
-  
+
       // Save the vote
       const vote = consensusState.last_commit.votes[i];
       await saveVote(vote, 'lastcommit', validatorId, roundId);
-  
+
       // Determine if the validator signed the last commit
       const signed = vote != 'nil-Vote';
-  
+
       // Update the HistoricSignatures table with the signing information
       await updateHistoricSignature(validatorId, consensusState.chain_id, consensusState.height, signed);
     }
@@ -475,21 +475,21 @@ async function saveConsensusState(consensusState) {
   `;
 
   const params = [
-      consensusState.chainId,
-      consensusState.timestamp,
-      consensusState.height,
-      consensusState.round,
-      consensusState.step,
-      consensusState.start_time,
-      consensusState.commit_time,
-      null,
-      null,
-//      JSON.stringify(consensusState.proposal),
-//      JSON.stringify(consensusState.proposal_block_parts_header),
-//      JSON.stringify(consensusState.locked_block_parts_header),
-//      JSON.stringify(consensusState.valid_block_parts_header),
-//      JSON.stringify(consensusState.votes),
-//      JSON.stringify(consensusState.last_commit),
+    consensusState.chainId,
+    consensusState.timestamp,
+    consensusState.height,
+    consensusState.round,
+    consensusState.step,
+    consensusState.start_time,
+    consensusState.commit_time,
+    null,
+    null,
+    //      JSON.stringify(consensusState.proposal),
+    //      JSON.stringify(consensusState.proposal_block_parts_header),
+    //      JSON.stringify(consensusState.locked_block_parts_header),
+    //      JSON.stringify(consensusState.valid_block_parts_header),
+    //      JSON.stringify(consensusState.votes),
+    //      JSON.stringify(consensusState.last_commit),
   ];
 
   const consensusStateId = await runDatabaseQuery(query, params, 'run');
@@ -517,8 +517,8 @@ async function saveRoundsGroup(consensusStateId, type = null) {
       RETURNING "id";
   `;
   const params = [
-      consensusStateId,
-      type
+    consensusStateId,
+    type
   ];
 
   const roundsGroupId = await runDatabaseQuery(query, params, 'run');
@@ -547,9 +547,9 @@ async function saveValidatorsGroup(consensusStateId, proposerId = null, type) {
       RETURNING "id";
   `;
   const params = [
-      type,
-      consensusStateId,
-      proposerId
+    type,
+    consensusStateId,
+    proposerId
   ];
 
   const validatorsGroupId = await runDatabaseQuery(query, params, 'run');
@@ -565,16 +565,16 @@ async function saveValidator(validator, validatorsGroupId) {
       RETURNING "id";
   `;
   const params = [
-      validatorsGroupId,
-      validator.address,
-      JSON.stringify(validator.pub_key),
-      valconsAddress,
-      validator.voting_power,
-      validator.proposer_priority
+    validatorsGroupId,
+    validator.address,
+    JSON.stringify(validator.pub_key),
+    valconsAddress,
+    validator.voting_power,
+    validator.proposer_priority
   ];
-  
+
   const validatorId = await runDatabaseQuery(query, params, 'run');
-  
+
   return validatorId;
 }
 
@@ -582,7 +582,7 @@ async function saveValidator(validator, validatorsGroupId) {
 async function saveVote(vote, type, validatorId, roundId) {
   let voteString = vote;
   let voteHash, index, address, height, round, msgType, voteType, date;
-  if (voteString !== 'nil-Vote'){
+  if (voteString !== 'nil-Vote') {
     [index, address, height, round, msgType, voteType, voteHash, date] = decodeVoteData(voteString);
   } else {
     voteHash = voteString;
@@ -594,11 +594,11 @@ async function saveVote(vote, type, validatorId, roundId) {
   `;
 
   const params = [
-      validatorId,
-      roundId,
-      type,
-      voteHash,
-      voteString
+    validatorId,
+    roundId,
+    type,
+    voteHash,
+    voteString
   ];
 
   await runDatabaseQuery(query, params, 'run');
@@ -622,19 +622,19 @@ async function loadConsensusStateFromDB(chainId) {
   const lastValidatorsGroup = await fetchValidatorsGroup(consensusStateRow.lastValidatorsGroupId);
 
   return new ConsensusState({
-      height: consensusStateRow.height,
-      round: consensusStateRow.round,
-      step: consensusStateRow.step,
-      start_time: consensusStateRow.start_time,
-      commit_time: consensusStateRow.commit_time,
-      validators: validatorsGroup,
-      last_validators: lastValidatorsGroup,
-      proposal: consensusStateRow.proposal,
-      proposal_block_parts_header: consensusStateRow.proposal_block_parts_header,
-      locked_block_parts_header: consensusStateRow.locked_block_parts_header,
-      valid_block_parts_header: consensusStateRow.valid_block_parts_header,
-      votes: consensusStateRow.votes,
-      last_commit: consensusStateRow.last_commit
+    height: consensusStateRow.height,
+    round: consensusStateRow.round,
+    step: consensusStateRow.step,
+    start_time: consensusStateRow.start_time,
+    commit_time: consensusStateRow.commit_time,
+    validators: validatorsGroup,
+    last_validators: lastValidatorsGroup,
+    proposal: consensusStateRow.proposal,
+    proposal_block_parts_header: consensusStateRow.proposal_block_parts_header,
+    locked_block_parts_header: consensusStateRow.locked_block_parts_header,
+    valid_block_parts_header: consensusStateRow.valid_block_parts_header,
+    votes: consensusStateRow.votes,
+    last_commit: consensusStateRow.last_commit
   }, chainId, consensusStateRow.timestamp);
 }
 
@@ -655,8 +655,8 @@ async function fetchValidatorsGroup(validatorsGroupId) {
   const proposerValidator = validators.find(v => v.id === validatorsGroupRow.proposerId);
 
   return new Validators({
-      validators: validators,
-      proposer: proposerValidator
+    validators: validators,
+    proposer: proposerValidator
   });
 }
 
@@ -718,32 +718,653 @@ async function updateStakingValidatorsDB(providerChainInfo, consumerChainInfos) 
     const sovereignChainId = sovereignChainInfo ? sovereignChainInfo.chainId : null;
 
     if (sovereignStakingValidators && sovereignChainId) {
-        sovereignStakingValidators.chainId = sovereignChainId;
+      sovereignStakingValidators.chainId = sovereignChainId;
     } else {
-        console.error(`ERROR fetching sovereign staking validators from ${global.CONFIG.SOVEREIGN_REST}! Check your config!`);
-        return;
+      console.error(`ERROR fetching sovereign staking validators from ${global.CONFIG.SOVEREIGN_REST}! Check your config!`);
+      return;
     }
   }
 
-//  if (!providerChainInfo || !consumerChainInfos || consumerChainInfos.length == 0 || !stakingValidators || stakingValidators.length == 0) {
-    const allChainIds = consumerChainInfos.map(chain => chain.chainId);
-    const stakingValidatorsWithSigningKeys = await fetchConsumerSigningKeys(stakingValidators, global.CONFIG.PROVIDER_RPC, allChainIds, global.CONFIG.PREFIX, global.CONFIG.RPC_DELAY_MS);
-    stakingValidatorsWithSigningKeys.chainId = providerChainInfo.chainId;
+  //  if (!providerChainInfo || !consumerChainInfos || consumerChainInfos.length == 0 || !stakingValidators || stakingValidators.length == 0) {
+  const allChainIds = consumerChainInfos.map(chain => chain.chainId);
+  const stakingValidatorsWithSigningKeys = await fetchConsumerSigningKeys(stakingValidators, global.CONFIG.PROVIDER_RPC, allChainIds, global.CONFIG.PREFIX, global.CONFIG.RPC_DELAY_MS);
+  stakingValidatorsWithSigningKeys.chainId = providerChainInfo.chainId;
 
-    await saveStakingValidators(stakingValidatorsWithSigningKeys);
-    console.log('Updated stakingValidators.');
+  await saveStakingValidators(stakingValidatorsWithSigningKeys);
+  console.log('Updated stakingValidators.');
 
-    if (hasSovereign) {
-        sovereignStakingValidators.validators.forEach(validator => {
-            validator.consumer_signing_keys = [];
-        });
-        await saveStakingValidators(sovereignStakingValidators);
-    }
-//   }
+  if (hasSovereign) {
+    sovereignStakingValidators.validators.forEach(validator => {
+      validator.consumer_signing_keys = [];
+    });
+    await saveStakingValidators(sovereignStakingValidators);
+  }
+  //   }
   console.log('Chain and validator data updated.');
   console.timeEnd('updateDatabaseData Execution Time');
   return;
 }
+
+async function getLatestConsensusState(chainId) {
+  const query = `
+    SELECT "id" AS "consensusStateId", "validatorsGroupId"
+    FROM "ConsensusState"
+    WHERE "chainId" = $1
+    ORDER BY "timestamp" DESC
+    LIMIT 1;
+  `;
+  return await runDatabaseQuery(query, [chainId], 'get');
+}
+
+// async function getCurrentRound(consensusStateId) {
+//   const query = `
+//     SELECT "VG"."proposerId", "V"
+//     FROM "ValidatorsGroup" "VG" 
+//     JOIN "ConsensusState" "CS" ON "VG"."consensusStateId" = "CS"."id"
+//     JOIN "Validator" "V" ON "VG"."proposerId" = "V"."id"
+//     WHERE "CS"."id" = $1
+//     Limit 1;
+//     `
+
+
+//   //SELECT "VG"."consensusStateId", "CS"."id", "VG"."id", "VG"."proposerId" FROM "ValidatorsGroup" "VG" JOIN "ConsensusState" "CS" ON "VG"."consensusStateId" = "CS"."id";
+// }
+
+async function createRoundView(chainId) {
+  const query = `
+  CREATE VIEW CURRENTROUND AS
+  WITH "LatestConsensusState" AS (
+    SELECT MAX("id") AS "id"
+    FROM "ConsensusState"
+    WHERE "chainId" = $1
+  )
+  SELECT
+    "SV"."moniker" AS "proposer_moniker",
+    "VT"."vote" AS "prevote_vote",
+    "VT2"."vote" AS "precommit_vote"
+  FROM
+    "LatestConsensusState" "LCS"
+    JOIN "ConsensusState" "CS" ON "LCS"."id" = "CS"."id"
+    JOIN "ValidatorsGroup" "VG" ON "CS"."id" = "VG"."consensusStateId"
+    JOIN "Validator" "V" ON "VG"."proposerId" = "V"."id"
+    LEFT JOIN "StakingValidator" "SV" ON
+      CASE
+        WHEN (SELECT "type" FROM "ChainInfo" WHERE "chainId" = $1 LIMIT 1) = 'provider'
+          THEN "SV"."consensus_pubkey_key" = ("V"."pub_key"::json)->>'value'
+        ELSE ("SV"."consumer_signing_keys"::json)->>$1::text = "V"."consensusAddress"
+      END
+    LEFT JOIN "Votes" "VT" ON "V"."id" = "VT"."validatorId" AND "VT"."type" = 'prevote'
+    LEFT JOIN "Votes" "VT2" ON "V"."id" = "VT2"."validatorId" AND "VT2"."type" = 'precommit'
+  WHERE
+    "VG"."type" = 'current'
+  LIMIT 1;
+  `
+  return await runDatabaseQuery(query, [chainId], 'get');
+}
+
+async function createCurrentRound() {
+  const query = `
+  CREATE OR REPLACE FUNCTION get_current_round(p_chain_id TEXT)
+  RETURNS TABLE (
+    proposer_moniker TEXT,
+    prevote_vote TEXT,
+    precommit_vote TEXT
+  )
+  AS $$
+  BEGIN
+    RETURN QUERY
+    WITH "LatestConsensusState" AS (
+      SELECT MAX("id") AS "id"
+      FROM "ConsensusState"
+      WHERE "chainId" = p_chain_id
+    )
+    SELECT
+      "SV"."moniker" AS "proposer_moniker",
+      "VT"."vote" AS "prevote_vote",
+      "VT2"."vote" AS "precommit_vote"
+    FROM
+      "LatestConsensusState" "LCS"
+      JOIN "ConsensusState" "CS" ON "LCS"."id" = "CS"."id"
+      JOIN "ValidatorsGroup" "VG" ON "CS"."id" = "VG"."consensusStateId"
+      JOIN "Validator" "V" ON "VG"."proposerId" = "V"."id"
+      LEFT JOIN "StakingValidator" "SV" ON
+        CASE
+          WHEN (SELECT "type" FROM "ChainInfo" WHERE "chainId" = p_chain_id LIMIT 1) = 'provider'
+            THEN "SV"."consensus_pubkey_key" = ("V"."pub_key"::json)->>'value'
+          ELSE ("SV"."consumer_signing_keys"::json)->>p_chain_id = "V"."consensusAddress"
+        END
+      LEFT JOIN "Votes" "VT" ON "V"."id" = "VT"."validatorId" AND "VT"."type" = 'prevote'
+      LEFT JOIN "Votes" "VT2" ON "V"."id" = "VT2"."validatorId" AND "VT2"."type" = 'precommit'
+    WHERE
+      "VG"."type" = 'current'
+    LIMIT 1;
+  END;
+  $$ LANGUAGE plpgsql;
+  `
+  return await runDatabaseQuery(query, [], 'get');
+}
+
+async function createLastCommit() {
+  const query = `
+  CREATE OR REPLACE FUNCTION get_last_commit(p_chian_id TEXT)
+  RETURNS TABLE (
+    address TEXT,
+    moniker TEXT,
+    lastCommitVote TEXT,
+    totalVotingPower NUMERIC,
+    totalAgreeingVotingPower NUMERIC,
+    totalNilVotingPower NUMERIC,
+    totalZeroVotingPower NUMERIC,
+    consensusPercentage NUMERIC
+  )
+  AS $$
+  BEGIN
+  RETURN QUERY
+  WITH "LatestConsensusState" AS (
+      SELECT "id" AS "consensusStateId", "lastValidatorsGroupId"
+      FROM "ConsensusState"
+      WHERE "chainId" = $1
+      ORDER BY "timestamp" DESC
+      LIMIT 1
+    ),
+    "LastProposerVote" AS (
+        SELECT 
+            "V"."address" AS "proposerAddress",
+            "VT"."vote" AS "proposerLastCommitVote",
+            "SV"."moniker" AS "proposerMoniker"
+        FROM "LatestConsensusState" "LCS"
+        JOIN "ValidatorsGroup" "VG" ON "LCS"."lastValidatorsGroupId" = "VG"."id"
+        JOIN "Validator" "V" ON "VG"."proposerId" = "V"."id"
+        JOIN "Votes" "VT" ON "V"."id" = "VT"."validatorId"
+        LEFT JOIN "StakingValidator" "SV" ON 
+            (
+                (SELECT "type" FROM "ChainInfo" WHERE "chainId" = $1 LIMIT 1) = 'provider' 
+                AND "SV"."consensus_pubkey_key" = ("V"."pub_key"::json)->>'value'
+            ) 
+            OR
+            (
+                (SELECT "type" FROM "ChainInfo" WHERE "chainId" = $1 LIMIT 1) != 'provider' 
+                AND ("SV"."consumer_signing_keys"::json)->>$1::text = "V"."consensusAddress"
+            )
+        WHERE "VT"."type" = 'lastcommit'
+        LIMIT 1
+    )
+    SELECT 
+        MIN("LPV"."proposerAddress") AS "proposerAddress",
+        MIN("LPV"."proposerMoniker") AS "proposerMoniker",
+        MIN("LPV"."proposerLastCommitVote") AS "proposerLastCommitVote",
+        SUM("V"."voting_power") AS "totalVotingPowerForLastCommit",
+        SUM(CASE WHEN "VT"."vote" = "LPV"."proposerLastCommitVote" AND "VT"."vote" NOT IN ('nil-Vote', '000000000000') THEN "V"."voting_power" ELSE 0 END) AS "totalAgreeingLastcommitVotingPower",
+        SUM(CASE WHEN "VT"."vote" = 'nil-Vote' THEN "V"."voting_power" ELSE 0 END) AS "totalNilvotingVotingPowerForLastCommit",
+        SUM(CASE WHEN "VT"."vote" = '000000000000' THEN "V"."voting_power" ELSE 0 END) AS "totalZerovotingVotingPowerForLastCommit",
+        100.0 * SUM(CASE WHEN "VT"."vote" = "LPV"."proposerLastCommitVote" AND "VT"."vote" NOT IN ('nil-Vote', '000000000000') THEN "V"."voting_power" ELSE 0 END) / SUM("V"."voting_power") AS "consensusPercentage"
+    FROM "LatestConsensusState" "LCS"
+    JOIN "ValidatorsGroup" "VG" ON "LCS"."lastValidatorsGroupId" = "VG"."id"
+    JOIN "Validator" "V" ON "VG"."id" = "V"."validatorsGroupId"
+    JOIN "Votes" "VT" ON "V"."id" = "VT"."validatorId"
+    LEFT JOIN "LastProposerVote" "LPV" ON "VT"."vote" = "LPV"."proposerLastCommitVote"
+    WHERE "VT"."type" = 'lastcommit';
+    END;
+    $$ LANGUAGE plpgsql;
+    `
+  return await runDatabaseQuery(query, [], 'get');
+}
+
+async function createCurrentValidators() {
+  const query = `
+  CREATE OR REPLACE FUNCTION get_current_validators(p_chain_id TEXT)
+RETURNS TABLE (
+    validatorId INT,
+    votingPower BIGINT,
+    pubKey TEXT,
+    consensusAddress TEXT,
+    proposerPriority BIGINT,
+    id INT,
+    stakingValidatorsMetaId BIGINT,
+    operatorAddress TEXT,
+    consumerSigningKeys TEXT,
+    moniker TEXT,
+    prevote TEXT,
+    precommit TEXT,
+    proposerPrevote TEXT,
+    proposerPrecommit TEXT,
+    consensusPubkey TEXT
+)
+AS $$
+BEGIN
+    RETURN QUERY
+    WITH "LatestConsensusState" AS (
+        SELECT cs."id" AS "latestConsensusStateId", cs."validatorsGroupId"
+        FROM "ConsensusState" cs
+        WHERE cs."chainId" = p_chain_id
+        ORDER BY cs."timestamp" DESC
+        LIMIT 1
+    ),
+    "LatestRoundsGroup" AS (
+        SELECT rg."id" AS "latestRoundsGroupId"
+        FROM "RoundsGroup" rg
+        WHERE rg."consensusStateId" = (SELECT "latestConsensusStateId" FROM "LatestConsensusState")
+        LIMIT 1
+    ),
+    "LatestRound" AS (
+        SELECT MAX(r."id") AS "latestRoundId"
+        FROM "Round" r
+        WHERE r."roundsGroupId" = (SELECT "latestRoundsGroupId" FROM "LatestRoundsGroup")
+    ),
+    "LatestValidatorsGroupId" AS (
+        SELECT cs."validatorsGroupId"
+        FROM "ConsensusState" cs
+        WHERE cs."id" = (SELECT "latestConsensusStateId" FROM "LatestConsensusState")
+    )
+    SELECT
+    "V"."id" AS "validatorId",
+    "V"."voting_power",
+    "V"."pub_key",
+    "V"."consensusAddress",
+    "V"."proposer_priority",
+    "SV"."id",
+    "SV"."stakingValidatorsMetaId",
+    "SV"."operator_address",
+    "SV"."consumer_signing_keys",
+    "SV"."moniker",
+    (SELECT MAX("vote") FROM "Votes" WHERE "validatorId" = "V"."id" AND "type" = 'prevote' AND "roundId" = (SELECT "latestRoundId" FROM "LatestRound")) AS "prevote",
+    (SELECT MAX("vote") FROM "Votes" WHERE "validatorId" = "V"."id" AND "type" = 'precommit' AND "roundId" = (SELECT "latestRoundId" FROM "LatestRound")) AS "precommit",
+    (SELECT MAX("vote") FROM "Votes" WHERE "validatorId" = "VG"."proposerId" AND "type" = 'prevote' AND "roundId" = (SELECT "latestRoundId" FROM "LatestRound")) AS "proposer_prevote",
+    (SELECT MAX("vote") FROM "Votes" WHERE "validatorId" = "VG"."proposerId" AND "type" = 'precommit' AND "roundId" = (SELECT "latestRoundId" FROM "LatestRound")) AS "proposer_precommit",
+    ("V"."pub_key"::json)->>'value' AS "consensus_pubkey"
+FROM "Validator" "V"
+JOIN "LatestValidatorsGroupId" "LVG" ON "V"."validatorsGroupId" = "LVG"."validatorsGroupId"
+JOIN "ValidatorsGroup" "VG" ON "V"."validatorsGroupId" = "VG"."id"
+LEFT JOIN "StakingValidator" "SV" ON "SV"."consensus_pubkey_key" = ("V"."pub_key"::json)->>'value'
+WHERE "V"."id" IN (
+    SELECT DISTINCT "validatorId"
+    FROM "Votes"
+    WHERE "type" = 'prevote' AND "roundId" = (SELECT "latestRoundId" FROM "LatestRound")
+)
+GROUP BY "V"."id", "SV"."id", "SV"."stakingValidatorsMetaId", "SV"."operator_address", "VG"."proposerId"
+ORDER BY "V"."voting_power" DESC;
+END;
+$$ LANGUAGE plpgsql;
+`
+
+  return await runDatabaseQuery(query, [], 'get');
+}
+
+async function getCurrentRound(chainId) {
+  const query = `
+  SELECT * FROM get_current_round($1);
+  `
+}
+
+async function getLastCommit(chainId) {
+  const query = `
+  SELECT * FROM get_last_commit($1);
+  `
+}
+
+async function getCurrentValidators(chainId) {
+  const query = `
+  SELECT * FROM get_current_validators($1);
+  `
+}
+
+async function getCurrentRoundFromView(chainId) {
+  const query = `
+  SELECT * FROM CURRENTROUND;
+  `
+}
+
+// async function getProposerVote(validatorsGroupId, roundId) {
+//   const query = `
+//     SELECT "R"."id" AS "roundId", "V"."vote" AS "proposerVote"
+//     FROM "Votes" "V"
+//     JOIN "Validator" "VL" ON "V"."validatorId" = "VL"."id"
+//     JOIN "ValidatorsGroup" "VG" ON "VL"."validatorsGroupId" = "VG"."id"
+//     JOIN "Round" "R" ON "V"."roundId" = "R"."id"
+//     WHERE "VG"."id" = $1
+//     AND "V"."type" = 'prevote'
+//     AND "V"."validatorId" = "VG"."proposerId"
+//     AND "R"."id" = $2
+//   `;
+
+//   return await runDatabaseQuery(query, [validatorsGroupId, roundId], 'one');
+// }
+
+async function calculatePreVoteMetrics(validatorsGroupId) {
+  const query = `
+    WITH "ProposerVote" AS (
+        SELECT "R"."id" AS "roundId", "V"."vote" AS "proposerVote"
+        FROM "Votes" "V"
+        JOIN "Validator" "VL" ON "V"."validatorId" = "VL"."id"
+        JOIN "ValidatorsGroup" "VG" ON "VL"."validatorsGroupId" = "VG"."id"
+        JOIN "Round" "R" ON "V"."roundId" = "R"."id"
+        WHERE "VG"."id" = $1
+        AND "V"."type" = 'prevote'
+        AND "V"."validatorId" = "VG"."proposerId"
+    )
+    SELECT 
+        "R"."roundNumber",
+        SUM("V"."voting_power") FILTER (WHERE "VT"."type" = 'prevote') AS "totalVotingPowerForPrevote",
+        SUM("V"."voting_power") FILTER (WHERE "VT"."type" = 'prevote' AND "VT"."vote" = "PV"."proposerVote" AND "VT"."vote" NOT IN ('nil-Vote', '000000000000')) AS "totalAgreeingVotingPowerForPrevote",
+        SUM("V"."voting_power") FILTER (WHERE "VT"."type" = 'prevote' AND "VT"."vote" = 'nil-Vote') AS "totalNilvotingVotingPowerForPrevote",
+        SUM("V"."voting_power") FILTER (WHERE "VT"."type" = 'prevote' AND "VT"."vote" = '000000000000') AS "totalZerovotingVotingPowerForPrevote",
+        (SUM("V"."voting_power") FILTER (WHERE "VT"."type" = 'prevote' AND "VT"."vote" = "PV"."proposerVote" AND "VT"."vote" NOT IN ('nil-Vote', '000000000000')) * 100.0 / NULLIF(SUM("V"."voting_power") FILTER (WHERE "VT"."type" = 'prevote'), 0)) AS "consensusPercentage"
+      FROM "ValidatorsGroup" "VG" 
+    JOIN "Validator" "V" ON "VG"."id" = "V"."validatorsGroupId" 
+    JOIN "Votes" "VT" ON "V"."id" = "VT"."validatorId" 
+    JOIN "Round" "R" ON "VT"."roundId" = "R"."id"
+    LEFT JOIN "ProposerVote" "PV" ON "R"."id" = "PV"."roundId"
+    WHERE "R"."roundNumber" != -1
+    AND "VG"."id" = $1
+    GROUP BY "R"."roundNumber", "PV"."proposerVote"
+    ORDER BY "R"."roundNumber";
+  `;
+  return await runDatabaseQuery(query, [validatorsGroupId], 'all');
+}
+
+async function calculatePreCommitMetrics(validatorsGroupId) {
+  const query = `
+    WITH "ProposerVote" AS (
+        SELECT "R"."id" AS "roundId", "V"."vote" AS "proposerVote"
+        FROM "Votes" "V"
+        JOIN "Validator" "VL" ON "V"."validatorId" = "VL"."id"
+        JOIN "ValidatorsGroup" "VG" ON "VL"."validatorsGroupId" = "VG"."id"
+        JOIN "Round" "R" ON "V"."roundId" = "R"."id"
+        WHERE "VG"."id" = $1
+        AND "V"."type" = 'prevote'
+        AND "V"."validatorId" = "VG"."proposerId"
+    )
+    SELECT 
+        "R"."roundNumber",
+        SUM("V"."voting_power") FILTER (WHERE "VT"."type" = 'prevote') AS "totalVotingPowerForPrevote",
+        SUM("V"."voting_power") FILTER (WHERE "VT"."type" = 'prevote' AND "VT"."vote" = "PV"."proposerVote" AND "VT"."vote" NOT IN ('nil-Vote', '000000000000')) AS "totalAgreeingVotingPowerForPrevote",
+        SUM("V"."voting_power") FILTER (WHERE "VT"."type" = 'prevote' AND "VT"."vote" = 'nil-Vote') AS "totalNilvotingVotingPowerForPrevote",
+        SUM("V"."voting_power") FILTER (WHERE "VT"."type" = 'prevote' AND "VT"."vote" = '000000000000') AS "totalZerovotingVotingPowerForPrevote",
+        (SUM("V"."voting_power") FILTER (WHERE "VT"."type" = 'prevote' AND "VT"."vote" = "PV"."proposerVote" AND "VT"."vote" NOT IN ('nil-Vote', '000000000000')) * 100.0 / NULLIF(SUM("V"."voting_power") FILTER (WHERE "VT"."type" = 'prevote'), 0)) AS "consensusPercentage"
+      FROM "ValidatorsGroup" "VG" 
+    JOIN "Validator" "V" ON "VG"."id" = "V"."validatorsGroupId" 
+    JOIN "Votes" "VT" ON "V"."id" = "VT"."validatorId" 
+    JOIN "Round" "R" ON "VT"."roundId" = "R"."id"
+    LEFT JOIN "ProposerVote" "PV" ON "R"."id" = "PV"."roundId"
+    WHERE "R"."roundNumber" != -1
+    AND "VG"."id" = $1
+    GROUP BY "R"."roundNumber", "PV"."proposerVote"
+    ORDER BY "R"."roundNumber";
+  `;
+  return await runDatabaseQuery(query, [validatorsGroupId], 'all');
+}
+
+// async function calculateOnboardingPrevote(validatorsGroupId) {
+//   const query = `
+//   ),
+//   "ProposerVote" AS (
+//       SELECT "R"."id" AS "roundId", "V"."vote" AS "proposerVote"
+//       FROM "Votes" "V"
+//       JOIN "Validator" "VL" ON "V"."validatorId" = "VL"."id"
+//       JOIN "ValidatorsGroup" "VG" ON "VL"."validatorsGroupId" = "VG"."id"
+//       JOIN "Round" "R" ON "V"."roundId" = "R"."id"
+//       WHERE "VG"."id" = (SELECT "validatorsGroupId" FROM "LatestConsensusState")
+//       AND "V"."type" = 'prevote'
+//       AND "V"."validatorId" = "VG"."proposerId"
+//   )
+//   SELECT 
+//       (SUM("V"."voting_power") FILTER (WHERE "VT"."type" = 'prevote' AND "VT"."vote" = "PV"."proposerVote" AND "VT"."vote" NOT IN ('nil-Vote', '000000000000')) * 100.0 / NULLIF(SUM("V"."voting_power") FILTER (WHERE "VT"."type" = 'prevote'), 0)) AS "prevoteConsensusPercentage"
+//   FROM "ValidatorsGroup" "VG" 
+//   JOIN "Validator" "V" ON "VG"."id" = "V"."validatorsGroupId" 
+//   JOIN "Votes" "VT" ON "V"."id" = "VT"."validatorId" 
+//   JOIN "Round" "R" ON "VT"."roundId" = "R"."id"
+//   LEFT JOIN "ProposerVote" "PV" ON "R"."id" = "PV"."roundId"
+//   WHERE "R"."roundNumber" != -1
+//   AND "VG"."id" = (SELECT "validatorsGroupId" FROM "LatestConsensusState")
+//   GROUP BY "R"."roundNumber", "PV"."proposerVote"
+//   ORDER BY "R"."roundNumber";
+//     `;
+//   return await runDatabaseQuery(query, [validatorsGroupId], 'all');
+// }
+
+
+
+async function updatePreVoteMetrics(chainId) {
+  try {
+    const { validatorsGroupId } = await getLatestConsensusState(chainId);
+    if (validatorsGroupId) {
+      // await createRoundView(chainId);
+      const currentRound = await getCurrentRound(chainId);
+      console.log("Current Round: " + currentRound);
+      //const lastCommit = await getLastCommit(chainId);
+      //console.log("Last Commit: " + lastCommit);
+      //const currentValidators = await getCurrentValidators(chainId);
+      //console.log("Current Validators: " + currentValidators);
+      // const currentRoundView = await getCurrentRoundFromView();
+      // console.log("Current Round View: " + currentRoundView)
+      const preVoteMetrics = await calculatePreVoteMetrics(validatorsGroupId);
+      if (Array.isArray(preVoteMetrics) && preVoteMetrics.length) {
+        for (let metric of preVoteMetrics) {
+          await updatePreVote(metric);
+        }
+      } else {
+        console.log("No pre-vote metrics found.");
+      }
+
+    } else {
+      console.log("No latest consensus state found for chain ID.");
+    }
+  } catch (error) {
+    console.error('Error updating PreVote metrics:', error);
+    throw error;
+  }
+}
+
+async function updatePreCommitMetrics(chainId) {
+  try {
+    const { validatorsGroupId } = await getLatestConsensusState(chainId);
+    if (validatorsGroupId) {
+      const preCommitMetrics = await calculatePreCommitMetrics(validatorsGroupId);
+      if (Array.isArray(preCommitMetrics) && preCommitMetrics.length) {
+        for (let metric of preCommitMetrics) {
+          await updatePreCommit(metric);
+        }
+      } else {
+        console.log("No pre-commit metrics found.");
+      }
+    } else {
+      console.log("No latest consensus state found for chain ID.");
+    }
+  } catch (error) {
+    console.error('Error updating PreCommit metrics:', error);
+    throw error;
+  }
+}
+
+async function updateLastCommitMetrics(chainId) {
+  try {
+    const { validatorsGroupId } = await getLatestConsensusState(chainId);
+    if (validatorsGroupId) {
+      const lastCommitMetrics = await calculateLastCommitMetrics(chainId);
+      if (Array.isArray(lastCommitMetrics) && lastCommitMetrics.length) {
+        for (let metric of lastCommitMetrics) {
+          await updateLastCommit(metric);
+        }
+      } else {
+        console.log("No pre-commit metrics found.");
+      }
+    } else {
+      console.log("No latest consensus state found for chain ID.");
+    }
+  } catch (error) {
+    console.error('Error updating PreCommit metrics:', error);
+    throw error;
+  }
+}
+
+// async function getValidators() {
+//   const query = `WITH "LatestConsensusState" AS (
+//     SELECT "id" AS "latestConsensusStateId", "validatorsGroupId"
+//     FROM "ConsensusState"
+//     WHERE "chainId" = '$chainId' 
+//     ORDER BY "timestamp" DESC
+//     LIMIT 1
+// ),
+// "LatestRoundsGroup" AS (
+//     SELECT "id" AS "latestRoundsGroupId"
+//     FROM "RoundsGroup"
+//     WHERE "consensusStateId" = (SELECT "latestConsensusStateId" FROM "LatestConsensusState")
+//     LIMIT 1
+// ),
+// "LatestRound" AS (
+//     SELECT MAX("id") AS "latestRoundId"
+//     FROM "Round"
+//     WHERE "roundsGroupId" = (SELECT "latestRoundsGroupId" FROM "LatestRoundsGroup")
+// ),
+// "LatestValidatorsGroupId" AS (
+//     SELECT "validatorsGroupId"
+//     FROM "ConsensusState"
+//     WHERE "id" = (SELECT "latestConsensusStateId" FROM "LatestConsensusState")
+// )
+// SELECT 
+//     "V"."id" AS "validatorId",
+//     "V"."voting_power",
+//     "V"."pub_key",
+//     "V"."consensusAddress",
+//     "V"."proposer_priority",
+//     "SV"."id",
+//     "SV"."stakingValidatorsMetaId",
+//     "SV"."operator_address",
+//     "SV"."consumer_signing_keys",
+//     "SV"."moniker",
+//     (SELECT MAX("vote") FROM "Votes" WHERE "validatorId" = "V"."id" AND "type" = 'prevote' AND "roundId" = (SELECT "latestRoundId" FROM "LatestRound")) AS "prevote",
+//     (SELECT MAX("vote") FROM "Votes" WHERE "validatorId" = "V"."id" AND "type" = 'precommit' AND "roundId" = (SELECT "latestRoundId" FROM "LatestRound")) AS "precommit",
+//     (SELECT MAX("vote") FROM "Votes" WHERE "validatorId" = "VG"."proposerId" AND "type" = 'prevote' AND "roundId" = (SELECT "latestRoundId" FROM "LatestRound")) AS "proposer_prevote",
+//     (SELECT MAX("vote") FROM "Votes" WHERE "validatorId" = "VG"."proposerId" AND "type" = 'precommit' AND "roundId" = (SELECT "latestRoundId" FROM "LatestRound")) AS "proposer_precommit",
+//     ("V"."pub_key"::json)->>'value' AS "consensus_pubkey"
+// FROM "Validator" "V" 
+// JOIN "LatestValidatorsGroupId" "LVG" ON "V"."validatorsGroupId" = "LVG"."validatorsGroupId"
+// JOIN "ValidatorsGroup" "VG" ON "V"."validatorsGroupId" = "VG"."id"
+// LEFT JOIN "StakingValidator" "SV" ON "SV"."consensus_pubkey_key" = ("V"."pub_key"::json)->>'value'
+// WHERE "V"."id" IN (
+//     SELECT DISTINCT "validatorId"
+//     FROM "Votes"
+//     WHERE "type" = 'prevote' AND "roundId" = (SELECT "latestRoundId" FROM "LatestRound")
+// )
+// GROUP BY "V"."id", "SV"."id", "SV"."stakingValidatorsMetaId", "SV"."operator_address", "VG"."proposerId"
+// ORDER BY "V"."voting_power" DESC;
+// `
+// const result = await runDatabaseQuery(query, [], 'get');
+
+//  console.log("Validator Query Result:" + result);
+//  //await updatePreVote(result);
+
+// }
+
+async function updateValidators() {
+
+}
+
+
+// async function getPreVote() {
+//   const query = `
+//   WITH "LatestConsensusState" AS (
+//     SELECT "id" AS "consensusStateId", "validatorsGroupId"
+//     FROM "ConsensusState"
+//     WHERE "chainId" = 'cosmoshub-4'
+//     ORDER BY "timestamp" DESC
+//     LIMIT 1
+// ),
+// "ProposerVote" AS (
+//     SELECT "R"."id" AS "roundId", "V"."vote" AS "proposerVote"
+//     FROM "Votes" "V"
+//     JOIN "Validator" "VL" ON "V"."validatorId" = "VL"."id"
+//     JOIN "ValidatorsGroup" "VG" ON "VL"."validatorsGroupId" = "VG"."id"
+//     JOIN "Round" "R" ON "V"."roundId" = "R"."id"
+//     WHERE "VG"."id" = (SELECT "validatorsGroupId" FROM "LatestConsensusState")
+//     AND "V"."type" = 'prevote'
+//     AND "V"."validatorId" = "VG"."proposerId"
+// )
+// SELECT 
+//     "R"."roundNumber",
+//     SUM("V"."voting_power") FILTER (WHERE "VT"."type" = 'prevote') AS "totalVotingPowerForPrevote",
+//     SUM("V"."voting_power") FILTER (WHERE "VT"."type" = 'prevote' AND "VT"."vote" = "PV"."proposerVote" AND "VT"."vote" NOT IN ('nil-Vote', '000000000000')) AS "totalAgreeingVotingPowerForPrevote",
+//     SUM("V"."voting_power") FILTER (WHERE "VT"."type" = 'prevote' AND "VT"."vote" = 'nil-Vote') AS "totalNilvotingVotingPowerForPrevote",
+//     SUM("V"."voting_power") FILTER (WHERE "VT"."type" = 'prevote' AND "VT"."vote" = '000000000000') AS "totalZerovotingVotingPowerForPrevote",
+//     (SUM("V"."voting_power") FILTER (WHERE "VT"."type" = 'prevote' AND "VT"."vote" = "PV"."proposerVote" AND "VT"."vote" NOT IN ('nil-Vote', '000000000000')) * 100.0 / NULLIF(SUM("V"."voting_power") FILTER (WHERE "VT"."type" = 'prevote'), 0)) AS "consensusPercentage"
+// FROM "ValidatorsGroup" "VG" 
+// JOIN "Validator" "V" ON "VG"."id" = "V"."validatorsGroupId" 
+// JOIN "Votes" "VT" ON "V"."id" = "VT"."validatorId" 
+// JOIN "Round" "R" ON "VT"."roundId" = "R"."id"
+// LEFT JOIN "ProposerVote" "PV" ON "R"."id" = "PV"."roundId"
+// WHERE "R"."roundNumber" != -1
+// AND "VG"."id" = (SELECT "validatorsGroupId" FROM "LatestConsensusState")
+// GROUP BY "R"."roundNumber", "PV"."proposerVote"
+// ORDER BY "R"."roundNumber";
+//   `;
+//   const result = await runDatabaseQuery(query, [], 'get');
+
+//   console.log("Query Result:" + result);
+//   await updatePreVote(result);
+// }
+
+const updatePreVote = async (params) => {
+  const round = params.roundNumber;
+  const total = params.totalVotingPowerForPrevote;
+  const totalAgree = params.totalAgreeingVotingPowerForPrevote;
+  const totalNil = params.totalNilvotingVotingPowerForPrevote;
+  const totalZero = params.totalZerovotingVotingPowerForPrevote;
+  const consensusPercentage = params.consensusPercentage;
+  console.log("Consensus Percentage: " + consensusPercentage)
+  const query = `
+  INSERT INTO "PreVote" ("round","total","totalAgree","totalNil","totalZero","consensusPercentage")
+  VALUES ($1,$2,$3,$4,$5,$6);
+`;
+  try {
+    await runDatabaseQuery(query, [round, total, totalAgree, totalNil, totalZero, consensusPercentage], 'run');
+    console.log(`Updated PreVote ${round}`);
+  } catch (err) {
+    console.error('Error updating PreVote:', err);
+    throw err;
+  }
+};
+
+const updatePreCommit = async (params) => {
+  const round = params.roundNumber;
+  const total = params.totalVotingPowerForPrevote;
+  const totalAgree = params.totalAgreeingVotingPowerForPrevote;
+  const totalNil = params.totalNilvotingVotingPowerForPrevote;
+  const totalZero = params.totalZerovotingVotingPowerForPrevote;
+  const consensusPercentage = params.consensusPercentage;
+  console.log("Consensus Percentage: " + consensusPercentage)
+  const query = `
+  INSERT INTO "PreCommit" ("round","total","totalAgree","totalNil","totalZero","consensusPercentage")
+  VALUES ($1,$2,$3,$4,$5,$6);
+`;
+  try {
+    await runDatabaseQuery(query, [round, total, totalAgree, totalNil, totalZero, consensusPercentage], 'run');
+    console.log(`Updated PreCommit ${round}`);
+  } catch (err) {
+    console.error('Error updating PreCommit:', err);
+    throw err;
+  }
+};
+
+// const updateLastCommit = async (params) => {
+//   const proposerAddress = params.pro;
+//   const total = params.totalVotingPowerForPrevote;
+//   const totalAgree = params.totalAgreeingVotingPowerForPrevote;
+//   const totalNil = params.totalNilvotingVotingPowerForPrevote;
+//   const totalZero = params.totalZerovotingVotingPowerForPrevote;
+//   const consensusPercentage = params.consensusPercentage;
+//   console.log("Consensus Percentage: " + consensusPercentage)
+//   const query = `
+//   INSERT INTO "PreCommit" ("round","total","totalAgree","totalNil","totalZero","consensusPercentage")
+//   VALUES ($1,$2,$3,$4,$5,$6);
+// `;
+//   try {
+//     await runDatabaseQuery(query, [round, total, totalAgree, totalNil, totalZero, consensusPercentage], 'run');
+//     console.log(`Updated PreCommit ${round}`);
+//   } catch (err) {
+//     console.error('Error updating PreCommit:', err);
+//     throw err;
+//   }
+// };
 
 export {
   getStakingValidatorsFromDB,
@@ -757,5 +1378,11 @@ export {
   saveChainInfos,
   updateConsensusStateDB,
   updateStakingValidatorsDB,
-  loadConsensusStateFromDB
+  loadConsensusStateFromDB,
+  updatePreVoteMetrics,
+  updatePreCommitMetrics,
+  createLastCommit,
+  createCurrentRound,
+  createCurrentValidators,
+  createRoundView
 };

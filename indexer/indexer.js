@@ -1,12 +1,18 @@
-import { updateConsensusStateDB,
+import {
+  updateConsensusStateDB,
   initializeData,
   prepareChains,
   validateEndpointsAndSaveChains,
-  updateStakingValidatorsDB
+  updateStakingValidatorsDB,
+  updatePreVoteMetrics,
+  updatePreCommitMetrics,
+  createCurrentRound,
+  createCurrentValidators,
+  createLastCommit
 } from './db/update.js';
-import { initializeDb } from './db/db.js';
+import { initializeDb, initializeTriggerClient } from './db/db.js';
 import { getConsensusState } from './utils/utils.js';
-import { workers } from './setupWorkers.js'
+import { workers } from './setupWorkers.js';
 import { loadConfig } from './configLoader.js';
 
 async function updateChainAndValidatorData() {
@@ -38,6 +44,8 @@ async function main() {
   await loadConfig();
   console.log(JSON.stringify(CONFIG));
   await initializeDb(CONFIG);
+  await initializeTriggerClient();
+
   console.log('Starting ics-valset-monitoring');
 
   // Initialize Data
@@ -56,6 +64,22 @@ async function main() {
   // Monitor Consensus State
   const chains = prepareChains(providerChainInfos, consumerChainInfos);
   consensusStateMonitor(chains, stakingValidators);
+
+
+  for (const chain of chains) {
+    await updatePreVoteMetrics(chain.chainId);
+    await updatePreCommitMetrics(chain.chainId);
+    //await updateLastCommitMetrics(chain.chainId);
+    //await createRoundView(chain.chainId);
+  }
+  await createCurrentRound();
+  console.log("Creating Validator Function");
+  await createCurrentValidators();
+  console.log("Validator function successfully created.");
+  await createLastCommit();
+  console.log("Last Commit function successfully created.");
+  
+
 }
 
 // Poll Consensus
@@ -63,7 +87,7 @@ async function pollConsensus(chains) {
   for (const chain of chains) {
     console.time(`[${chain.chainId}] pollConsensus Execution Time`);
     const consensusState = await getConsensusState(chain.rpcEndpoint, chain.chainId);
-    
+
     if (consensusState) {
       await updateConsensusStateDB(consensusState, global.CONFIG.RETAIN_STATES);
       console.log(`Updated consensusState for chain ${chain.chainId}`);

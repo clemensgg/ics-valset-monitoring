@@ -1,4 +1,5 @@
 import pkg from 'pg';
+import { updatePreCommitMetrics, updatePreVoteMetrics } from './update.js';
 let client;
 
 const createClient = () => {
@@ -23,6 +24,28 @@ const initializeClient = async () => {
       console.error('Database connection failed:', err);
       process.exit(1);
     });
+};
+
+const initializeTriggerClient = async () => {
+  client = createClient();
+  await client.connect()
+      .then(() => {
+          console.log('Connected to PostgreSQL database.');
+          return client.query('SET CONSTRAINTS ALL IMMEDIATE;');
+      })
+      .catch(err => {
+          console.error('Database connection failed on trigger:', err);
+          process.exit(1);
+      });
+  client.query('LISTEN data_change_channel');
+
+  // Listen for notifications from PostgreSQL
+  client.on('notification', async (msg) => {
+      const payload = JSON.parse(msg.payload);
+      console.log('Received Consensus notification:', payload);
+      updatePreVoteMetrics("cosmoshub-4");
+      updatePreCommitMetrics("cosmoshub-4");
+  });
 };
 
 const runDatabaseQuery = async (query, params = [], type = 'get') => {
@@ -205,6 +228,46 @@ const createTables = async () => {
       );
     `);
 
+    // Prevote Table
+    await runDatabaseQuery(`
+      CREATE TABLE IF NOT EXISTS "PreVote" (
+        "id" SERIAL PRIMARY KEY,
+        "round" INT,
+        "total" BIGINT,
+        "totalAgree" BIGINT,
+        "totalNil" BIGINT,
+        "totalZero" BIGINT,
+        "consensusPercentage" FLOAT
+      );
+    `);
+
+    // PreCommit Table
+    await runDatabaseQuery(`
+      CREATE TABLE IF NOT EXISTS "PreCommit" (
+        "id" SERIAL PRIMARY KEY,
+        "round" INT,
+        "total" BIGINT,
+        "totalAgree" BIGINT,
+        "totalNil" BIGINT,
+        "totalZero" BIGINT,
+        "consensusPercentage" FLOAT
+      );
+    `);
+
+    // Commits Table
+    await runDatabaseQuery(`
+      CREATE TABLE IF NOT EXISTS "Commit" (
+        "id" SERIAL PRIMARY KEY,
+        "proposer_address" TEXT,
+        "proposer_vote" TEXT,
+        "total_voting_power" BIGINT,
+        "total_agree" BIGINT,
+        "total_nil" BIGINT,
+        "total_zero" BIGINT,
+        "consensus_percentage" FLOAT
+      );
+    `)
+
   await addConstraintIfNotExists('fk_validatorsgroup1', 'ConsensusState', `
     ALTER TABLE "ConsensusState" ADD CONSTRAINT fk_validatorsgroup1
     FOREIGN KEY ("validatorsGroupId") REFERENCES "ValidatorsGroup"("id") ON DELETE CASCADE;
@@ -221,6 +284,38 @@ const createTables = async () => {
     throw err;
   }
   return true;
+};
+
+const createFunctionAndTrigger = async () => {
+  try {
+    // SQL to create a function that notifies on data change
+    const createFunctionSQL = `
+      CREATE OR REPLACE FUNCTION notify_change() RETURNS TRIGGER AS $$
+      BEGIN
+        PERFORM pg_notify('data_change_channel', row_to_json(NEW)::text);
+        RETURN NEW;
+      END;
+      $$ LANGUAGE plpgsql;
+    `;
+
+    // SQL to create a trigger that calls the notify_change function after an insert operation
+    const createTriggerSQL = `
+      DROP TRIGGER IF EXISTS ConsensusState_after_insert ON "ConsensusState";
+      CREATE TRIGGER ConsensusState_after_insert
+      AFTER INSERT ON "ConsensusState"
+      FOR EACH ROW EXECUTE FUNCTION notify_change();
+    `;
+
+    // Execute the SQL to create the function
+    await client.query(createFunctionSQL);
+    console.log('Function created successfully.');
+
+    // Execute the SQL to create the trigger
+    await client.query(createTriggerSQL);
+    console.log('Trigger created successfully.');
+  } catch (err) {
+    console.error('Error creating function and trigger:', err);
+  }
 };
 
 const tableNames = [
@@ -284,6 +379,7 @@ const addConstraintIfNotExists = async (constraintName, tableName, constraintSql
 async function initializeDb() {
   await initializeClient()
   await createTables().catch(err => console.error('Failed to create tables:', err));
+  await createFunctionAndTrigger()
 }
 
 const deleteAllTables = async () => {
@@ -320,6 +416,8 @@ process.on('exit', (code) => {
 
 export {
   initializeDb,
+  initializeTriggerClient,
   deleteAllTables,
-  runDatabaseQuery
+  runDatabaseQuery,
+  createFunctionAndTrigger
 };
