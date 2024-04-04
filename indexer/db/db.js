@@ -43,8 +43,8 @@ const initializeTriggerClient = async () => {
   client.on('notification', async (msg) => {
       const payload = JSON.parse(msg.payload);
       console.log('Received Consensus notification:', payload);
-      updatePreVoteMetrics("cosmoshub-4");
-      updatePreCommitMetrics("cosmoshub-4");
+      updatePreVoteMetrics(payload.chainId);
+      updatePreCommitMetrics(payload.chainId);
   });
 };
 
@@ -237,7 +237,8 @@ const createTables = async () => {
         "totalAgree" BIGINT,
         "totalNil" BIGINT,
         "totalZero" BIGINT,
-        "consensusPercentage" FLOAT
+        "consensusPercentage" FLOAT,
+        "chainId" TEXT
       );
     `);
 
@@ -250,7 +251,8 @@ const createTables = async () => {
         "totalAgree" BIGINT,
         "totalNil" BIGINT,
         "totalZero" BIGINT,
-        "consensusPercentage" FLOAT
+        "consensusPercentage" FLOAT,
+        "chainId" TEXT
       );
     `);
 

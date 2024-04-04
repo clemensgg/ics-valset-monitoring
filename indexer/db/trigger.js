@@ -35,19 +35,19 @@ const initializeTriggerClient = async () => {
     });
 };
 
-const updatePreVote = async (roundNumber) => {
-    const query = `
-    INSERT INTO "PreVote" ("roundNumber")
-    VALUES ($1);
-`;
-    try {
-        await runDatabaseQuery(query, [roundNumber], 'run');
-        console.log(`Updated PreVote for Round ${roundNumber}`);
-    } catch (err) {
-        console.error('Error updating PreVote:', err);
-        throw err;
-    }
-};
+// const updatePreVote = async (roundNumber) => {
+//     const query = `
+//     INSERT INTO "PreVote" ("roundNumber")
+//     VALUES ($1);
+// `;
+//     try {
+//         await runDatabaseQuery(query, [roundNumber], 'run');
+//         console.log(`Updated PreVote for Round ${roundNumber}`);
+//     } catch (err) {
+//         console.error('Error updating PreVote:', err);
+//         throw err;
+//     }
+// };
 
 
 

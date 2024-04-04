@@ -1140,7 +1140,7 @@ async function updatePreVoteMetrics(chainId) {
       const preVoteMetrics = await calculatePreVoteMetrics(validatorsGroupId);
       if (Array.isArray(preVoteMetrics) && preVoteMetrics.length) {
         for (let metric of preVoteMetrics) {
-          await updatePreVote(metric);
+          await updatePreVote(metric, chainId);
         }
       } else {
         console.log("No pre-vote metrics found.");
@@ -1162,7 +1162,7 @@ async function updatePreCommitMetrics(chainId) {
       const preCommitMetrics = await calculatePreCommitMetrics(validatorsGroupId);
       if (Array.isArray(preCommitMetrics) && preCommitMetrics.length) {
         for (let metric of preCommitMetrics) {
-          await updatePreCommit(metric);
+          await updatePreCommit(metric, chainId);
         }
       } else {
         console.log("No pre-commit metrics found.");
@@ -1303,7 +1303,7 @@ async function updateValidators() {
 //   await updatePreVote(result);
 // }
 
-const updatePreVote = async (params) => {
+const updatePreVote = async (params, chainId) => {
   const round = params.roundNumber;
   const total = params.totalVotingPowerForPrevote;
   const totalAgree = params.totalAgreeingVotingPowerForPrevote;
@@ -1312,11 +1312,11 @@ const updatePreVote = async (params) => {
   const consensusPercentage = params.consensusPercentage;
   console.log("Consensus Percentage: " + consensusPercentage)
   const query = `
-  INSERT INTO "PreVote" ("round","total","totalAgree","totalNil","totalZero","consensusPercentage")
-  VALUES ($1,$2,$3,$4,$5,$6);
+  INSERT INTO "PreVote" ("round","total","totalAgree","totalNil","totalZero","consensusPercentage","chainId")
+  VALUES ($1,$2,$3,$4,$5,$6,$7);
 `;
   try {
-    await runDatabaseQuery(query, [round, total, totalAgree, totalNil, totalZero, consensusPercentage], 'run');
+    await runDatabaseQuery(query, [round, total, totalAgree, totalNil, totalZero, consensusPercentage, chainId], 'run');
     console.log(`Updated PreVote ${round}`);
   } catch (err) {
     console.error('Error updating PreVote:', err);
@@ -1324,7 +1324,7 @@ const updatePreVote = async (params) => {
   }
 };
 
-const updatePreCommit = async (params) => {
+const updatePreCommit = async (params, chainId) => {
   const round = params.roundNumber;
   const total = params.totalVotingPowerForPrevote;
   const totalAgree = params.totalAgreeingVotingPowerForPrevote;
@@ -1333,11 +1333,11 @@ const updatePreCommit = async (params) => {
   const consensusPercentage = params.consensusPercentage;
   console.log("Consensus Percentage: " + consensusPercentage)
   const query = `
-  INSERT INTO "PreCommit" ("round","total","totalAgree","totalNil","totalZero","consensusPercentage")
-  VALUES ($1,$2,$3,$4,$5,$6);
+  INSERT INTO "PreCommit" ("round","total","totalAgree","totalNil","totalZero","consensusPercentage","chainId")
+  VALUES ($1,$2,$3,$4,$5,$6,$7);
 `;
   try {
-    await runDatabaseQuery(query, [round, total, totalAgree, totalNil, totalZero, consensusPercentage], 'run');
+    await runDatabaseQuery(query, [round, total, totalAgree, totalNil, totalZero, consensusPercentage, chainId], 'run');
     console.log(`Updated PreCommit ${round}`);
   } catch (err) {
     console.error('Error updating PreCommit:', err);

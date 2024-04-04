@@ -371,7 +371,7 @@
           "format": "table",
           "hide": false,
           "rawQuery": true,
-          "rawSql": "SELECT \"round\",\"total\",\"totalAgree\",\"totalNil\",\"totalZero\",\"consensusPercentage\" FROM \"PreVote\" ORDER BY \"id\" DESC LIMIT 2;",
+          "rawSql": "SELECT \"round\",\"total\",\"totalAgree\",\"totalNil\",\"totalZero\",\"consensusPercentage\" FROM \"PreVote\" WHERE \"chainId\" = '$chainId' ORDER BY \"id\" DESC LIMIT 2;",
           "refId": "A",
           "sql": {
             "columns": [
@@ -400,7 +400,7 @@
           "format": "table",
           "hide": true,
           "rawQuery": true,
-          "rawSql": "SELECT \"round\",\"total\",\"totalAgree\",\"totalNil\",\"totalZero\",\"consensusPercentage\" FROM \"PreVote\" ORDER BY \"id\" DESC LIMIT 2;",
+          "rawSql": "SELECT \"round\",\"total\",\"totalAgree\",\"totalNil\",\"totalZero\",\"consensusPercentage\" FROM \"PreVote\" WHERE \"chainId\" = '$chainId' ORDER BY \"id\" DESC LIMIT 2;",
           "refId": "B",
           "sql": {
             "columns": [
@@ -1095,7 +1095,7 @@
           "format": "table",
           "hide": true,
           "rawQuery": true,
-          "rawSql": "SELECT \"round\",\"total\",\"totalAgree\",\"totalNil\",\"totalZero\",\"consensusPercentage\" FROM \"PreCommit\" ORDER BY \"id\" DESC LIMIT 2;",
+          "rawSql": "SELECT \"round\",\"total\",\"totalAgree\",\"totalNil\",\"totalZero\",\"consensusPercentage\" FROM \"PreCommit\" WHERE \"chainId\" = '$chainId' ORDER BY \"id\" DESC LIMIT 2;",
           "refId": "A",
           "sql": {
             "columns": [
@@ -1124,7 +1124,7 @@
           "format": "table",
           "hide": false,
           "rawQuery": true,
-          "rawSql": "SELECT \"round\",\"total\",\"totalAgree\",\"totalNil\",\"totalZero\",\"consensusPercentage\" FROM \"PreCommit\" ORDER BY \"id\" DESC LIMIT 2;",
+          "rawSql": "SELECT \"round\",\"total\",\"totalAgree\",\"totalNil\",\"totalZero\",\"consensusPercentage\" FROM \"PreCommit\" WHERE \"chainId\" = '$chainId' ORDER BY \"id\" DESC LIMIT 2;",
           "refId": "B",
           "sql": {
             "columns": [
@@ -1195,6 +1195,30 @@
           }
         },
         "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "proposer_moniker"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "Proposer"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "proposer_last_commit_vote"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "Vote"
+              }
+            ]
+          },
           {
             "matcher": {
               "id": "byName",
@@ -1283,12 +1307,8 @@
               "totalVotingPowerForLastCommit": true,
               "totalZerovotingVotingPowerForLastCommit": true
             },
-            "includeByName": {},
             "indexByName": {},
-            "renameByName": {
-              "lastcommitvote": "Vote",
-              "moniker": "Moniker"
-            }
+            "renameByName": {}
           }
         }
       ],
@@ -1433,7 +1453,7 @@
     "list": [
       {
         "current": {
-          "selected": false,
+          "selected": true,
           "text": "cosmoshub-4",
           "value": "cosmoshub-4"
         },
@@ -1479,6 +1499,6 @@
   "timezone": "",
   "title": "ics-consensus-provider",
   "uid": "ae2d1868-c009-472b-b094-55b69a70cda0-pvd",
-  "version": 79,
+  "version": 90,
   "weekStart": ""
 }
