@@ -104,7 +104,7 @@
         "textMode": "value_and_name",
         "wideLayout": true
       },
-      "pluginVersion": "10.4.0",
+      "pluginVersion": "10.4.1",
       "targets": [
         {
           "datasource": "PostgreSQL",
@@ -251,7 +251,7 @@
         "textMode": "auto",
         "wideLayout": true
       },
-      "pluginVersion": "10.4.0",
+      "pluginVersion": "10.4.1",
       "targets": [
         {
           "datasource": "PostgreSQL",
@@ -363,7 +363,7 @@
           }
         ]
       },
-      "pluginVersion": "10.4.0",
+      "pluginVersion": "10.4.1",
       "targets": [
         {
           "datasource": "PostgreSQL",
@@ -400,7 +400,7 @@
           "format": "table",
           "hide": true,
           "rawQuery": true,
-          "rawSql": "SELECT \"round\",\"total\",\"totalAgree\",\"totalNil\",\"totalZero\",\"consensusPercentage\" FROM \"PreVote\" WHERE \"chainId\" = '$chainId' ORDER BY \"id\" DESC LIMIT 2;",
+          "rawSql": "SELECT \"round\",\"total\",\"totalAgree\",\"totalNil\",\"totalZero\",\"consensusPercentage\" FROM \"PreVote\" \"chainId\" = '$chainId' ORDER BY \"id\" DESC LIMIT 2;",
           "refId": "B",
           "sql": {
             "columns": [
@@ -529,7 +529,7 @@
         "sizing": "auto",
         "valueMode": "color"
       },
-      "pluginVersion": "10.4.0",
+      "pluginVersion": "10.4.1",
       "targets": [
         {
           "datasource": "PostgreSQL",
@@ -537,7 +537,7 @@
           "format": "table",
           "hide": false,
           "rawQuery": true,
-          "rawSql": "SELECT \"consensusPercentage\" AS \"consensusPercentagePreVote\" FROM \"PreVote\";",
+          "rawSql": "SELECT \"consensusPercentage\" AS \"consensusPercentagePreVote\" FROM \"PreVote\" WHERE \"chainId\" = '$chainId';",
           "refId": "A",
           "sql": {
             "columns": [
@@ -566,7 +566,7 @@
           "format": "table",
           "hide": false,
           "rawQuery": true,
-          "rawSql": "SELECT \"consensusPercentage\" AS \"consensusPercentagePreCommit\" FROM \"PreCommit\";",
+          "rawSql": "SELECT \"consensusPercentage\" AS \"consensusPercentagePreCommit\" FROM \"PreCommit\" WHERE \"chainId\" = '$chainId';",
           "refId": "B",
           "sql": {
             "columns": [
@@ -723,7 +723,7 @@
         "textMode": "auto",
         "wideLayout": true
       },
-      "pluginVersion": "10.4.0",
+      "pluginVersion": "10.4.1",
       "targets": [
         {
           "datasource": "PostgreSQL",
@@ -754,7 +754,10 @@
       "type": "stat"
     },
     {
-      "datasource": "PostgreSQL",
+      "datasource": {
+        "type": "grafana-postgresql-datasource",
+        "uid": "PCC52D03280B7034C"
+      },
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -818,7 +821,7 @@
           "editorMode": "code",
           "format": "table",
           "rawQuery": true,
-          "rawSql": "WITH \"LatestConsensusState\" AS (\n    SELECT \"id\" AS \"latestConsensusStateId\", \"validatorsGroupId\"\n    FROM \"ConsensusState\"\n    WHERE \"chainId\" = '$chainId' \n    ORDER BY \"timestamp\" DESC\n    LIMIT 1\n),\n\"LatestRoundsGroup\" AS (\n    SELECT \"id\" AS \"latestRoundsGroupId\"\n    FROM \"RoundsGroup\"\n    WHERE \"consensusStateId\" = (SELECT \"latestConsensusStateId\" FROM \"LatestConsensusState\")\n    LIMIT 1\n),\n\"LatestRound\" AS (\n    SELECT MAX(\"id\") AS \"latestRoundId\"\n    FROM \"Round\"\n    WHERE \"roundsGroupId\" = (SELECT \"latestRoundsGroupId\" FROM \"LatestRoundsGroup\")\n),\n\"LatestValidatorsGroupId\" AS (\n    SELECT \"validatorsGroupId\"\n    FROM \"ConsensusState\"\n    WHERE \"id\" = (SELECT \"latestConsensusStateId\" FROM \"LatestConsensusState\")\n)\nSELECT \n    \"V\".\"id\" AS \"validatorId\",\n    \"V\".\"voting_power\",\n    \"V\".\"pub_key\",\n    \"V\".\"consensusAddress\",\n    \"V\".\"proposer_priority\",\n    \"SV\".\"id\",\n    \"SV\".\"stakingValidatorsMetaId\",\n    \"SV\".\"operator_address\",\n    \"SV\".\"consumer_signing_keys\",\n    \"SV\".\"moniker\",\n    (SELECT MAX(\"vote\") FROM \"Votes\" WHERE \"validatorId\" = \"V\".\"id\" AND \"type\" = 'prevote' AND \"roundId\" = (SELECT \"latestRoundId\" FROM \"LatestRound\")) AS \"prevote\",\n    (SELECT MAX(\"vote\") FROM \"Votes\" WHERE \"validatorId\" = \"V\".\"id\" AND \"type\" = 'precommit' AND \"roundId\" = (SELECT \"latestRoundId\" FROM \"LatestRound\")) AS \"precommit\",\n    (SELECT MAX(\"vote\") FROM \"Votes\" WHERE \"validatorId\" = \"VG\".\"proposerId\" AND \"type\" = 'prevote' AND \"roundId\" = (SELECT \"latestRoundId\" FROM \"LatestRound\")) AS \"proposer_prevote\",\n    (SELECT MAX(\"vote\") FROM \"Votes\" WHERE \"validatorId\" = \"VG\".\"proposerId\" AND \"type\" = 'precommit' AND \"roundId\" = (SELECT \"latestRoundId\" FROM \"LatestRound\")) AS \"proposer_precommit\",\n    (\"V\".\"pub_key\"::json)->>'value' AS \"consensus_pubkey\"\nFROM \"Validator\" \"V\" \nJOIN \"LatestValidatorsGroupId\" \"LVG\" ON \"V\".\"validatorsGroupId\" = \"LVG\".\"validatorsGroupId\"\nJOIN \"ValidatorsGroup\" \"VG\" ON \"V\".\"validatorsGroupId\" = \"VG\".\"id\"\nLEFT JOIN \"StakingValidator\" \"SV\" ON \"SV\".\"consensus_pubkey_key\" = (\"V\".\"pub_key\"::json)->>'value'\nWHERE \"V\".\"id\" IN (\n    SELECT DISTINCT \"validatorId\"\n    FROM \"Votes\"\n    WHERE \"type\" = 'prevote' AND \"roundId\" = (SELECT \"latestRoundId\" FROM \"LatestRound\")\n)\nGROUP BY \"V\".\"id\", \"SV\".\"id\", \"SV\".\"stakingValidatorsMetaId\", \"SV\".\"operator_address\", \"VG\".\"proposerId\"\nORDER BY \"V\".\"voting_power\" DESC;\n",
+          "rawSql": "SELECT votingpower, prevote, precommit, moniker, operatoraddress, consensuspubkey FROM get_current_validators('$chainId') ORDER BY votingpower DESC;",
           "refId": "A",
           "sql": {
             "columns": [
@@ -846,8 +849,8 @@
           "options": {
             "include": {
               "names": [
-                "voting_power",
-                "moniker"
+                "moniker",
+                "votingpower"
               ]
             }
           }
@@ -858,6 +861,7 @@
             "excludeByName": {
               "precommitDotColor": false
             },
+            "includeByName": {},
             "indexByName": {
               "consensus_pubkey": 5,
               "moniker": 3,
@@ -876,7 +880,8 @@
               "precommitDotColor": "Precommit",
               "prevote": "Prevote",
               "prevoteDotColor": "Prevote",
-              "voting_power": "Voting Power"
+              "voting_power": "Voting Power",
+              "votingpower": "Voting Power"
             }
           }
         }
@@ -974,7 +979,7 @@
         "textMode": "auto",
         "wideLayout": true
       },
-      "pluginVersion": "10.4.0",
+      "pluginVersion": "10.4.1",
       "targets": [
         {
           "datasource": "PostgreSQL",
@@ -1087,7 +1092,7 @@
           }
         ]
       },
-      "pluginVersion": "10.4.0",
+      "pluginVersion": "10.4.1",
       "targets": [
         {
           "datasource": "PostgreSQL",
@@ -1095,7 +1100,7 @@
           "format": "table",
           "hide": true,
           "rawQuery": true,
-          "rawSql": "SELECT \"round\",\"total\",\"totalAgree\",\"totalNil\",\"totalZero\",\"consensusPercentage\" FROM \"PreCommit\" WHERE \"chainId\" = '$chainId' ORDER BY \"id\" DESC LIMIT 2;",
+          "rawSql": "SELECT \"round\",\"total\",\"totalAgree\",\"totalNil\",\"totalZero\",\"consensusPercentage\" FROM \"PreCommit\" ORDER BY \"id\" DESC LIMIT 2;",
           "refId": "A",
           "sql": {
             "columns": [
@@ -1124,7 +1129,7 @@
           "format": "table",
           "hide": false,
           "rawQuery": true,
-          "rawSql": "SELECT \"round\",\"total\",\"totalAgree\",\"totalNil\",\"totalZero\",\"consensusPercentage\" FROM \"PreCommit\" WHERE \"chainId\" = '$chainId' ORDER BY \"id\" DESC LIMIT 2;",
+          "rawSql": "SELECT \"round\",\"total\",\"totalAgree\",\"totalNil\",\"totalZero\",\"consensusPercentage\" FROM \"PreCommit\" ORDER BY \"id\" DESC LIMIT 2;",
           "refId": "B",
           "sql": {
             "columns": [
@@ -1267,7 +1272,7 @@
         "textMode": "auto",
         "wideLayout": true
       },
-      "pluginVersion": "10.4.0",
+      "pluginVersion": "10.4.1",
       "targets": [
         {
           "datasource": "PostgreSQL",
@@ -1365,7 +1370,7 @@
         "showHeader": true,
         "sortBy": []
       },
-      "pluginVersion": "10.4.0",
+      "pluginVersion": "10.4.1",
       "repeat": "chainType",
       "repeatDirection": "v",
       "targets": [
@@ -1453,7 +1458,7 @@
     "list": [
       {
         "current": {
-          "selected": true,
+          "selected": false,
           "text": "cosmoshub-4",
           "value": "cosmoshub-4"
         },
@@ -1499,6 +1504,6 @@
   "timezone": "",
   "title": "ics-consensus-provider",
   "uid": "ae2d1868-c009-472b-b094-55b69a70cda0-pvd",
-  "version": 90,
+  "version": 103,
   "weekStart": ""
 }

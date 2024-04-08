@@ -15,7 +15,6 @@
   "editable": true,
   "fiscalYearStartMonth": 0,
   "graphTooltip": 0,
-  "id": 1,
   "links": [],
   "liveNow": false,
   "panels": [
@@ -94,13 +93,15 @@
           "fields": "/.*/",
           "values": false
         },
+        "showPercentChange": false,
         "text": {
           "titleSize": 14,
           "valueSize": 24
         },
-        "textMode": "value_and_name"
+        "textMode": "value_and_name",
+        "wideLayout": true
       },
-      "pluginVersion": "10.1.5",
+      "pluginVersion": "10.4.1",
       "targets": [
         {
           "datasource": "PostgreSQL",
@@ -129,7 +130,6 @@
         }
       ],
       "title": "Chain Info",
-      "transformations": [],
       "type": "stat"
     },
     {
@@ -240,13 +240,15 @@
           "fields": "/.*/",
           "values": false
         },
+        "showPercentChange": false,
         "text": {
           "titleSize": 14,
           "valueSize": 20
         },
-        "textMode": "auto"
+        "textMode": "auto",
+        "wideLayout": true
       },
-      "pluginVersion": "10.1.5",
+      "pluginVersion": "10.4.1",
       "targets": [
         {
           "datasource": "PostgreSQL",
@@ -277,7 +279,10 @@
       "type": "stat"
     },
     {
-      "datasource": "PostgreSQL",
+      "datasource": {
+        "type": "grafana-postgresql-datasource",
+        "uid": "PCC52D03280B7034C"
+      },
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -348,14 +353,14 @@
         },
         "showHeader": true
       },
-      "pluginVersion": "10.1.5",
+      "pluginVersion": "10.4.1",
       "targets": [
         {
           "datasource": "PostgreSQL",
           "editorMode": "code",
           "format": "table",
           "rawQuery": true,
-          "rawSql": "WITH \"LatestConsensusState\" AS (\n    SELECT \"id\" AS \"consensusStateId\", \"validatorsGroupId\"\n    FROM \"ConsensusState\"\n    WHERE \"chainId\" = '$chainId'\n    ORDER BY \"timestamp\" DESC\n    LIMIT 1\n),\n\"ProposerVote\" AS (\n    SELECT \"R\".\"id\" AS \"roundId\", \"V\".\"vote\" AS \"proposerVote\"\n    FROM \"Votes\" \"V\"\n    JOIN \"Validator\" \"VL\" ON \"V\".\"validatorId\" = \"VL\".\"id\"\n    JOIN \"ValidatorsGroup\" \"VG\" ON \"VL\".\"validatorsGroupId\" = \"VG\".\"id\"\n    JOIN \"Round\" \"R\" ON \"V\".\"roundId\" = \"R\".\"id\"\n    WHERE \"VG\".\"id\" = (SELECT \"validatorsGroupId\" FROM \"LatestConsensusState\")\n    AND \"V\".\"type\" = 'prevote'\n    AND \"V\".\"validatorId\" = \"VG\".\"proposerId\"\n)\nSELECT \n    \"R\".\"roundNumber\",\n    SUM(\"V\".\"voting_power\") FILTER (WHERE \"VT\".\"type\" = 'prevote') AS \"totalVotingPowerForPrevote\",\n    SUM(\"V\".\"voting_power\") FILTER (WHERE \"VT\".\"type\" = 'prevote' AND \"VT\".\"vote\" = \"PV\".\"proposerVote\" AND \"VT\".\"vote\" NOT IN ('nil-Vote', '000000000000')) AS \"totalAgreeingVotingPowerForPrevote\",\n    SUM(\"V\".\"voting_power\") FILTER (WHERE \"VT\".\"type\" = 'prevote' AND \"VT\".\"vote\" = 'nil-Vote') AS \"totalNilvotingVotingPowerForPrevote\",\n    SUM(\"V\".\"voting_power\") FILTER (WHERE \"VT\".\"type\" = 'prevote' AND \"VT\".\"vote\" = '000000000000') AS \"totalZerovotingVotingPowerForPrevote\",\n    (SUM(\"V\".\"voting_power\") FILTER (WHERE \"VT\".\"type\" = 'prevote' AND \"VT\".\"vote\" = \"PV\".\"proposerVote\" AND \"VT\".\"vote\" NOT IN ('nil-Vote', '000000000000')) * 100.0 / NULLIF(SUM(\"V\".\"voting_power\") FILTER (WHERE \"VT\".\"type\" = 'prevote'), 0)) AS \"consensusPercentage\"\nFROM \"ValidatorsGroup\" \"VG\" \nJOIN \"Validator\" \"V\" ON \"VG\".\"id\" = \"V\".\"validatorsGroupId\" \nJOIN \"Votes\" \"VT\" ON \"V\".\"id\" = \"VT\".\"validatorId\" \nJOIN \"Round\" \"R\" ON \"VT\".\"roundId\" = \"R\".\"id\"\nLEFT JOIN \"ProposerVote\" \"PV\" ON \"R\".\"id\" = \"PV\".\"roundId\"\nWHERE \"R\".\"roundNumber\" != -1\nAND \"VG\".\"id\" = (SELECT \"validatorsGroupId\" FROM \"LatestConsensusState\")\nGROUP BY \"R\".\"roundNumber\", \"PV\".\"proposerVote\"\nORDER BY \"R\".\"roundNumber\";\n",
+          "rawSql": "SELECT \"round\",\"total\",\"totalAgree\",\"totalNil\",\"totalZero\",\"consensusPercentage\" FROM \"PreVote\" WHERE \"chainId\" = '$chainId' ORDER BY \"id\" DESC LIMIT 2;",
           "refId": "A",
           "sql": {
             "columns": [
@@ -397,7 +402,10 @@
       "type": "table"
     },
     {
-      "datasource": "PostgreSQL",
+      "datasource": {
+        "type": "grafana-postgresql-datasource",
+        "uid": "PCC52D03280B7034C"
+      },
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -419,13 +427,13 @@
               }
             ]
           },
-          "unit": "percentunit"
+          "unit": "percent"
         },
         "overrides": [
           {
             "matcher": {
               "id": "byName",
-              "options": "prevoteAgreePercentage"
+              "options": "consensusPercentagePreVote"
             },
             "properties": [
               {
@@ -457,8 +465,10 @@
       "id": 4,
       "options": {
         "displayMode": "gradient",
+        "maxVizHeight": 300,
         "minVizHeight": 10,
         "minVizWidth": 0,
+        "namePlacement": "auto",
         "orientation": "horizontal",
         "reduceOptions": {
           "calcs": [
@@ -468,21 +478,51 @@
           "values": false
         },
         "showUnfilled": true,
+        "sizing": "auto",
         "text": {
           "titleSize": 14,
           "valueSize": 24
         },
         "valueMode": "color"
       },
-      "pluginVersion": "10.1.5",
+      "pluginVersion": "10.4.1",
       "targets": [
         {
           "datasource": "PostgreSQL",
           "editorMode": "code",
           "format": "table",
           "rawQuery": true,
-          "rawSql": "WITH \"LatestConsensusState\" AS (\n    SELECT \"id\" AS \"consensusStateId\", \"validatorsGroupId\"\n    FROM \"ConsensusState\"\n    WHERE \"chainId\" = '$chainId'\n    ORDER BY \"timestamp\" DESC\n    LIMIT 1\n),\n\"LastProposerVote\" AS (\n    SELECT \n        (SELECT \"vote\" FROM \"Votes\" WHERE \"validatorId\" = \"VG\".\"proposerId\" AND \"type\" = 'prevote') AS \"prevoteProposerVote\",\n        (SELECT \"vote\" FROM \"Votes\" WHERE \"validatorId\" = \"VG\".\"proposerId\" AND \"type\" = 'precommit') AS \"precommitProposerVote\"\n    FROM \"LatestConsensusState\" \"LCS\"\n    JOIN \"ValidatorsGroup\" \"VG\" ON \"LCS\".\"validatorsGroupId\" = \"VG\".\"id\"\n),\n\"LatestRound\" AS (\n    SELECT \"R\".\"id\" AS \"latestRoundId\"\n    FROM \"Round\" \"R\"\n    JOIN \"RoundsGroup\" \"RG\" ON \"R\".\"roundsGroupId\" = \"RG\".\"id\"\n    JOIN \"ConsensusState\" \"CS\" ON \"RG\".\"consensusStateId\" = \"CS\".\"id\"\n    WHERE \"CS\".\"id\" = (SELECT \"consensusStateId\" FROM \"LatestConsensusState\")\n    ORDER BY \"R\".\"roundNumber\" DESC\n    LIMIT 1\n),\n\"TotalAgreeingVotingPower\" AS (\n    SELECT \n        SUM(CASE WHEN \"VT\".\"type\" = 'prevote' THEN \"V\".\"voting_power\" ELSE 0 END) AS \"totalAgreeingVotingPowerForPrevote\",\n        SUM(CASE WHEN \"VT\".\"type\" = 'precommit' THEN \"V\".\"voting_power\" ELSE 0 END) AS \"totalAgreeingVotingPowerForPrecommit\"\n    FROM \"ValidatorsGroup\" \"VG\" \n    JOIN \"Validator\" \"V\" ON \"VG\".\"id\" = \"V\".\"validatorsGroupId\" \n    JOIN \"Votes\" \"VT\" ON \"V\".\"id\" = \"VT\".\"validatorId\" \n    JOIN \"LastProposerVote\" \"LPV\" ON (\"VT\".\"vote\" = \"LPV\".\"prevoteProposerVote\" OR \"VT\".\"vote\" = \"LPV\".\"precommitProposerVote\")\n    JOIN \"LatestRound\" \"LR\" ON \"VT\".\"roundId\" = \"LR\".\"latestRoundId\" \n    WHERE (\"VT\".\"type\" = 'prevote' OR \"VT\".\"type\" = 'precommit') AND \"VT\".\"vote\" != 'nil-Vote'\n),\n\"TotalVotingPower\" AS (\n    SELECT \n        SUM(CASE WHEN \"VT\".\"type\" = 'prevote' THEN \"V\".\"voting_power\" ELSE 0 END) AS \"totalVotingPowerForPrevote\",\n        SUM(CASE WHEN \"VT\".\"type\" = 'precommit' THEN \"V\".\"voting_power\" ELSE 0 END) AS \"totalVotingPowerForPrecommit\"\n    FROM \"ValidatorsGroup\" \"VG\" \n    JOIN \"Validator\" \"V\" ON \"VG\".\"id\" = \"V\".\"validatorsGroupId\" \n    JOIN \"Votes\" \"VT\" ON \"V\".\"id\" = \"VT\".\"validatorId\" \n    JOIN \"LatestRound\" \"LR\" ON \"VT\".\"roundId\" = \"LR\".\"latestRoundId\" \n    WHERE \"VT\".\"type\" = 'prevote' OR \"VT\".\"type\" = 'precommit'\n)\n\nSELECT \n    COALESCE(\n        (CAST((SELECT \"totalAgreeingVotingPowerForPrevote\" FROM \"TotalAgreeingVotingPower\") AS REAL) / \n        CAST((SELECT \"totalVotingPowerForPrevote\" FROM \"TotalVotingPower\") AS REAL)), 0\n    ) AS \"prevoteAgreePercentage\",\n    COALESCE(\n        (CAST((SELECT \"totalAgreeingVotingPowerForPrecommit\" FROM \"TotalAgreeingVotingPower\") AS REAL) / \n        CAST((SELECT \"totalVotingPowerForPrecommit\" FROM \"TotalVotingPower\") AS REAL)), 0\n    ) AS \"precommitAgreePercentage\"\nFROM \"LatestConsensusState\";\n",
+          "rawSql": "SELECT \"consensusPercentage\" AS \"consensusPercentagePreVote\" FROM \"PreVote\" WHERE \"chainId\" = '$chainId';",
           "refId": "A",
+          "sql": {
+            "columns": [
+              {
+                "parameters": [],
+                "type": "function"
+              }
+            ],
+            "groupBy": [
+              {
+                "property": {
+                  "type": "string"
+                },
+                "type": "groupBy"
+              }
+            ],
+            "limit": 50
+          }
+        },
+        {
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "PCC52D03280B7034C"
+          },
+          "editorMode": "code",
+          "format": "table",
+          "hide": false,
+          "rawQuery": true,
+          "rawSql": "SELECT \"consensusPercentage\" AS \"consensusPercentagePreCommit\" FROM \"PreCommit\" WHERE \"chainId\" = '$chainId';",
+          "refId": "B",
           "sql": {
             "columns": [
               {
@@ -613,13 +653,15 @@
           "fields": "/.*/",
           "values": false
         },
+        "showPercentChange": false,
         "text": {
           "titleSize": 14,
           "valueSize": 24
         },
-        "textMode": "auto"
+        "textMode": "auto",
+        "wideLayout": true
       },
-      "pluginVersion": "10.1.5",
+      "pluginVersion": "10.4.1",
       "targets": [
         {
           "datasource": "PostgreSQL",
@@ -699,7 +741,7 @@
         },
         "showHeader": true
       },
-      "pluginVersion": "10.1.5",
+      "pluginVersion": "10.4.1",
       "targets": [
         {
           "datasource": "PostgreSQL",
@@ -731,7 +773,10 @@
       "type": "table"
     },
     {
-      "datasource": "PostgreSQL",
+      "datasource": {
+        "type": "grafana-postgresql-datasource",
+        "uid": "PCC52D03280B7034C"
+      },
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -810,20 +855,22 @@
           "fields": "/.*/",
           "values": false
         },
+        "showPercentChange": false,
         "text": {
           "titleSize": 14,
           "valueSize": 14
         },
-        "textMode": "auto"
+        "textMode": "auto",
+        "wideLayout": true
       },
-      "pluginVersion": "10.1.5",
+      "pluginVersion": "10.4.1",
       "targets": [
         {
           "datasource": "PostgreSQL",
           "editorMode": "code",
           "format": "table",
           "rawQuery": true,
-          "rawSql": "WITH \"LatestConsensusState\" AS (\n    SELECT MAX(\"id\") AS \"id\"\n    FROM \"ConsensusState\"\n    WHERE \"chainId\" = '$chainId'\n)\nSELECT \n    \"SV\".\"moniker\" AS \"proposer_moniker\",\n    \"VT\".\"vote\" AS \"prevote_vote\",\n    \"VT2\".\"vote\" AS \"precommit_vote\"\nFROM \n    \"LatestConsensusState\" \"LCS\"\nJOIN \"ConsensusState\" \"CS\" ON \"LCS\".\"id\" = \"CS\".\"id\"\nJOIN \"ValidatorsGroup\" \"VG\" ON \"CS\".\"id\" = \"VG\".\"consensusStateId\"\nJOIN \"Validator\" \"V\" ON \"VG\".\"proposerId\" = \"V\".\"id\"\nLEFT JOIN \"StakingValidator\" \"SV\" ON \n    CASE \n        WHEN (SELECT \"type\" FROM \"ChainInfo\" WHERE \"chainId\" = '$chainId' LIMIT 1) = 'provider' THEN \"SV\".\"consensus_pubkey_key\" = (\"V\".\"pub_key\"::json)->>'value'\n        ELSE (\"SV\".\"consumer_signing_keys\"::json)->>'$chainId'::text = \"V\".\"consensusAddress\"\n    END\nLEFT JOIN \"Votes\" \"VT\" ON \"V\".\"id\" = \"VT\".\"validatorId\" AND \"VT\".\"type\" = 'prevote'\nLEFT JOIN \"Votes\" \"VT2\" ON \"V\".\"id\" = \"VT2\".\"validatorId\" AND \"VT2\".\"type\" = 'precommit'\nWHERE \n    \"VG\".\"type\" = 'current'\nLIMIT 1;",
+          "rawSql": "SELECT * FROM get_current_round('$chainId')",
           "refId": "A",
           "sql": {
             "columns": [
@@ -845,11 +892,13 @@
         }
       ],
       "title": "Current Round",
-      "transformations": [],
       "type": "stat"
     },
     {
-      "datasource": "PostgreSQL",
+      "datasource": {
+        "type": "grafana-postgresql-datasource",
+        "uid": "PCC52D03280B7034C"
+      },
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -920,14 +969,14 @@
         },
         "showHeader": true
       },
-      "pluginVersion": "10.1.5",
+      "pluginVersion": "10.4.1",
       "targets": [
         {
           "datasource": "PostgreSQL",
           "editorMode": "code",
           "format": "table",
           "rawQuery": true,
-          "rawSql": "WITH \"LatestConsensusState\" AS (\n    SELECT \"id\" AS \"consensusStateId\", \"validatorsGroupId\"\n    FROM \"ConsensusState\"\n    WHERE \"chainId\" = '$chainId'\n    ORDER BY \"timestamp\" DESC\n    LIMIT 1\n),\n\"ProposerVote\" AS (\n    SELECT \"R\".\"id\" AS \"roundId\", MAX(\"V\".\"vote\") AS \"proposerVote\"\n    FROM \"Votes\" \"V\"\n    JOIN \"Validator\" \"VL\" ON \"V\".\"validatorId\" = \"VL\".\"id\"\n    JOIN \"ValidatorsGroup\" \"VG\" ON \"VL\".\"validatorsGroupId\" = \"VG\".\"id\"\n    JOIN \"Round\" \"R\" ON \"V\".\"roundId\" = \"R\".\"id\"\n    WHERE \"VG\".\"id\" = (SELECT \"validatorsGroupId\" FROM \"LatestConsensusState\")\n    AND \"V\".\"type\" = 'precommit'\n    AND \"V\".\"validatorId\" = \"VG\".\"proposerId\"\n    GROUP BY \"R\".\"id\"\n)\nSELECT \n    \"R\".\"roundNumber\",\n    SUM(\"V\".\"voting_power\") FILTER (WHERE \"VT\".\"type\" = 'precommit') AS \"totalVotingPowerForPrecommit\",\n    SUM(\"V\".\"voting_power\") FILTER (WHERE \"VT\".\"type\" = 'precommit' AND \"VT\".\"vote\" = \"PV\".\"proposerVote\" AND \"VT\".\"vote\" NOT IN ('nil-Vote', '000000000000')) AS \"totalAgreeingVotingPowerForPrecommit\",\n    SUM(\"V\".\"voting_power\") FILTER (WHERE \"VT\".\"type\" = 'precommit' AND \"VT\".\"vote\" = 'nil-Vote') AS \"totalNilvotingVotingPowerForPrecommit\",\n    SUM(\"V\".\"voting_power\") FILTER (WHERE \"VT\".\"type\" = 'precommit' AND \"VT\".\"vote\" = '000000000000') AS \"totalZerovotingVotingPowerForPrecommit\",\n    (SUM(\"V\".\"voting_power\") FILTER (WHERE \"VT\".\"type\" = 'precommit' AND \"VT\".\"vote\" = \"PV\".\"proposerVote\" AND \"VT\".\"vote\" NOT IN ('nil-Vote', '000000000000')) * 100.0 / NULLIF(SUM(\"V\".\"voting_power\") FILTER (WHERE \"VT\".\"type\" = 'precommit'), 0)) AS \"consensusPercentage\"\nFROM \"ValidatorsGroup\" \"VG\" \nJOIN \"Validator\" \"V\" ON \"VG\".\"id\" = \"V\".\"validatorsGroupId\" \nJOIN \"Votes\" \"VT\" ON \"V\".\"id\" = \"VT\".\"validatorId\" \nJOIN \"Round\" \"R\" ON \"VT\".\"roundId\" = \"R\".\"id\"\nLEFT JOIN \"ProposerVote\" \"PV\" ON \"R\".\"id\" = \"PV\".\"roundId\"\nWHERE \"R\".\"roundNumber\" != -1\nAND \"VG\".\"id\" = (SELECT \"validatorsGroupId\" FROM \"LatestConsensusState\")\nGROUP BY \"R\".\"roundNumber\", \"PV\".\"proposerVote\"\nORDER BY \"R\".\"roundNumber\";\n",
+          "rawSql": "SELECT \"round\",\"total\",\"totalAgree\",\"totalNil\",\"totalZero\",\"consensusPercentage\" FROM \"PreCommit\" ORDER BY \"id\" DESC LIMIT 2;",
           "refId": "A",
           "sql": {
             "columns": [
@@ -969,7 +1018,10 @@
       "type": "table"
     },
     {
-      "datasource": "PostgreSQL",
+      "datasource": {
+        "type": "grafana-postgresql-datasource",
+        "uid": "PCC52D03280B7034C"
+      },
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -1055,20 +1107,22 @@
           "fields": "/.*/",
           "values": false
         },
+        "showPercentChange": false,
         "text": {
           "titleSize": 14,
           "valueSize": 14
         },
-        "textMode": "auto"
+        "textMode": "auto",
+        "wideLayout": true
       },
-      "pluginVersion": "10.1.5",
+      "pluginVersion": "10.4.1",
       "targets": [
         {
           "datasource": "PostgreSQL",
           "editorMode": "code",
           "format": "table",
           "rawQuery": true,
-          "rawSql": "WITH \"LatestConsensusState\" AS (\n    SELECT \"id\" AS \"consensusStateId\", \"lastValidatorsGroupId\"\n    FROM \"ConsensusState\"\n    WHERE \"chainId\" = '$chainId'\n    ORDER BY \"timestamp\" DESC\n    LIMIT 1\n),\n\"LastProposerVote\" AS (\n    SELECT \n        \"V\".\"address\" AS \"proposerAddress\",\n        \"VT\".\"vote\" AS \"proposerLastCommitVote\",\n        \"SV\".\"moniker\" AS \"proposerMoniker\"\n    FROM \"LatestConsensusState\" \"LCS\"\n    JOIN \"ValidatorsGroup\" \"VG\" ON \"LCS\".\"lastValidatorsGroupId\" = \"VG\".\"id\"\n    JOIN \"Validator\" \"V\" ON \"VG\".\"proposerId\" = \"V\".\"id\"\n    JOIN \"Votes\" \"VT\" ON \"V\".\"id\" = \"VT\".\"validatorId\"\n    LEFT JOIN \"StakingValidator\" \"SV\" ON \n        (\n            (SELECT \"type\" FROM \"ChainInfo\" WHERE \"chainId\" = '$chainId' LIMIT 1) = 'provider' \n            AND \"SV\".\"consensus_pubkey_key\" = (\"V\".\"pub_key\"::json)->>'value'\n        ) \n        OR\n        (\n            (SELECT \"type\" FROM \"ChainInfo\" WHERE \"chainId\" = '$chainId' LIMIT 1) != 'provider' \n            AND (\"SV\".\"consumer_signing_keys\"::json)->>'$chainId'::text = \"V\".\"consensusAddress\"\n        )\n    WHERE \"VT\".\"type\" = 'lastcommit'\n    LIMIT 1\n)\nSELECT \n    MIN(\"LPV\".\"proposerAddress\") AS \"proposerAddress\",\n    MIN(\"LPV\".\"proposerMoniker\") AS \"proposerMoniker\",\n    MIN(\"LPV\".\"proposerLastCommitVote\") AS \"proposerLastCommitVote\",\n    SUM(\"V\".\"voting_power\") AS \"totalVotingPowerForLastCommit\",\n    SUM(CASE WHEN \"VT\".\"vote\" = \"LPV\".\"proposerLastCommitVote\" AND \"VT\".\"vote\" NOT IN ('nil-Vote', '000000000000') THEN \"V\".\"voting_power\" ELSE 0 END) AS \"totalAgreeingLastcommitVotingPower\",\n    SUM(CASE WHEN \"VT\".\"vote\" = 'nil-Vote' THEN \"V\".\"voting_power\" ELSE 0 END) AS \"totalNilvotingVotingPowerForLastCommit\",\n    SUM(CASE WHEN \"VT\".\"vote\" = '000000000000' THEN \"V\".\"voting_power\" ELSE 0 END) AS \"totalZerovotingVotingPowerForLastCommit\",\n    100.0 * SUM(CASE WHEN \"VT\".\"vote\" = \"LPV\".\"proposerLastCommitVote\" AND \"VT\".\"vote\" NOT IN ('nil-Vote', '000000000000') THEN \"V\".\"voting_power\" ELSE 0 END) / SUM(\"V\".\"voting_power\") AS \"consensusPercentage\"\nFROM \"LatestConsensusState\" \"LCS\"\nJOIN \"ValidatorsGroup\" \"VG\" ON \"LCS\".\"lastValidatorsGroupId\" = \"VG\".\"id\"\nJOIN \"Validator\" \"V\" ON \"VG\".\"id\" = \"V\".\"validatorsGroupId\"\nJOIN \"Votes\" \"VT\" ON \"V\".\"id\" = \"VT\".\"validatorId\"\nLEFT JOIN \"LastProposerVote\" \"LPV\" ON \"VT\".\"vote\" = \"LPV\".\"proposerLastCommitVote\"\nWHERE \"VT\".\"type\" = 'lastcommit';\n",
+          "rawSql": "SELECT moniker, lastcommitvote, consensuspercentage FROM get_last_commit('$chainId')",
           "refId": "A",
           "sql": {
             "columns": [
@@ -1109,13 +1163,17 @@
       "type": "stat"
     },
     {
-      "datasource": "PostgreSQL",
+      "datasource": {
+        "type": "grafana-postgresql-datasource",
+        "uid": "PCC52D03280B7034C"
+      },
       "fieldConfig": {
         "defaults": {
           "color": {
             "mode": "thresholds"
           },
           "custom": {
+            "axisBorderShow": false,
             "axisCenteredZero": false,
             "axisColorMode": "text",
             "axisLabel": "",
@@ -1197,7 +1255,7 @@
           "editorMode": "code",
           "format": "table",
           "rawQuery": true,
-          "rawSql": "WITH \"LatestConsensusState\" AS (\n    SELECT \"id\" AS \"latestConsensusStateId\"\n    FROM \"ConsensusState\"\n    WHERE \"chainId\" = '$chainId'\n    ORDER BY \"timestamp\" DESC\n    LIMIT 1\n),\n\"LatestRoundsGroup\" AS (\n    SELECT \"id\" AS \"latestRoundsGroupId\"\n    FROM \"RoundsGroup\"\n    WHERE \"consensusStateId\" = (SELECT \"latestConsensusStateId\" FROM \"LatestConsensusState\")\n    LIMIT 1\n),\n\"LatestRound\" AS (\n    SELECT MAX(\"id\") AS \"latestRoundId\"\n    FROM \"Round\"\n    WHERE \"roundsGroupId\" = (SELECT \"latestRoundsGroupId\" FROM \"LatestRoundsGroup\")\n),\n\"LatestValidatorsGroupId\" AS (\n    SELECT \"validatorsGroupId\"\n    FROM \"ConsensusState\"\n    WHERE \"id\" = (SELECT \"latestConsensusStateId\" FROM \"LatestConsensusState\")\n),\n\"ChainType\" AS (\n    SELECT \"type\"\n    FROM \"ChainInfo\"\n    WHERE \"chainId\" = '$chainId'\n    LIMIT 1\n)\n\nSELECT \n    -- \"V\".\"id\" AS \"validatorId\",\n    \"V\".\"voting_power\",\n--    \"V\".\"address\",\n--    \"V\".\"pub_key\",\n--    \"V\".\"consensusAddress\",\n--    \"V\".\"proposer_priority\",\n    \"SV\".\"moniker\"\nFROM \"Validator\" \"V\"\nJOIN \"LatestValidatorsGroupId\" \"LVG\" ON \"V\".\"validatorsGroupId\" = \"LVG\".\"validatorsGroupId\"\nLEFT JOIN \"StakingValidator\" \"SV\" ON \n    CASE \n        WHEN (SELECT \"type\" FROM \"ChainType\") = 'provider' THEN \"SV\".\"consensus_pubkey_key\" = (\"V\".\"pub_key\"::json)->>'value'\n        ELSE (\"SV\".\"consumer_signing_keys\"::json)->>'$chainId'::text = \"V\".\"consensusAddress\"\n    END\nWHERE \"V\".\"id\" IN (\n    SELECT DISTINCT \"validatorId\"\n    FROM \"Votes\"\n    WHERE \"type\" = 'prevote' AND \"roundId\" = (SELECT \"latestRoundId\" FROM \"LatestRound\")\n)\nGROUP BY \"V\".\"id\", \"SV\".\"moniker\", \"SV\".\"tokens\"\nORDER BY \"V\".\"voting_power\" DESC;\n",
+          "rawSql": "SELECT votingpower, prevote, precommit, moniker, operatoraddress, consensuspubkey FROM get_current_validators('$chainId') ORDER BY votingpower DESC;",
           "refId": "A",
           "sql": {
             "columns": [
@@ -1226,15 +1284,21 @@
               "moniker": false,
               "voting_power": false
             },
+            "includeByName": {},
             "indexByName": {},
-            "renameByName": {}
+            "renameByName": {
+              "votingpower": ""
+            }
           }
         }
       ],
       "type": "barchart"
     },
     {
-      "datasource": "PostgreSQL",
+      "datasource": {
+        "type": "grafana-postgresql-datasource",
+        "uid": "PCC52D03280B7034C"
+      },
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -1382,7 +1446,7 @@
         "showHeader": true,
         "sortBy": []
       },
-      "pluginVersion": "10.1.5",
+      "pluginVersion": "10.4.1",
       "repeat": "chainType",
       "repeatDirection": "v",
       "targets": [
@@ -1391,7 +1455,7 @@
           "editorMode": "code",
           "format": "table",
           "rawQuery": true,
-          "rawSql": "WITH \"LatestConsensusState\" AS (\n    SELECT \"id\" AS \"latestConsensusStateId\", \"validatorsGroupId\"\n    FROM \"ConsensusState\"\n    WHERE \"chainId\" = '$chainId' \n    ORDER BY \"timestamp\" DESC\n    LIMIT 1\n),\n\"LatestRoundsGroup\" AS (\n    SELECT \"id\" AS \"latestRoundsGroupId\"\n    FROM \"RoundsGroup\"\n    WHERE \"consensusStateId\" = (SELECT \"latestConsensusStateId\" FROM \"LatestConsensusState\")\n    LIMIT 1\n),\n\"LatestRound\" AS (\n    SELECT MAX(\"id\") AS \"latestRoundId\"\n    FROM \"Round\"\n    WHERE \"roundsGroupId\" = (SELECT \"latestRoundsGroupId\" FROM \"LatestRoundsGroup\")\n),\n\"LatestValidatorsGroupId\" AS (\n    SELECT \"validatorsGroupId\"\n    FROM \"ConsensusState\"\n    WHERE \"id\" = (SELECT \"latestConsensusStateId\" FROM \"LatestConsensusState\")\n)\nSELECT \n    \"V\".\"id\" AS \"validatorId\",\n    \"V\".\"voting_power\",\n    \"V\".\"pub_key\",\n    \"V\".\"consensusAddress\",\n    \"V\".\"proposer_priority\",\n    \"SV\".\"id\",\n    \"SV\".\"stakingValidatorsMetaId\",\n    \"SV\".\"operator_address\",\n    \"SV\".\"consensus_pubkey_type\",\n    \"SV\".\"consumer_signing_keys\",\n    \"SV\".\"moniker\",\n    (SELECT MAX(\"vote\") FROM \"Votes\" WHERE \"validatorId\" = \"V\".\"id\" AND \"type\" = 'prevote' AND \"roundId\" = (SELECT \"latestRoundId\" FROM \"LatestRound\")) AS \"prevote\",\n    (SELECT MAX(\"vote\") FROM \"Votes\" WHERE \"validatorId\" = \"V\".\"id\" AND \"type\" = 'precommit' AND \"roundId\" = (SELECT \"latestRoundId\" FROM \"LatestRound\")) AS \"precommit\",\n    (\"SV\".\"consumer_signing_keys\"::json)->>'$chainId'::text AS \"consumer_signing_key\"\nFROM \"Validator\" \"V\" \nJOIN \"LatestValidatorsGroupId\" \"LVG\" ON \"V\".\"validatorsGroupId\" = \"LVG\".\"validatorsGroupId\"\nLEFT JOIN \"StakingValidator\" \"SV\" ON (\"SV\".\"consumer_signing_keys\"::json)->>'$chainId'::text = \"V\".\"consensusAddress\"\nWHERE \"V\".\"id\" IN (\n    SELECT DISTINCT \"validatorId\"\n    FROM \"Votes\"\n    WHERE \"type\" = 'prevote' AND \"roundId\" = (SELECT \"latestRoundId\" FROM \"LatestRound\")\n)\nGROUP BY \"V\".\"id\", \"SV\".\"id\", \"SV\".\"stakingValidatorsMetaId\", \"SV\".\"operator_address\"\nORDER BY \"V\".\"voting_power\" DESC;\n",
+          "rawSql": "SELECT votingpower, prevote, precommit, moniker, operatoraddress, consensuspubkey FROM get_current_validators('$chainId') ORDER BY votingpower DESC;",
           "refId": "A",
           "sql": {
             "columns": [
@@ -1419,12 +1483,12 @@
           "options": {
             "include": {
               "names": [
-                "voting_power",
-                "operator_address",
-                "moniker",
-                "consumer_signing_key",
                 "prevote",
-                "precommit"
+                "precommit",
+                "moniker",
+                "operatoraddress",
+                "consensuspubkey",
+                "votingpower"
               ]
             }
           }
@@ -1460,8 +1524,7 @@
     }
   ],
   "refresh": "1s",
-  "schemaVersion": 38,
-  "style": "dark",
+  "schemaVersion": 39,
   "tags": [],
   "templating": {
     "list": [
@@ -1471,7 +1534,10 @@
           "text": "neutron-1",
           "value": "neutron-1"
         },
-        "datasource": "PostgreSQL",
+        "datasource": {
+          "type": "grafana-postgresql-datasource",
+          "uid": "PCC52D03280B7034C"
+        },
         "definition": "SELECT \"chainId\" FROM \"ChainInfo\";",
         "hide": 0,
         "includeAll": false,
@@ -1510,6 +1576,6 @@
   "timezone": "",
   "title": "ics-consensus-consumer",
   "uid": "ae2d1868-c009-472b-b094-55b69a70cda0",
-  "version": 18,
+  "version": 2,
   "weekStart": ""
 }
