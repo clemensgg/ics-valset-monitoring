@@ -756,20 +756,6 @@ async function getLatestConsensusState(chainId) {
   return await runDatabaseQuery(query, [chainId], 'get');
 }
 
-// async function getCurrentRound(consensusStateId) {
-//   const query = `
-//     SELECT "VG"."proposerId", "V"
-//     FROM "ValidatorsGroup" "VG" 
-//     JOIN "ConsensusState" "CS" ON "VG"."consensusStateId" = "CS"."id"
-//     JOIN "Validator" "V" ON "VG"."proposerId" = "V"."id"
-//     WHERE "CS"."id" = $1
-//     Limit 1;
-//     `
-
-
-//   //SELECT "VG"."consensusStateId", "CS"."id", "VG"."id", "VG"."proposerId" FROM "ValidatorsGroup" "VG" JOIN "ConsensusState" "CS" ON "VG"."consensusStateId" = "CS"."id";
-// }
-
 async function createRoundView(chainId) {
   const query = `
   CREATE VIEW CURRENTROUND AS
@@ -846,22 +832,22 @@ async function createCurrentRound() {
 
 async function createLastCommit() {
   const query = `
-  CREATE OR REPLACE FUNCTION get_last_commit(p_chian_id TEXT)
+  CREATE OR REPLACE FUNCTION get_last_commit(p_chain_id TEXT)
   RETURNS TABLE (
     address TEXT,
     moniker TEXT,
     lastCommitVote TEXT,
-    totalVotingPower NUMERIC,
-    totalAgreeingVotingPower NUMERIC,
-    totalNilVotingPower NUMERIC,
-    totalZeroVotingPower NUMERIC,
-    consensusPercentage NUMERIC
+    totalVotingPower BIGINT,
+    totalAgreeingVotingPower BIGINT,
+    totalNilVotingPower BIGINT,
+    totalZeroVotingPower BIGINT,
+    consensusPercentage DOUBLE PRECISION
   )
   AS $$
   BEGIN
   RETURN QUERY
   WITH "LatestConsensusState" AS (
-      SELECT "id" AS "consensusStateId", "lastValidatorsGroupId"
+      SELECT "id" AS "consensusStateId", "lastValidatorsGroupId", "chainId"
       FROM "ConsensusState"
       WHERE "chainId" = $1
       ORDER BY "timestamp" DESC
@@ -893,11 +879,26 @@ async function createLastCommit() {
         MIN("LPV"."proposerAddress") AS "proposerAddress",
         MIN("LPV"."proposerMoniker") AS "proposerMoniker",
         MIN("LPV"."proposerLastCommitVote") AS "proposerLastCommitVote",
-        SUM("V"."voting_power") AS "totalVotingPowerForLastCommit",
-        SUM(CASE WHEN "VT"."vote" = "LPV"."proposerLastCommitVote" AND "VT"."vote" NOT IN ('nil-Vote', '000000000000') THEN "V"."voting_power" ELSE 0 END) AS "totalAgreeingLastcommitVotingPower",
-        SUM(CASE WHEN "VT"."vote" = 'nil-Vote' THEN "V"."voting_power" ELSE 0 END) AS "totalNilvotingVotingPowerForLastCommit",
-        SUM(CASE WHEN "VT"."vote" = '000000000000' THEN "V"."voting_power" ELSE 0 END) AS "totalZerovotingVotingPowerForLastCommit",
-        100.0 * SUM(CASE WHEN "VT"."vote" = "LPV"."proposerLastCommitVote" AND "VT"."vote" NOT IN ('nil-Vote', '000000000000') THEN "V"."voting_power" ELSE 0 END) / SUM("V"."voting_power") AS "consensusPercentage"
+        (SELECT "PC"."total"q
+         FROM "PreCommit" "PC"
+         ORDER BY "PC"."id" DESC
+         LIMIT 1) AS "totalVotingPowerForLastCommit",
+         (SELECT "PC"."totalAgree"
+         FROM "PreCommit" "PC"
+         ORDER BY "PC"."id" DESC
+         LIMIT 1) AS "totalAgreeingLastcommitVotingPower",
+         (SELECT "PC"."totalNil"
+         FROM "PreCommit" "PC"
+         ORDER BY "PC"."id" DESC
+         LIMIT 1) AS "totalNilvotingVotingPowerForLastCommit",
+         (SELECT "PC"."totalZero"
+         FROM "PreCommit" "PC"
+         ORDER BY "PC"."id" DESC
+         LIMIT 1) AS "totalZerovotingVotingPowerForLastCommit",
+         (SELECT "PC"."consensusPercentage"
+         FROM "PreCommit" "PC"
+         ORDER BY "PC"."id" DESC
+         LIMIT 1) AS "consensusPercentage"
     FROM "LatestConsensusState" "LCS"
     JOIN "ValidatorsGroup" "VG" ON "LCS"."lastValidatorsGroupId" = "VG"."id"
     JOIN "Validator" "V" ON "VG"."id" = "V"."validatorsGroupId"
@@ -1014,22 +1015,6 @@ async function getCurrentRoundFromView(chainId) {
   `
 }
 
-// async function getProposerVote(validatorsGroupId, roundId) {
-//   const query = `
-//     SELECT "R"."id" AS "roundId", "V"."vote" AS "proposerVote"
-//     FROM "Votes" "V"
-//     JOIN "Validator" "VL" ON "V"."validatorId" = "VL"."id"
-//     JOIN "ValidatorsGroup" "VG" ON "VL"."validatorsGroupId" = "VG"."id"
-//     JOIN "Round" "R" ON "V"."roundId" = "R"."id"
-//     WHERE "VG"."id" = $1
-//     AND "V"."type" = 'prevote'
-//     AND "V"."validatorId" = "VG"."proposerId"
-//     AND "R"."id" = $2
-//   `;
-
-//   return await runDatabaseQuery(query, [validatorsGroupId, roundId], 'one');
-// }
-
 async function calculatePreVoteMetrics(validatorsGroupId) {
   const query = `
     WITH "ProposerVote" AS (
@@ -1094,49 +1079,12 @@ async function calculatePreCommitMetrics(validatorsGroupId) {
   return await runDatabaseQuery(query, [validatorsGroupId], 'all');
 }
 
-// async function calculateOnboardingPrevote(validatorsGroupId) {
-//   const query = `
-//   ),
-//   "ProposerVote" AS (
-//       SELECT "R"."id" AS "roundId", "V"."vote" AS "proposerVote"
-//       FROM "Votes" "V"
-//       JOIN "Validator" "VL" ON "V"."validatorId" = "VL"."id"
-//       JOIN "ValidatorsGroup" "VG" ON "VL"."validatorsGroupId" = "VG"."id"
-//       JOIN "Round" "R" ON "V"."roundId" = "R"."id"
-//       WHERE "VG"."id" = (SELECT "validatorsGroupId" FROM "LatestConsensusState")
-//       AND "V"."type" = 'prevote'
-//       AND "V"."validatorId" = "VG"."proposerId"
-//   )
-//   SELECT 
-//       (SUM("V"."voting_power") FILTER (WHERE "VT"."type" = 'prevote' AND "VT"."vote" = "PV"."proposerVote" AND "VT"."vote" NOT IN ('nil-Vote', '000000000000')) * 100.0 / NULLIF(SUM("V"."voting_power") FILTER (WHERE "VT"."type" = 'prevote'), 0)) AS "prevoteConsensusPercentage"
-//   FROM "ValidatorsGroup" "VG" 
-//   JOIN "Validator" "V" ON "VG"."id" = "V"."validatorsGroupId" 
-//   JOIN "Votes" "VT" ON "V"."id" = "VT"."validatorId" 
-//   JOIN "Round" "R" ON "VT"."roundId" = "R"."id"
-//   LEFT JOIN "ProposerVote" "PV" ON "R"."id" = "PV"."roundId"
-//   WHERE "R"."roundNumber" != -1
-//   AND "VG"."id" = (SELECT "validatorsGroupId" FROM "LatestConsensusState")
-//   GROUP BY "R"."roundNumber", "PV"."proposerVote"
-//   ORDER BY "R"."roundNumber";
-//     `;
-//   return await runDatabaseQuery(query, [validatorsGroupId], 'all');
-// }
-
-
-
 async function updatePreVoteMetrics(chainId) {
   try {
     const { validatorsGroupId } = await getLatestConsensusState(chainId);
     if (validatorsGroupId) {
-      // await createRoundView(chainId);
       const currentRound = await getCurrentRound(chainId);
       console.log("Current Round: " + currentRound);
-      //const lastCommit = await getLastCommit(chainId);
-      //console.log("Last Commit: " + lastCommit);
-      //const currentValidators = await getCurrentValidators(chainId);
-      //console.log("Current Validators: " + currentValidators);
-      // const currentRoundView = await getCurrentRoundFromView();
-      // console.log("Current Round View: " + currentRoundView)
       const preVoteMetrics = await calculatePreVoteMetrics(validatorsGroupId);
       if (Array.isArray(preVoteMetrics) && preVoteMetrics.length) {
         for (let metric of preVoteMetrics) {
@@ -1197,112 +1145,6 @@ async function updateLastCommitMetrics(chainId) {
   }
 }
 
-// async function getValidators() {
-//   const query = `WITH "LatestConsensusState" AS (
-//     SELECT "id" AS "latestConsensusStateId", "validatorsGroupId"
-//     FROM "ConsensusState"
-//     WHERE "chainId" = '$chainId' 
-//     ORDER BY "timestamp" DESC
-//     LIMIT 1
-// ),
-// "LatestRoundsGroup" AS (
-//     SELECT "id" AS "latestRoundsGroupId"
-//     FROM "RoundsGroup"
-//     WHERE "consensusStateId" = (SELECT "latestConsensusStateId" FROM "LatestConsensusState")
-//     LIMIT 1
-// ),
-// "LatestRound" AS (
-//     SELECT MAX("id") AS "latestRoundId"
-//     FROM "Round"
-//     WHERE "roundsGroupId" = (SELECT "latestRoundsGroupId" FROM "LatestRoundsGroup")
-// ),
-// "LatestValidatorsGroupId" AS (
-//     SELECT "validatorsGroupId"
-//     FROM "ConsensusState"
-//     WHERE "id" = (SELECT "latestConsensusStateId" FROM "LatestConsensusState")
-// )
-// SELECT 
-//     "V"."id" AS "validatorId",
-//     "V"."voting_power",
-//     "V"."pub_key",
-//     "V"."consensusAddress",
-//     "V"."proposer_priority",
-//     "SV"."id",
-//     "SV"."stakingValidatorsMetaId",
-//     "SV"."operator_address",
-//     "SV"."consumer_signing_keys",
-//     "SV"."moniker",
-//     (SELECT MAX("vote") FROM "Votes" WHERE "validatorId" = "V"."id" AND "type" = 'prevote' AND "roundId" = (SELECT "latestRoundId" FROM "LatestRound")) AS "prevote",
-//     (SELECT MAX("vote") FROM "Votes" WHERE "validatorId" = "V"."id" AND "type" = 'precommit' AND "roundId" = (SELECT "latestRoundId" FROM "LatestRound")) AS "precommit",
-//     (SELECT MAX("vote") FROM "Votes" WHERE "validatorId" = "VG"."proposerId" AND "type" = 'prevote' AND "roundId" = (SELECT "latestRoundId" FROM "LatestRound")) AS "proposer_prevote",
-//     (SELECT MAX("vote") FROM "Votes" WHERE "validatorId" = "VG"."proposerId" AND "type" = 'precommit' AND "roundId" = (SELECT "latestRoundId" FROM "LatestRound")) AS "proposer_precommit",
-//     ("V"."pub_key"::json)->>'value' AS "consensus_pubkey"
-// FROM "Validator" "V" 
-// JOIN "LatestValidatorsGroupId" "LVG" ON "V"."validatorsGroupId" = "LVG"."validatorsGroupId"
-// JOIN "ValidatorsGroup" "VG" ON "V"."validatorsGroupId" = "VG"."id"
-// LEFT JOIN "StakingValidator" "SV" ON "SV"."consensus_pubkey_key" = ("V"."pub_key"::json)->>'value'
-// WHERE "V"."id" IN (
-//     SELECT DISTINCT "validatorId"
-//     FROM "Votes"
-//     WHERE "type" = 'prevote' AND "roundId" = (SELECT "latestRoundId" FROM "LatestRound")
-// )
-// GROUP BY "V"."id", "SV"."id", "SV"."stakingValidatorsMetaId", "SV"."operator_address", "VG"."proposerId"
-// ORDER BY "V"."voting_power" DESC;
-// `
-// const result = await runDatabaseQuery(query, [], 'get');
-
-//  console.log("Validator Query Result:" + result);
-//  //await updatePreVote(result);
-
-// }
-
-async function updateValidators() {
-
-}
-
-
-// async function getPreVote() {
-//   const query = `
-//   WITH "LatestConsensusState" AS (
-//     SELECT "id" AS "consensusStateId", "validatorsGroupId"
-//     FROM "ConsensusState"
-//     WHERE "chainId" = 'cosmoshub-4'
-//     ORDER BY "timestamp" DESC
-//     LIMIT 1
-// ),
-// "ProposerVote" AS (
-//     SELECT "R"."id" AS "roundId", "V"."vote" AS "proposerVote"
-//     FROM "Votes" "V"
-//     JOIN "Validator" "VL" ON "V"."validatorId" = "VL"."id"
-//     JOIN "ValidatorsGroup" "VG" ON "VL"."validatorsGroupId" = "VG"."id"
-//     JOIN "Round" "R" ON "V"."roundId" = "R"."id"
-//     WHERE "VG"."id" = (SELECT "validatorsGroupId" FROM "LatestConsensusState")
-//     AND "V"."type" = 'prevote'
-//     AND "V"."validatorId" = "VG"."proposerId"
-// )
-// SELECT 
-//     "R"."roundNumber",
-//     SUM("V"."voting_power") FILTER (WHERE "VT"."type" = 'prevote') AS "totalVotingPowerForPrevote",
-//     SUM("V"."voting_power") FILTER (WHERE "VT"."type" = 'prevote' AND "VT"."vote" = "PV"."proposerVote" AND "VT"."vote" NOT IN ('nil-Vote', '000000000000')) AS "totalAgreeingVotingPowerForPrevote",
-//     SUM("V"."voting_power") FILTER (WHERE "VT"."type" = 'prevote' AND "VT"."vote" = 'nil-Vote') AS "totalNilvotingVotingPowerForPrevote",
-//     SUM("V"."voting_power") FILTER (WHERE "VT"."type" = 'prevote' AND "VT"."vote" = '000000000000') AS "totalZerovotingVotingPowerForPrevote",
-//     (SUM("V"."voting_power") FILTER (WHERE "VT"."type" = 'prevote' AND "VT"."vote" = "PV"."proposerVote" AND "VT"."vote" NOT IN ('nil-Vote', '000000000000')) * 100.0 / NULLIF(SUM("V"."voting_power") FILTER (WHERE "VT"."type" = 'prevote'), 0)) AS "consensusPercentage"
-// FROM "ValidatorsGroup" "VG" 
-// JOIN "Validator" "V" ON "VG"."id" = "V"."validatorsGroupId" 
-// JOIN "Votes" "VT" ON "V"."id" = "VT"."validatorId" 
-// JOIN "Round" "R" ON "VT"."roundId" = "R"."id"
-// LEFT JOIN "ProposerVote" "PV" ON "R"."id" = "PV"."roundId"
-// WHERE "R"."roundNumber" != -1
-// AND "VG"."id" = (SELECT "validatorsGroupId" FROM "LatestConsensusState")
-// GROUP BY "R"."roundNumber", "PV"."proposerVote"
-// ORDER BY "R"."roundNumber";
-//   `;
-//   const result = await runDatabaseQuery(query, [], 'get');
-
-//   console.log("Query Result:" + result);
-//   await updatePreVote(result);
-// }
-
 const updatePreVote = async (params, chainId) => {
   const round = params.roundNumber;
   const total = params.totalVotingPowerForPrevote;
@@ -1345,26 +1187,6 @@ const updatePreCommit = async (params, chainId) => {
   }
 };
 
-// const updateLastCommit = async (params) => {
-//   const proposerAddress = params.pro;
-//   const total = params.totalVotingPowerForPrevote;
-//   const totalAgree = params.totalAgreeingVotingPowerForPrevote;
-//   const totalNil = params.totalNilvotingVotingPowerForPrevote;
-//   const totalZero = params.totalZerovotingVotingPowerForPrevote;
-//   const consensusPercentage = params.consensusPercentage;
-//   console.log("Consensus Percentage: " + consensusPercentage)
-//   const query = `
-//   INSERT INTO "PreCommit" ("round","total","totalAgree","totalNil","totalZero","consensusPercentage")
-//   VALUES ($1,$2,$3,$4,$5,$6);
-// `;
-//   try {
-//     await runDatabaseQuery(query, [round, total, totalAgree, totalNil, totalZero, consensusPercentage], 'run');
-//     console.log(`Updated PreCommit ${round}`);
-//   } catch (err) {
-//     console.error('Error updating PreCommit:', err);
-//     throw err;
-//   }
-// };
 
 export {
   getStakingValidatorsFromDB,
