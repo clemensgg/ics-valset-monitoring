@@ -1081,7 +1081,7 @@ async function calculatePreCommitMetrics(validatorsGroupId) {
 
 async function updatePreVoteMetrics(chainId) {
   try {
-    const { validatorsGroupId } = await getLatestConsensusState(chainId);
+    const { validatorsGroupId } = await getLatestConsensusState(chainId) || {};
     if (validatorsGroupId) {
       const currentRound = await getCurrentRound(chainId);
       console.log("Current Round: " + currentRound);
@@ -1105,7 +1105,7 @@ async function updatePreVoteMetrics(chainId) {
 
 async function updatePreCommitMetrics(chainId) {
   try {
-    const { validatorsGroupId } = await getLatestConsensusState(chainId);
+    const { validatorsGroupId } = await getLatestConsensusState(chainId) || {};
     if (validatorsGroupId) {
       const preCommitMetrics = await calculatePreCommitMetrics(validatorsGroupId);
       if (Array.isArray(preCommitMetrics) && preCommitMetrics.length) {
