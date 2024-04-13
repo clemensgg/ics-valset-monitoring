@@ -7,7 +7,8 @@ import {
   updatePreVoteMetrics,
   updatePreCommitMetrics,
   createCurrentRound,
-  createCurrentValidators,
+  createCurrentValidatorsProvider,
+  createCurrentValidatorsConsumer,
   createLastCommit
 } from './db/update.js';
 import { initializeDb, initializeTriggerClient } from './db/db.js';
@@ -74,8 +75,9 @@ async function main() {
   }
   await createCurrentRound();
   console.log("Creating Validator Function");
-  await createCurrentValidators();
-  console.log("Validator function successfully created.");
+  await createCurrentValidatorsProvider();
+  await createCurrentValidatorsConsumer();
+  console.log("Validator functions successfully created.");
   await createLastCommit();
   console.log("Last Commit function successfully created.");
   

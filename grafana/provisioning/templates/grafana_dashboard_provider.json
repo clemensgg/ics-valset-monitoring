@@ -104,7 +104,7 @@
         "textMode": "value_and_name",
         "wideLayout": true
       },
-      "pluginVersion": "10.4.1",
+      "pluginVersion": "10.4.2",
       "targets": [
         {
           "datasource": "PostgreSQL",
@@ -251,7 +251,7 @@
         "textMode": "auto",
         "wideLayout": true
       },
-      "pluginVersion": "10.4.1",
+      "pluginVersion": "10.4.2",
       "targets": [
         {
           "datasource": "PostgreSQL",
@@ -363,7 +363,7 @@
           }
         ]
       },
-      "pluginVersion": "10.4.1",
+      "pluginVersion": "10.4.2",
       "targets": [
         {
           "datasource": "PostgreSQL",
@@ -400,7 +400,7 @@
           "format": "table",
           "hide": true,
           "rawQuery": true,
-          "rawSql": "SELECT \"round\",\"total\",\"totalAgree\",\"totalNil\",\"totalZero\",\"consensusPercentage\" FROM \"PreVote\" \"chainId\" = '$chainId' ORDER BY \"id\" DESC LIMIT 2;",
+          "rawSql": "SELECT \"round\",\"total\",\"totalAgree\",\"totalNil\",\"totalZero\",\"consensusPercentage\" FROM \"PreVote\" ORDER BY \"id\" DESC LIMIT 2;",
           "refId": "B",
           "sql": {
             "columns": [
@@ -427,13 +427,19 @@
           "id": "organize",
           "options": {
             "excludeByName": {},
+            "includeByName": {},
             "indexByName": {},
             "renameByName": {
               "consensusPercentage": "Consensus",
+              "round": "Round",
               "roundNumber": "Round",
+              "total": "Total",
+              "totalAgree": "Agreeing",
               "totalAgreeingVotingPowerForPrevote": "Agreeing",
+              "totalNil": "nil-Vote",
               "totalNilvotingVotingPowerForPrevote": "nil-Vote",
               "totalVotingPowerForPrevote": "Total",
+              "totalZero": "Zero",
               "totalZerovotingVotingPowerForPrevote": "000000000000"
             }
           }
@@ -529,7 +535,7 @@
         "sizing": "auto",
         "valueMode": "color"
       },
-      "pluginVersion": "10.4.1",
+      "pluginVersion": "10.4.2",
       "targets": [
         {
           "datasource": "PostgreSQL",
@@ -723,7 +729,7 @@
         "textMode": "auto",
         "wideLayout": true
       },
-      "pluginVersion": "10.4.1",
+      "pluginVersion": "10.4.2",
       "targets": [
         {
           "datasource": "PostgreSQL",
@@ -776,7 +782,7 @@
           {
             "matcher": {
               "id": "byName",
-              "options": "Voting Power"
+              "options": "Moniker"
             },
             "properties": [
               {
@@ -821,7 +827,7 @@
           "editorMode": "code",
           "format": "table",
           "rawQuery": true,
-          "rawSql": "SELECT votingpower, prevote, precommit, moniker, operatoraddress, consensuspubkey FROM get_current_validators('$chainId') ORDER BY votingpower DESC;",
+          "rawSql": "SELECT moniker, votingpower FROM get_current_validators('$chainId') ORDER BY votingpower DESC;",
           "refId": "A",
           "sql": {
             "columns": [
@@ -847,6 +853,7 @@
         {
           "id": "filterFieldsByName",
           "options": {
+            "byVariable": false,
             "include": {
               "names": [
                 "moniker",
@@ -979,7 +986,7 @@
         "textMode": "auto",
         "wideLayout": true
       },
-      "pluginVersion": "10.4.1",
+      "pluginVersion": "10.4.2",
       "targets": [
         {
           "datasource": "PostgreSQL",
@@ -1092,7 +1099,7 @@
           }
         ]
       },
-      "pluginVersion": "10.4.1",
+      "pluginVersion": "10.4.2",
       "targets": [
         {
           "datasource": "PostgreSQL",
@@ -1100,7 +1107,7 @@
           "format": "table",
           "hide": true,
           "rawQuery": true,
-          "rawSql": "SELECT \"round\",\"total\",\"totalAgree\",\"totalNil\",\"totalZero\",\"consensusPercentage\" FROM \"PreCommit\" ORDER BY \"id\" DESC LIMIT 2;",
+          "rawSql": "SELECT \"round\",\"total\",\"totalAgree\",\"totalNil\",\"totalZero\",\"consensusPercentage\" FROM \"PreCommit\" WHERE \"chainId\" = '$chainId' ORDER BY \"id\" DESC LIMIT 2;",
           "refId": "A",
           "sql": {
             "columns": [
@@ -1129,7 +1136,7 @@
           "format": "table",
           "hide": false,
           "rawQuery": true,
-          "rawSql": "SELECT \"round\",\"total\",\"totalAgree\",\"totalNil\",\"totalZero\",\"consensusPercentage\" FROM \"PreCommit\" ORDER BY \"id\" DESC LIMIT 2;",
+          "rawSql": "SELECT \"round\",\"total\",\"totalAgree\",\"totalNil\",\"totalZero\",\"consensusPercentage\" FROM \"PreCommit\" WHERE \"chainId\" = '$chainId' ORDER BY \"id\" DESC LIMIT 2;",
           "refId": "B",
           "sql": {
             "columns": [
@@ -1156,16 +1163,22 @@
           "id": "organize",
           "options": {
             "excludeByName": {},
+            "includeByName": {},
             "indexByName": {},
             "renameByName": {
               "consensusPercentage": "Consensus",
+              "round": "Round",
               "roundNumber": "Round",
+              "total": "Total",
+              "totalAgree": "Agreeing",
               "totalAgreeingVotingPowerForPrecommit": "Agreeing",
               "totalAgreeingVotingPowerForPrevote": "Agreeing",
+              "totalNil": "nil-Vote",
               "totalNilvotingVotingPowerForPrecommit": "nil-vote",
               "totalNilvotingVotingPowerForPrevote": "nil-Vote",
               "totalVotingPowerForPrecommit": "Total",
               "totalVotingPowerForPrevote": "Total",
+              "totalZero": "Zero",
               "totalZerovotingVotingPowerForPrecommit": "000000000000",
               "totalZerovotingVotingPowerForPrevote": "000000000000"
             }
@@ -1272,7 +1285,7 @@
         "textMode": "auto",
         "wideLayout": true
       },
-      "pluginVersion": "10.4.1",
+      "pluginVersion": "10.4.2",
       "targets": [
         {
           "datasource": "PostgreSQL",
@@ -1312,8 +1325,13 @@
               "totalVotingPowerForLastCommit": true,
               "totalZerovotingVotingPowerForLastCommit": true
             },
+            "includeByName": {},
             "indexByName": {},
-            "renameByName": {}
+            "renameByName": {
+              "consensuspercentage": "Consensus",
+              "lastcommitvote": "Vote",
+              "moniker": "Proposer"
+            }
           }
         }
       ],
@@ -1343,11 +1361,76 @@
               {
                 "color": "green",
                 "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
               }
             ]
           }
         },
-        "overrides": []
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Prevote"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 75
+              },
+              {
+                "id": "mappings",
+                "value": [
+                  {
+                    "options": {
+                      "000000000000": {
+                        "index": 1,
+                        "text": "🟡"
+                      },
+                      "nil-Vote": {
+                        "index": 0,
+                        "text": "⚪️"
+                      }
+                    },
+                    "type": "value"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Precommit"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 75
+              },
+              {
+                "id": "mappings",
+                "value": [
+                  {
+                    "options": {
+                      "000000000000": {
+                        "index": 1,
+                        "text": "🟡"
+                      },
+                      "nil-Vote": {
+                        "index": 0,
+                        "text": "⚪️"
+                      }
+                    },
+                    "type": "value"
+                  }
+                ]
+              }
+            ]
+          }
+        ]
       },
       "gridPos": {
         "h": 61,
@@ -1370,7 +1453,7 @@
         "showHeader": true,
         "sortBy": []
       },
-      "pluginVersion": "10.4.1",
+      "pluginVersion": "10.4.2",
       "repeat": "chainType",
       "repeatDirection": "v",
       "targets": [
@@ -1504,6 +1587,6 @@
   "timezone": "",
   "title": "ics-consensus-provider",
   "uid": "ae2d1868-c009-472b-b094-55b69a70cda0-pvd",
-  "version": 103,
+  "version": 145,
   "weekStart": ""
 }

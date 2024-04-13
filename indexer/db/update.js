@@ -911,9 +911,93 @@ async function createLastCommit() {
   return await runDatabaseQuery(query, [], 'get');
 }
 
-async function createCurrentValidators() {
+async function createCurrentValidatorsConsumer() {
   const query = `
-  CREATE OR REPLACE FUNCTION get_current_validators(p_chain_id TEXT)
+  CREATE OR REPLACE FUNCTION get_current_validators_consumer(p_chain_id TEXT)
+RETURNS TABLE (
+    validatorId INT,
+    votingPower BIGINT,
+    pubKey TEXT,
+    consensusAddress TEXT,
+    proposerPriority BIGINT,
+    id INT,
+    stakingValidatorsMetaId BIGINT,
+    operatorAddress TEXT,
+    consensusPubkeyType TEXT,
+    consumerSigningKeys TEXT,
+    moniker TEXT,
+    prevote TEXT,
+    precommit TEXT,
+    consumerSigningKey TEXT
+)
+AS $$
+BEGIN
+    RETURN QUERY
+    WITH "LatestConsensusState" AS (
+      SELECT cs."id" AS "latestConsensusStateId", cs."validatorsGroupId"
+      FROM "ConsensusState" cs
+      WHERE cs."chainId" = p_chain_id
+      ORDER BY cs."timestamp" DESC
+      LIMIT 1
+  ),
+  "LatestRoundsGroup" AS (
+      SELECT rg."id" AS "latestRoundsGroupId"
+      FROM "RoundsGroup" rg
+      WHERE rg."consensusStateId" = (SELECT "latestConsensusStateId" FROM "LatestConsensusState")
+      LIMIT 1
+  ),
+  "LatestRound" AS (
+      SELECT MAX(r."id") AS "latestRoundId"
+      FROM "Round" r
+      WHERE r."roundsGroupId" = (SELECT "latestRoundsGroupId" FROM "LatestRoundsGroup")
+  ),
+  "LatestValidatorsGroupId" AS (
+      SELECT cs."validatorsGroupId"
+      FROM "ConsensusState" cs
+      WHERE cs."id" = (SELECT "latestConsensusStateId" FROM "LatestConsensusState")
+  )
+  SELECT
+      "V"."id" AS "validatorId",
+      "V"."voting_power",
+      "V"."pub_key",
+      "V"."consensusAddress",
+      "V"."proposer_priority",
+      "SV"."id",
+      "SV"."stakingValidatorsMetaId",
+      "SV"."operator_address",
+      "SV"."consensus_pubkey_type",
+      "SV"."consumer_signing_keys",
+      "SV"."moniker",
+      (SELECT MAX("vote") FROM "Votes" WHERE "validatorId" = "V"."id" AND "type" = 'prevote' AND "roundId" = (SELECT "latestRoundId" FROM "LatestRound")) AS "prevote",
+      (SELECT MAX("vote") FROM "Votes" WHERE "validatorId" = "V"."id" AND "type" = 'precommit' AND "roundId" = (SELECT "latestRoundId" FROM "LatestRound")) AS "precommit",
+      ("SV"."consumer_signing_keys"::json)->>p_chain_id::text AS "consumer_signing_key"
+  FROM
+      "Validator" "V"
+  JOIN
+      "LatestValidatorsGroupId" "LVG" ON "V"."validatorsGroupId" = "LVG"."validatorsGroupId"
+  LEFT JOIN
+      "StakingValidator" "SV" ON ("SV"."consumer_signing_keys"::json)->>p_chain_id::text = "V"."consensusAddress"
+  WHERE
+      "V"."id" IN (
+          SELECT DISTINCT "validatorId"
+          FROM "Votes"
+          WHERE "type" = 'prevote' AND "roundId" = (SELECT "latestRoundId" FROM "LatestRound")
+      )
+  GROUP BY
+      "V"."id", "SV"."id", "SV"."stakingValidatorsMetaId", "SV"."operator_address"
+  ORDER BY 
+      "V"."voting_power" DESC;
+  
+END;
+$$ LANGUAGE plpgsql;
+`
+
+  return await runDatabaseQuery(query, [], 'get');
+}
+
+async function createCurrentValidatorsProvider() {
+  const query = `
+  CREATE OR REPLACE FUNCTION get_current_validators_provider(p_chain_id TEXT)
 RETURNS TABLE (
     validatorId INT,
     votingPower BIGINT,
@@ -1003,17 +1087,17 @@ async function getLastCommit(chainId) {
   `
 }
 
-async function getCurrentValidators(chainId) {
-  const query = `
-  SELECT * FROM get_current_validators($1);
-  `
-}
+// async function getCurrentValidators(chainId) {
+//   const query = `
+//   SELECT * FROM get_current_validators($1);
+//   `
+// }
 
-async function getCurrentRoundFromView(chainId) {
-  const query = `
-  SELECT * FROM CURRENTROUND;
-  `
-}
+// async function getCurrentRoundFromView(chainId) {
+//   const query = `
+//   SELECT * FROM CURRENTROUND;
+//   `
+// }
 
 async function calculatePreVoteMetrics(validatorsGroupId) {
   const query = `
@@ -1205,6 +1289,7 @@ export {
   updatePreCommitMetrics,
   createLastCommit,
   createCurrentRound,
-  createCurrentValidators,
+  createCurrentValidatorsProvider,
+  createCurrentValidatorsConsumer,
   createRoundView
 };

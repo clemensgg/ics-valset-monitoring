@@ -101,7 +101,7 @@
         "textMode": "value_and_name",
         "wideLayout": true
       },
-      "pluginVersion": "10.4.1",
+      "pluginVersion": "10.4.2",
       "targets": [
         {
           "datasource": "PostgreSQL",
@@ -248,7 +248,7 @@
         "textMode": "auto",
         "wideLayout": true
       },
-      "pluginVersion": "10.4.1",
+      "pluginVersion": "10.4.2",
       "targets": [
         {
           "datasource": "PostgreSQL",
@@ -353,7 +353,7 @@
         },
         "showHeader": true
       },
-      "pluginVersion": "10.4.1",
+      "pluginVersion": "10.4.2",
       "targets": [
         {
           "datasource": "PostgreSQL",
@@ -387,13 +387,19 @@
           "id": "organize",
           "options": {
             "excludeByName": {},
+            "includeByName": {},
             "indexByName": {},
             "renameByName": {
               "consensusPercentage": "Consensus",
+              "round": "Round",
               "roundNumber": "Round",
+              "total": "Total",
+              "totalAgree": "Agreeing",
               "totalAgreeingVotingPowerForPrevote": "Agreeing",
+              "totalNil": "nil-Vote",
               "totalNilvotingVotingPowerForPrevote": "nil-Vote",
               "totalVotingPowerForPrevote": "Total",
+              "totalZero": "Zero",
               "totalZerovotingVotingPowerForPrevote": "000000000000"
             }
           }
@@ -485,7 +491,7 @@
         },
         "valueMode": "color"
       },
-      "pluginVersion": "10.4.1",
+      "pluginVersion": "10.4.2",
       "targets": [
         {
           "datasource": "PostgreSQL",
@@ -521,7 +527,7 @@
           "format": "table",
           "hide": false,
           "rawQuery": true,
-          "rawSql": "SELECT \"consensusPercentage\" AS \"consensusPercentagePreCommit\" FROM \"PreCommit\" WHERE \"chainId\" = '$chainId';",
+          "rawSql": "SELECT \"consensusPercentage\" AS \"precommitAgreePercentage\" FROM \"PreCommit\" WHERE \"chainId\" = '$chainId';",
           "refId": "B",
           "sql": {
             "columns": [
@@ -661,7 +667,7 @@
         "textMode": "auto",
         "wideLayout": true
       },
-      "pluginVersion": "10.4.1",
+      "pluginVersion": "10.4.2",
       "targets": [
         {
           "datasource": "PostgreSQL",
@@ -692,7 +698,10 @@
       "type": "stat"
     },
     {
-      "datasource": "PostgreSQL",
+      "datasource": {
+        "type": "grafana-postgresql-datasource",
+        "uid": "PCC52D03280B7034C"
+      },
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -741,7 +750,7 @@
         },
         "showHeader": true
       },
-      "pluginVersion": "10.4.1",
+      "pluginVersion": "10.4.2",
       "targets": [
         {
           "datasource": "PostgreSQL",
@@ -863,7 +872,7 @@
         "textMode": "auto",
         "wideLayout": true
       },
-      "pluginVersion": "10.4.1",
+      "pluginVersion": "10.4.2",
       "targets": [
         {
           "datasource": "PostgreSQL",
@@ -969,14 +978,14 @@
         },
         "showHeader": true
       },
-      "pluginVersion": "10.4.1",
+      "pluginVersion": "10.4.2",
       "targets": [
         {
           "datasource": "PostgreSQL",
           "editorMode": "code",
           "format": "table",
           "rawQuery": true,
-          "rawSql": "SELECT \"round\",\"total\",\"totalAgree\",\"totalNil\",\"totalZero\",\"consensusPercentage\" FROM \"PreCommit\" ORDER BY \"id\" DESC LIMIT 2;",
+          "rawSql": "SELECT \"round\",\"total\",\"totalAgree\",\"totalNil\",\"totalZero\",\"consensusPercentage\" FROM \"PreCommit\" WHERE \"chainId\" = '$chainId' ORDER BY \"id\" DESC LIMIT 2;",
           "refId": "A",
           "sql": {
             "columns": [
@@ -1003,13 +1012,19 @@
           "id": "organize",
           "options": {
             "excludeByName": {},
+            "includeByName": {},
             "indexByName": {},
             "renameByName": {
               "consensusPercentage": "Consensus",
+              "round": "Round",
               "roundNumber": "Round",
+              "total": "Total",
+              "totalAgree": "Agreeing",
               "totalAgreeingVotingPowerForPrecommit": "Agreeing",
+              "totalNil": "nil-Vote",
               "totalNilvotingVotingPowerForPrecommit": "nil-vote",
               "totalVotingPowerForPrecommit": "Total",
+              "totalZero": "Zero",
               "totalZerovotingVotingPowerForPrecommit": "000000000000"
             }
           }
@@ -1115,7 +1130,7 @@
         "textMode": "auto",
         "wideLayout": true
       },
-      "pluginVersion": "10.4.1",
+      "pluginVersion": "10.4.2",
       "targets": [
         {
           "datasource": "PostgreSQL",
@@ -1155,8 +1170,13 @@
               "totalVotingPowerForLastCommit": true,
               "totalZerovotingVotingPowerForLastCommit": true
             },
+            "includeByName": {},
             "indexByName": {},
-            "renameByName": {}
+            "renameByName": {
+              "consensuspercentage": "Consensus",
+              "lastcommitvote": "Vote",
+              "moniker": "Proposer"
+            }
           }
         }
       ],
@@ -1255,7 +1275,7 @@
           "editorMode": "code",
           "format": "table",
           "rawQuery": true,
-          "rawSql": "SELECT votingpower, prevote, precommit, moniker, operatoraddress, consensuspubkey FROM get_current_validators('$chainId') ORDER BY votingpower DESC;",
+          "rawSql": "SELECT moniker, votingpower FROM get_current_validators_consumer('$chainId') ORDER BY votingpower DESC;",
           "refId": "A",
           "sql": {
             "columns": [
@@ -1287,7 +1307,8 @@
             "includeByName": {},
             "indexByName": {},
             "renameByName": {
-              "votingpower": ""
+              "moniker": "Moniker",
+              "votingpower": "Voting Power"
             }
           }
         }
@@ -1446,7 +1467,7 @@
         "showHeader": true,
         "sortBy": []
       },
-      "pluginVersion": "10.4.1",
+      "pluginVersion": "10.4.2",
       "repeat": "chainType",
       "repeatDirection": "v",
       "targets": [
@@ -1455,7 +1476,7 @@
           "editorMode": "code",
           "format": "table",
           "rawQuery": true,
-          "rawSql": "SELECT votingpower, prevote, precommit, moniker, operatoraddress, consensuspubkey FROM get_current_validators('$chainId') ORDER BY votingpower DESC;",
+          "rawSql": "SELECT votingpower, prevote, precommit, moniker, operatoraddress, consumersigningkey FROM get_current_validators_consumer('$chainId') ORDER BY votingpower DESC;",
           "refId": "A",
           "sql": {
             "columns": [
@@ -1499,23 +1520,25 @@
             "excludeByName": {
               "precommitDotColor": false
             },
+            "includeByName": {},
             "indexByName": {
-              "consumer_signing_key": 5,
               "moniker": 3,
-              "operator_address": 4,
+              "operatoraddress": 4,
               "precommit": 2,
               "prevote": 1,
-              "voting_power": 0
+              "votingpower": 0
             },
             "renameByName": {
               "consumer_signing_key": "Current Consumer-Signing-Key",
               "moniker": "Moniker",
               "operator_address": "Operator Address",
+              "operatoraddress": "Operator Address",
               "precommit": "Precommit",
               "precommitDotColor": "Precommit",
               "prevote": "Prevote",
               "prevoteDotColor": "Prevote",
-              "voting_power": "Voting Power"
+              "voting_power": "Voting Power",
+              "votingpower": "Voting Power"
             }
           }
         }
@@ -1576,6 +1599,6 @@
   "timezone": "",
   "title": "ics-consensus-consumer",
   "uid": "ae2d1868-c009-472b-b094-55b69a70cda0",
-  "version": 2,
+  "version": 4,
   "weekStart": ""
 }
