@@ -7,8 +7,8 @@ export class ConsensusState {
     this.height = data.height;
     this.round = data.round;
     this.step = data.step;
-    this.start_time = data.start_time;
-    this.commit_time = data.commit_time;
+    this.start_time = data.start_time; // step start time > use for step duration
+    this.commit_time = data.commit_time; // proposal commit time > use for block duration
     this.validators = data.validators ? new Validators(data.validators) : null;
     this.proposal = data.proposal;
     this.proposal_block_parts_header = data.proposal_block_parts_header;
