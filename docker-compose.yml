@@ -12,6 +12,12 @@ services:
       - icsvalset_network
     volumes:
       - ./data/.icsValsetMonitoring_data:/var/lib/postgresql/data
+    logging:
+      driver: json-file
+      options:
+        max-size: "500m"
+        max-file: "5"
+        labels: "postgres-log"
 
   grafana-icsvalset:
     image: grafana/grafana-oss:latest
@@ -33,11 +39,12 @@ services:
       - ./data/.grafana_data/data:/var/lib/grafana
       - ./grafana/grafana.ini:/etc/grafana/grafana.ini
       - ./grafana/init-grafana.sh:/init-grafana.sh
-#    environment:
-#      - GF_DASHBOARDS_MIN_REFRESH_INTERVAL=1s
-#      - GF_AUTH_ANONYMOUS_ENABLED=true
-#      - GF_AUTH_ANONYMOUS_ORG_NAME=ccvalidators
-#      - GF_AUTH_ANONYMOUS_ORG_ROLE=Viewer
+    logging:
+      driver: json-file
+      options:
+        max-size: "500m"
+        max-file: "5"
+        labels: "grafana-log"
 
   indexer-icsvalset:
     build: . 
@@ -58,6 +65,12 @@ services:
       - PG_PORT=${PG_PORT}
       - PG_PWD=${PG_PWD}
       - PG_DBNAME=${PG_DBNAME}
+    logging:
+      driver: json-file
+      options:
+        max-size: "500m"
+        max-file: "5"
+        labels: "indexer-log"
 
 networks:
   icsvalset_network:
