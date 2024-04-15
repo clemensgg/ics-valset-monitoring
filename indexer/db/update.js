@@ -928,7 +928,10 @@ RETURNS TABLE (
     moniker TEXT,
     prevote TEXT,
     precommit TEXT,
-    consumerSigningKey TEXT
+    proposerPrevote TEXT,
+    proposerPrecommit TEXT,
+    consumerSigningKey TEXT,
+    votestatus INT
 )
 AS $$
 BEGIN
@@ -970,11 +973,22 @@ BEGIN
       "SV"."moniker",
       (SELECT MAX("vote") FROM "Votes" WHERE "validatorId" = "V"."id" AND "type" = 'prevote' AND "roundId" = (SELECT "latestRoundId" FROM "LatestRound")) AS "prevote",
       (SELECT MAX("vote") FROM "Votes" WHERE "validatorId" = "V"."id" AND "type" = 'precommit' AND "roundId" = (SELECT "latestRoundId" FROM "LatestRound")) AS "precommit",
-      ("SV"."consumer_signing_keys"::json)->>p_chain_id::text AS "consumer_signing_key"
+      (SELECT MAX("vote") FROM "Votes" WHERE "validatorId" = "VG"."proposerId" AND "type" = 'prevote' AND "roundId" = (SELECT "latestRoundId" FROM "LatestRound")) AS "proposer_prevote",
+      (SELECT MAX("vote") FROM "Votes" WHERE "validatorId" = "VG"."proposerId" AND "type" = 'precommit' AND "roundId" = (SELECT "latestRoundId" FROM "LatestRound")) AS "proposer_precommit",
+      ("SV"."consumer_signing_keys"::json)->>p_chain_id::text AS "consumer_signing_key",
+      CASE
+        WHEN (SELECT MAX("vote") FROM "Votes" WHERE "validatorId" = "V"."id" AND "type" = 'prevote' AND "roundId" = (SELECT "latestRoundId" FROM "LatestRound")) = 'nil-Vote' THEN 0
+        WHEN (SELECT MAX("vote") FROM "Votes" WHERE "validatorId" = "V"."id" AND "type" = 'prevote' AND "roundId" = (SELECT "latestRoundId" FROM "LatestRound")) = '000000000000' THEN 1
+        WHEN (SELECT MAX("vote") FROM "Votes" WHERE "validatorId" = "V"."id" AND "type" = 'prevote' AND "roundId" = (SELECT "latestRoundId" FROM "LatestRound")) = 
+             (SELECT MAX("vote") FROM "Votes" WHERE "validatorId" = "VG"."proposerId" AND "type" = 'prevote' AND "roundId" = (SELECT "latestRoundId" FROM "LatestRound")) THEN 2
+        ELSE 3
+    END AS "voteStatus"
   FROM
       "Validator" "V"
   JOIN
       "LatestValidatorsGroupId" "LVG" ON "V"."validatorsGroupId" = "LVG"."validatorsGroupId"
+  JOIN 
+      "ValidatorsGroup" "VG" ON "V"."validatorsGroupId" = "VG"."id"
   LEFT JOIN
       "StakingValidator" "SV" ON ("SV"."consumer_signing_keys"::json)->>p_chain_id::text = "V"."consensusAddress"
   WHERE
@@ -984,7 +998,7 @@ BEGIN
           WHERE "type" = 'prevote' AND "roundId" = (SELECT "latestRoundId" FROM "LatestRound")
       )
   GROUP BY
-      "V"."id", "SV"."id", "SV"."stakingValidatorsMetaId", "SV"."operator_address"
+      "V"."id", "SV"."id", "SV"."stakingValidatorsMetaId", "SV"."operator_address", "VG"."proposerId"
   ORDER BY 
       "V"."voting_power" DESC;
   
@@ -1013,7 +1027,8 @@ RETURNS TABLE (
     precommit TEXT,
     proposerPrevote TEXT,
     proposerPrecommit TEXT,
-    consensusPubkey TEXT
+    consensusPubkey TEXT,
+    voteStatus INT
 )
 AS $$
 BEGIN
@@ -1056,7 +1071,16 @@ BEGIN
     (SELECT MAX("vote") FROM "Votes" WHERE "validatorId" = "V"."id" AND "type" = 'precommit' AND "roundId" = (SELECT "latestRoundId" FROM "LatestRound")) AS "precommit",
     (SELECT MAX("vote") FROM "Votes" WHERE "validatorId" = "VG"."proposerId" AND "type" = 'prevote' AND "roundId" = (SELECT "latestRoundId" FROM "LatestRound")) AS "proposer_prevote",
     (SELECT MAX("vote") FROM "Votes" WHERE "validatorId" = "VG"."proposerId" AND "type" = 'precommit' AND "roundId" = (SELECT "latestRoundId" FROM "LatestRound")) AS "proposer_precommit",
-    ("V"."pub_key"::json)->>'value' AS "consensus_pubkey"
+    ("V"."pub_key"::json)->>'value' AS "consensus_pubkey",
+    CASE
+        WHEN (SELECT MAX("vote") FROM "Votes" WHERE "validatorId" = "V"."id" AND "type" = 'prevote' AND "roundId" = (SELECT "latestRoundId" FROM "LatestRound")) = 'nil-Vote' THEN 0
+        WHEN (SELECT MAX("vote") FROM "Votes" WHERE "validatorId" = "V"."id" AND "type" = 'prevote' AND "roundId" = (SELECT "latestRoundId" FROM "LatestRound")) = '000000000000' THEN 1
+        WHEN (SELECT MAX("vote") FROM "Votes" WHERE "validatorId" = "V"."id" AND "type" = 'prevote' AND "roundId" = (SELECT "latestRoundId" FROM "LatestRound")) = 
+             (SELECT MAX("vote") FROM "Votes" WHERE "validatorId" = "VG"."proposerId" AND "type" = 'prevote' AND "roundId" = (SELECT "latestRoundId" FROM "LatestRound")) THEN 2
+        ELSE 3
+    END AS "voteStatus"
+
+
 FROM "Validator" "V"
 JOIN "LatestValidatorsGroupId" "LVG" ON "V"."validatorsGroupId" = "LVG"."validatorsGroupId"
 JOIN "ValidatorsGroup" "VG" ON "V"."validatorsGroupId" = "VG"."id"
