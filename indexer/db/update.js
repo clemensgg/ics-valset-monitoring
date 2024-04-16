@@ -327,7 +327,7 @@ async function updateConsensusStateDB(consensusState, retainStates = 0) {
       if (pruneIds.length > 0) {
         await pruneConsensusStateDB(pruneIds, consensusState.chainId);
         await pruneHistoricSignatures(consensusState.chainId);
-        await pruneChainMeta();
+        await pruneChainMetrics();
       }
     } else {
       console.error('Error: lastcommit data is not correctly associated with the current state.');
@@ -705,11 +705,11 @@ async function pruneHistoricSignatures(chainId) {
   return true;
 };
 
-async function pruneChainMeta() {
+async function pruneChainMetrics() {
   const query = `
-    DELETE FROM "ChainMeta"
+    DELETE FROM "ChainMetrics"
     WHERE "id" NOT IN (
-        SELECT "id" FROM "ChainMeta"
+        SELECT "id" FROM "ChainMetrics"
         ORDER BY "id" DESC
         LIMIT 1000
     );
@@ -718,7 +718,7 @@ async function pruneChainMeta() {
     await runDatabaseQuery(query, []);
     return true;
   } catch (err) {
-    console.error("Error pruning ChainMeta: ", err)
+    console.error("Error pruning ChainMetrics: ", err)
     throw err;
   }
 }
@@ -1314,7 +1314,7 @@ const updatePreCommit = async (params, chainId) => {
   }
 };
 
-const updateChainMeta = async (params) => {
+const updateChainMetrics = async (params) => {
   const chainId = params.chainId;
   const step = params.step;
   const startTime = params.start_time;
@@ -1322,7 +1322,7 @@ const updateChainMeta = async (params) => {
 
   // Fetch previous block
   const fetchQuery = `
-    SELECT "id", "step", "startTime", "commitTime", "stepDuration" FROM "ChainMeta"
+    SELECT "id", "step", "startTime", "commitTime", "stepDuration" FROM "ChainMetrics"
     WHERE "chainId" = $1
     ORDER BY "id" DESC
     LIMIT 1;
@@ -1331,20 +1331,20 @@ const updateChainMeta = async (params) => {
   // Fetch validator count
   const fetchTotalValidatorsQuery = `SELECT COUNT(*) FROM get_current_validators_provider($1);`;
 
-  // Insert into ChainMeta
+  // Insert into ChainMetrics
   const insertQuery = `
-        INSERT INTO "ChainMeta" ("chainId", "step", "startTime", "commitTime" ,"blockDuration", "stepDuration", "totalValidators")
+        INSERT INTO "ChainMetrics" ("chainId", "step", "startTime", "commitTime" ,"blockDuration", "stepDuration", "totalValidators")
         VALUES ($1, $2, $3, $4, $5, $6, $7);
       `;
 
-  // Update ChainMeta
-  const updateQuery = `UPDATE "ChainMeta" SET "step" = $1, "stepDuration" = $2 WHERE "id" = $3;`;
+  // Update ChainMetrics
+  const updateQuery = `UPDATE "ChainMetrics" SET "step" = $1, "stepDuration" = $2 WHERE "id" = $3;`;
 
   let result;
   try {
     result = await runDatabaseQuery(fetchQuery, [chainId], 'get')
   } catch (err) {
-    console.error('Error fetching ChainMeta', err);
+    console.error('Error fetching ChainMetrics', err);
     throw err;
   }
 
@@ -1356,7 +1356,7 @@ const updateChainMeta = async (params) => {
       try {
         await runDatabaseQuery(updateQuery, [step, timeDiffStep, result.id], 'run');
       } catch (err) {
-        console.error('Error updating ChainMeta:', err);
+        console.error('Error updating ChainMetrics:', err);
         throw err;
       }
     }
@@ -1378,7 +1378,7 @@ const updateChainMeta = async (params) => {
       try {
         await runDatabaseQuery(insertQuery, [chainId, step, startTime, commitTime, timeDiffBlock, timeDiffStep, totalValidators], 'run');
       } catch (err) {
-        console.error('Error updating ChainMeta:', err);
+        console.error('Error updating ChainMetrics:', err);
         throw err;
       }
     }
@@ -1387,7 +1387,7 @@ const updateChainMeta = async (params) => {
     try {
       await runDatabaseQuery(insertQuery, [chainId, step, startTime, commitTime, "0", "0", 0], 'run');
     } catch (err) {
-      console.error('Error updating ChainMeta:', err);
+      console.error('Error updating ChainMetrics:', err);
       throw err;
     }
   }
@@ -1437,5 +1437,5 @@ export {
   createCurrentValidatorsProvider,
   createCurrentValidatorsConsumer,
   createRoundView,
-  updateChainMeta
+  updateChainMetrics
 };
