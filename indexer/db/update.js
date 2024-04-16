@@ -327,6 +327,7 @@ async function updateConsensusStateDB(consensusState, retainStates = 0) {
       if (pruneIds.length > 0) {
         await pruneConsensusStateDB(pruneIds, consensusState.chainId);
         await pruneHistoricSignatures(consensusState.chainId);
+        await pruneChainMeta();
       }
     } else {
       console.error('Error: lastcommit data is not correctly associated with the current state.');
@@ -703,6 +704,24 @@ async function pruneHistoricSignatures(chainId) {
   await runDatabaseQuery(query, [chainId]);
   return true;
 };
+
+async function pruneChainMeta() {
+  const query = `
+    DELETE FROM "ChainMeta"
+    WHERE "id" NOT IN (
+        SELECT "id" FROM "ChainMeta"
+        ORDER BY "id" DESC
+        LIMIT 1000
+    );
+  `;
+  try {
+    await runDatabaseQuery(query, []);
+    return true;
+  } catch (err) {
+    console.error("Error pruning ChainMeta: ", err)
+    throw err;
+  }
+}
 
 async function updateStakingValidatorsDB(providerChainInfo, consumerChainInfos) {
   console.time('updateDatabaseData Execution Time');
@@ -1295,6 +1314,108 @@ const updatePreCommit = async (params, chainId) => {
   }
 };
 
+const updateChainMeta = async (params) => {
+  const chainId = params.chainId;
+  const step = params.step;
+  const startTime = params.start_time;
+  const commitTime = params.commit_time;
+
+  // Fetch previous block
+  const fetchQuery = `
+    SELECT "id", "step", "startTime", "commitTime", "stepDuration" FROM "ChainMeta"
+    WHERE "chainId" = $1
+    ORDER BY "id" DESC
+    LIMIT 1;
+  `;
+
+  // Fetch validator count
+  const fetchTotalValidatorsQuery = `SELECT COUNT(*) FROM get_current_validators_provider($1);`;
+
+  // Insert into ChainMeta
+  const insertQuery = `
+        INSERT INTO "ChainMeta" ("chainId", "step", "startTime", "commitTime" ,"blockDuration", "stepDuration", "totalValidators")
+        VALUES ($1, $2, $3, $4, $5, $6, $7);
+      `;
+
+  // Update ChainMeta
+  const updateQuery = `UPDATE "ChainMeta" SET "step" = $1, "stepDuration" = $2 WHERE "id" = $3;`;
+
+  let result;
+  try {
+    result = await runDatabaseQuery(fetchQuery, [chainId], 'get')
+  } catch (err) {
+    console.error('Error fetching ChainMeta', err);
+    throw err;
+  }
+
+  if (result) {
+    //console.log("Fetched Result: %s", result)
+    if (step > result.step) {
+      let timeDiffStep = Math.round(result.stepDuration / step);
+
+      try {
+        await runDatabaseQuery(updateQuery, [step, timeDiffStep, result.id], 'run');
+      } catch (err) {
+        console.error('Error updating ChainMeta:', err);
+        throw err;
+      }
+    }
+    else if ((startTime != result.stepDuration && commitTime != result.commitTime)) {
+
+      let timeDiffBlock = calculateTimeDifference(result.commitTime, commitTime);
+      let timeDiffStep = calculateTimeDifference(result.startTime, startTime);
+      let totalValidators;
+
+      try {
+        const vresult = await runDatabaseQuery(fetchTotalValidatorsQuery, [chainId], 'get')
+        //console.log("Validator function result: %s", vresult);
+        totalValidators = vresult.count;
+      } catch (err) {
+        console.error('Error fetching total validators', err);
+        throw err;
+      }
+
+      try {
+        await runDatabaseQuery(insertQuery, [chainId, step, startTime, commitTime, timeDiffBlock, timeDiffStep, totalValidators], 'run');
+      } catch (err) {
+        console.error('Error updating ChainMeta:', err);
+        throw err;
+      }
+    }
+  }
+  else {
+    try {
+      await runDatabaseQuery(insertQuery, [chainId, step, startTime, commitTime, "0", "0", 0], 'run');
+    } catch (err) {
+      console.error('Error updating ChainMeta:', err);
+      throw err;
+    }
+  }
+};
+
+function calculateTimeDifference(dateStr1, dateStr2) {
+  if (dateStr1 == null || dateStr2 == null) {
+    console.error("One or both date strings are null or undefined:", dateStr1, dateStr2);
+    return null;
+  }
+
+  const formattedDateStr1 = dateStr1.slice(0, 23) + 'Z';
+  const formattedDateStr2 = dateStr2.slice(0, 23) + 'Z';
+
+  const date1 = new Date(formattedDateStr1);
+  const date2 = new Date(formattedDateStr2);
+
+  if (isNaN(date1.getTime()) || isNaN(date2.getTime())) {
+    console.error("Invalid dates provided:", formattedDateStr1, formattedDateStr2);
+    return null;
+  }
+
+  const difference = date2 - date1;
+  return difference;
+}
+
+
+
 
 export {
   getStakingValidatorsFromDB,
@@ -1315,5 +1436,6 @@ export {
   createCurrentRound,
   createCurrentValidatorsProvider,
   createCurrentValidatorsConsumer,
-  createRoundView
+  createRoundView,
+  updateChainMeta
 };

@@ -1,5 +1,5 @@
 import pkg from 'pg';
-import { updatePreCommitMetrics, updatePreVoteMetrics } from './update.js';
+import { updatePreCommitMetrics, updatePreVoteMetrics, updateChainMeta } from './update.js';
 let client;
 
 const createClient = () => {
@@ -45,6 +45,7 @@ const initializeTriggerClient = async () => {
       console.log('Received Consensus notification:', payload);
       updatePreVoteMetrics(payload.chainId);
       updatePreCommitMetrics(payload.chainId);
+      updateChainMeta(payload);
   });
 };
 
@@ -101,6 +102,20 @@ const createTables = async () => {
         "clientIds" TEXT
       );
     `);
+
+    // ChainMeta Table
+    await runDatabaseQuery(`
+      CREATE TABLE IF NOT EXISTS "ChainMeta" (
+        "id" SERIAL PRIMARY KEY,
+        "chainId" TEXT NOT NULL,
+        "step" INT,
+        "startTime" TEXT,
+        "commitTime" TEXT,
+        "blockDuration" TEXT,
+        "stepDuration" TEXT,
+        "lowestSigningVotingPower" INT,
+        "totalValidators" INT
+      );`)
 
     // StakingValidatorsMeta Table
     await runDatabaseQuery(`
