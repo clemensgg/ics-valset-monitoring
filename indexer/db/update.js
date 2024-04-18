@@ -14,6 +14,7 @@ import {
   getProviderChainInfos,
   getStakingValidators,
   validateConsumerRpcs,
+  getCCVParams
 } from '../utils/utils.js';
 
 import {
@@ -250,58 +251,58 @@ async function getStakingValidatorsFromDB(metaRowId) {
   }
 }
 
-async function saveMatchedValidators(matchedValidators) {
-  console.log('Saving matchedValidators to DB:',
-    matchedValidators);
+// async function saveMatchedValidators(matchedValidators) {
+//   console.log('Saving matchedValidators to DB:',
+//     matchedValidators);
 
-  try {
-    // Insert into MatchedValidators table
-    const matchedQuery = 'INSERT INTO "MatchedValidators" ("chainId", "timestamp", "created_at", "updated_at") VALUES ($1, $2, $3, $4) RETURNING "id"';
-    const matchedParams = [matchedValidators.chainId, matchedValidators.timestamp, new Date().toISOString(), new Date().toISOString()];
-    const matchedId = await runDatabaseQuery(matchedQuery,
-      matchedParams, 'run'); // ID of the last inserted row
+//   try {
+//     // Insert into MatchedValidators table
+//     const matchedQuery = 'INSERT INTO "MatchedValidators" ("chainId", "timestamp", "created_at", "updated_at") VALUES ($1, $2, $3, $4) RETURNING "id"';
+//     const matchedParams = [matchedValidators.chainId, matchedValidators.timestamp, new Date().toISOString(), new Date().toISOString()];
+//     const matchedId = await runDatabaseQuery(matchedQuery,
+//       matchedParams, 'run'); // ID of the last inserted row
 
-    // Now, insert each validator into MatchedValidatorDetail table
-    const detailQuery = 'INSERT INTO "MatchedValidatorDetail" ("matchedValidatorsId", "operator_address", "consensus_address") VALUES ($1, $2, $3, $4) RETURNING "id"';
-    for (const validator of matchedValidators.validators) {
-      const detailParams = [matchedId, validator.operator_address, validator.consensus_address];
-      await runDatabaseQuery(detailQuery,
-        detailParams, 'run');
-    }
+//     // Now, insert each validator into MatchedValidatorDetail table
+//     const detailQuery = 'INSERT INTO "MatchedValidatorDetail" ("matchedValidatorsId", "operator_address", "consensus_address") VALUES ($1, $2, $3, $4) RETURNING "id"';
+//     for (const validator of matchedValidators.validators) {
+//       const detailParams = [matchedId, validator.operator_address, validator.consensus_address];
+//       await runDatabaseQuery(detailQuery,
+//         detailParams, 'run');
+//     }
 
-    console.log('All matched validators inserted successfully.');
-  } catch (error) {
-    console.error('Error saving matchedValidators to DB:',
-      error);
-    throw error;
-  }
-}
+//     console.log('All matched validators inserted successfully.');
+//   } catch (error) {
+//     console.error('Error saving matchedValidators to DB:',
+//       error);
+//     throw error;
+//   }
+// }
 
-async function getMatchedValidatorsFromDB() {
-  try {
-    // Get the latest MatchedValidators entry
-    const matchedRow = await runDatabaseQuery('SELECT * FROM "MatchedValidators" ORDER BY "id" DESC LIMIT 1', [], 'get');
+// async function getMatchedValidatorsFromDB() {
+//   try {
+//     // Get the latest MatchedValidators entry
+//     const matchedRow = await runDatabaseQuery('SELECT * FROM "MatchedValidators" ORDER BY "id" DESC LIMIT 1', [], 'get');
 
-    if (!matchedRow) {
-      return null;
-    }
+//     if (!matchedRow) {
+//       return null;
+//     }
 
-    // Get all MatchedValidatorDetail entries associated with the latest matched entry
-    const validatorRows = await runDatabaseQuery('SELECT * FROM "MatchedValidatorDetail" WHERE "matchedValidatorsId" = $1', [matchedRow], 'all');
+//     // Get all MatchedValidatorDetail entries associated with the latest matched entry
+//     const validatorRows = await runDatabaseQuery('SELECT * FROM "MatchedValidatorDetail" WHERE "matchedValidatorsId" = $1', [matchedRow], 'all');
 
-    const result = {
-      chainId: matchedRow.chainId,
-      timestamp: matchedRow.timestamp,
-      validators: validatorRows
-    };
+//     const result = {
+//       chainId: matchedRow.chainId,
+//       timestamp: matchedRow.timestamp,
+//       validators: validatorRows
+//     };
 
-    return result;
-  } catch (error) {
-    console.error('Error fetching "matchedValidators" from DB:',
-      error);
-    throw error;
-  }
-}
+//     return result;
+//   } catch (error) {
+//     console.error('Error fetching "matchedValidators" from DB:',
+//       error);
+//     throw error;
+//   }
+// }
 
 async function updateConsensusStateDB(consensusState, retainStates = 0) {
   try {
@@ -445,7 +446,9 @@ async function saveValidatorsAndVotes(consensusState, consensusStateId, type) {
       const signed = vote != 'nil-Vote';
 
       // Update the HistoricSignatures table with the signing information
-      await updateHistoricSignature(validatorId, consensusState.chain_id, consensusState.height, signed);
+      // console.log("Consensus State Debug: %s", consensusState);
+      let valconsAddress = pubKeyToValcons(validator.pub_key.value, "cosmos"); //cosmos hardcode
+      await updateHistoricSignature(valconsAddress, consensusState.chainId, consensusState.height, signed);
     }
   }
 
@@ -672,16 +675,16 @@ async function pruneConsensusStateDB(pruneIds, chainId) {
   return true;
 }
 
-const updateHistoricSignature = async (validatorId, chainId, height, signed) => {
+const updateHistoricSignature = async (validatorAddress, chainId, height, signed) => {
   const query = `
-    INSERT INTO "HistoricSignatures" ("validatorId", "chainId", "height", "signed")
+    INSERT INTO "HistoricSignatures" ("validatorAddress", "chainId", "height", "signed")
     VALUES ($1, $2, $3, $4)
-    ON CONFLICT ("validatorId", "chainId", "height")
+    ON CONFLICT ("validatorAddress", "chainId", "height")
     DO UPDATE SET "signed" = EXCLUDED.signed;
   `;
   try {
-    await runDatabaseQuery(query, [validatorId, chainId, height, signed]);
-    console.log(`Historic signature updated for validator ${validatorId} at height ${height}`);
+    await runDatabaseQuery(query, [validatorAddress, chainId, height, signed]);
+    console.log(`Historic signature updated for validator ${validatorAddress} at height ${height}`);
   } catch (err) {
     console.error('Error updating historic signature:', err);
     throw err;
@@ -690,18 +693,19 @@ const updateHistoricSignature = async (validatorId, chainId, height, signed) => 
 
 async function pruneHistoricSignatures(chainId) {
   const query = `
-    DELETE FROM "HistoricSignatures"
-    WHERE "id" NOT IN (
-      SELECT "id"
-      FROM "HistoricSignatures"
-      WHERE "chainId" = $1
-      ORDER BY "height" DESC
-      LIMIT 100
-    )
-    AND "chainId" = $1;
+  DELETE FROM "HistoricSignatures"
+  WHERE "id" NOT IN (
+      SELECT "id" FROM (
+          SELECT "id"
+          FROM "HistoricSignatures"
+          ORDER BY "timestamp" DESC
+          LIMIT 10000
+      ) AS subquery
+  );
+  
   `;
 
-  await runDatabaseQuery(query, [chainId]);
+  await runDatabaseQuery(query, []);
   return true;
 };
 
@@ -1393,6 +1397,86 @@ const updateChainMetrics = async (params) => {
   }
 };
 
+const updateCCVParams = async (params) => {
+  const chainId = params.chainId;
+  const consumerRpc = "http://148.251.183.254:2102";
+  if (chainId === "neutron-1") {
+    let ccvParams = await getCCVParams(chainId, consumerRpc);
+
+    console.log("CCV Params:", ccvParams);
+    console.log("Type of chainId:", typeof chainId);
+    console.log("Type of enabled:", typeof ccvParams.enabled);
+    console.log("Type of blocksPerDistributionTransmission:", typeof ccvParams.blocksPerDistributionTransmission);
+    console.log("Type of distributionTransmissionChannel:", typeof ccvParams.distributionTransmissionChannel);
+    console.log("Type of providerFeePoolAddrStr:", typeof ccvParams.providerFeePoolAddrStr);
+    console.log("Type of ccvTimeoutPeriod:", typeof ccvParams.ccvTimeoutPeriod);
+    console.log("Type of transferTimeoutPeriod:", typeof ccvParams.transferTimeoutPeriod);
+    console.log("Type of consumerRedistributionFraction:", typeof ccvParams.consumerRedistributionFraction);
+    console.log("Type of historicalEntries:", typeof ccvParams.historicalEntries);
+    console.log("Type of unbondingPeriod:", typeof ccvParams.unbondingPeriod);
+    console.log("Type of softOptOutThreshold:", typeof ccvParams.softOptOutThreshold);
+    console.log("Type of rewardDenoms:", typeof ccvParams.rewardDenoms); // Note: this should be 'object' if it's an array
+    console.log("Type of providerRewardDenoms:", typeof ccvParams.providerRewardDenoms); // Similarly, expect 'object' for an array
+
+    console.log("CCV INFO enabled: %s", ccvParams.enabled);
+    console.log("CCV INFO threshold: %s", ccvParams.softOptOutThreshold);
+    console.log("CCV INFO transmission: %s", ccvParams.blocksPerDistributionTransmission);
+    console.log("CCV INFO transmissionchannel: %s", ccvParams.distributionTransmissionChannel);
+    console.log("CCV INFO historicalentries: %s", ccvParams.historicalEntries);
+
+    let blocksString = ccvParams.blocksPerDistributionTransmission ? ccvParams.blocksPerDistributionTransmission.toString() : "default_value";
+    let historicalString = ccvParams.historicalEntries ? ccvParams.historicalEntries.toString() : "default_value";
+
+    console.log("String BigInt 1: %s", blocksString);
+    console.log("String BigInt 2: %s", historicalString);
+
+    console.log("Type of blocksString:", typeof blocksString);
+    console.log("Type of historicalString:", typeof historicalString);
+
+    // Insert into CCVParams
+    const insertQuery = `
+        INSERT INTO "CCVParams"( 
+        "chainId", 
+        "enabled", 
+        "blocksPerDistributionTransmission",
+        "distributionTransmissionChannel",
+        "providerFeePoolAddrStr",
+        "ccvTimeoutPeriod",
+        "transferTimeoutPeriod",
+        "consumerRedistributionFraction",
+        "historicalEntries",
+        "unbondingPeriod",
+        "softOptOutThreshold",
+        "rewardDenoms",
+        "providerRewardDenoms"
+        ) VALUES (
+          $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13
+        );
+      `;
+
+    try {
+      await runDatabaseQuery(insertQuery, [
+        chainId,
+        ccvParams.enabled,
+        blocksString,
+        ccvParams.distributionTransmissionChannel,
+        ccvParams.providerFeePoolAddrStr,
+        ccvParams.ccvTimeoutPeriod,
+        ccvParams.transferTimeoutPeriod,
+        ccvParams.consumerRedistributionFraction,
+        historicalString,
+        ccvParams.unbondingPeriod,
+        ccvParams.softOptOutThreshold,
+        ccvParams.rewardDenoms,
+        ccvParams.providerRewardDenoms
+      ], 'run');
+    } catch (err) {
+      console.error('Error updating CCVParams:', err);
+      throw err;
+    }
+  }
+}
+
 function calculateTimeDifference(dateStr1, dateStr2) {
   if (dateStr1 == null || dateStr2 == null) {
     console.error("One or both date strings are null or undefined:", dateStr1, dateStr2);
@@ -1420,11 +1504,11 @@ function calculateTimeDifference(dateStr1, dateStr2) {
 export {
   getStakingValidatorsFromDB,
   getLastStakingValidatorsMetaFromDB,
-  saveMatchedValidators,
+  //saveMatchedValidators,
   initializeData,
   prepareChains,
   validateEndpointsAndSaveChains,
-  getMatchedValidatorsFromDB,
+  //getMatchedValidatorsFromDB,
   getChainInfosFromDB,
   saveChainInfos,
   updateConsensusStateDB,
@@ -1437,5 +1521,6 @@ export {
   createCurrentValidatorsProvider,
   createCurrentValidatorsConsumer,
   createRoundView,
-  updateChainMetrics
+  updateChainMetrics,
+  updateCCVParams
 };

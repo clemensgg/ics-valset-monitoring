@@ -1,5 +1,10 @@
 import pkg from 'pg';
-import { updatePreCommitMetrics, updatePreVoteMetrics, updateChainMetrics } from './update.js';
+import {
+  updatePreCommitMetrics,
+  updatePreVoteMetrics,
+  updateChainMetrics,
+  updateCCVParams
+} from './update.js';
 let client;
 
 const createClient = () => {
@@ -29,23 +34,24 @@ const initializeClient = async () => {
 const initializeTriggerClient = async () => {
   client = createClient();
   await client.connect()
-      .then(() => {
-          console.log('Connected to PostgreSQL database.');
-          return client.query('SET CONSTRAINTS ALL IMMEDIATE;');
-      })
-      .catch(err => {
-          console.error('Database connection failed on trigger:', err);
-          process.exit(1);
-      });
+    .then(() => {
+      console.log('Connected to PostgreSQL database.');
+      return client.query('SET CONSTRAINTS ALL IMMEDIATE;');
+    })
+    .catch(err => {
+      console.error('Database connection failed on trigger:', err);
+      process.exit(1);
+    });
   client.query('LISTEN data_change_channel');
 
   // Listen for notifications from PostgreSQL
   client.on('notification', async (msg) => {
-      const payload = JSON.parse(msg.payload);
-      console.log('Received Consensus notification:', payload);
-      updatePreVoteMetrics(payload.chainId);
-      updatePreCommitMetrics(payload.chainId);
-      updateChainMetrics(payload);
+    const payload = JSON.parse(msg.payload);
+    console.log('Received Consensus notification:', payload);
+    updatePreVoteMetrics(payload.chainId);
+    updatePreCommitMetrics(payload.chainId);
+    updateChainMetrics(payload);
+    updateCCVParams(payload);
   });
 };
 
@@ -82,7 +88,7 @@ const runDatabaseQuery = async (query, params = [], type = 'get') => {
     return null;
   }
 };
-  
+
 
 const createTables = async () => {
   try {
@@ -104,6 +110,7 @@ const createTables = async () => {
     `);
 
     // ChainMetrics Table
+    //lowestOptedInVotingPower for consumer/ null on provider
     await runDatabaseQuery(`
       CREATE TABLE IF NOT EXISTS "ChainMetrics" (
         "id" SERIAL PRIMARY KEY,
@@ -113,8 +120,27 @@ const createTables = async () => {
         "commitTime" TEXT,
         "blockDuration" TEXT,
         "stepDuration" TEXT,
-        "lowestSigningVotingPower" INT,
+        "lowestOptedInVotingPower" INT, 
         "totalValidators" INT
+      );`)
+
+    // CCVParams Table
+    await runDatabaseQuery(`
+      CREATE TABLE IF NOT EXISTS "CCVParams" (
+        "id" SERIAL PRIMARY KEY,
+        "chainId" TEXT NOT NULL,
+        "enabled" BOOLEAN,
+        "blocksPerDistributionTransmission" TEXT,
+        "distributionTransmissionChannel" TEXT,
+        "providerFeePoolAddrStr" TEXT,
+        "ccvTimeoutPeriod"  INTERVAL,
+        "transferTimeoutPeriod" INTERVAL,
+        "consumerRedistributionFraction" TEXT,
+        "historicalEntries" TEXT,
+        "unbondingPeriod" INTERVAL,
+        "softOptOutThreshold" TEXT,
+        "rewardDenoms" TEXT[],
+        "providerRewardDenoms" TEXT[]
       );`)
 
     // StakingValidatorsMeta Table
@@ -207,14 +233,26 @@ const createTables = async () => {
     await runDatabaseQuery(`
       CREATE TABLE IF NOT EXISTS "HistoricSignatures" (
         "id" SERIAL PRIMARY KEY,
-        "validatorId" BIGINT REFERENCES "Validator"("id") ON DELETE CASCADE,
-        "chainId" TEXT REFERENCES "ChainInfo"("chainId") ON DELETE CASCADE,
+        "validatorAddress" TEXT,
+        "chainId" TEXT REFERENCES "ChainInfo"("chainId"),
         "height" BIGINT NOT NULL,
         "signed" BOOLEAN NOT NULL,
         "timestamp" TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-        UNIQUE ("validatorId", "chainId", "height")
+        UNIQUE ("validatorAddress", "chainId", "height")
       );
     `);
+
+    // // Uptime Table (Temporary)
+    // await runDatabaseQuery(`
+    //   CREATE TABLE IF NOT EXISTS "Uptime" (
+    //     "id" SERIAL PRIMARY KEY,
+    //     "validatorId" BIGINT,
+    //     "chainId" TEXT,
+    //     "height" BIGINT,
+    //     "signed" BOOLEAN,
+    //     "timestamp" TIMESTAMP
+    //   );
+    // `);
 
     // StakingValidator Table
     await runDatabaseQuery(`
@@ -285,12 +323,12 @@ const createTables = async () => {
       );
     `)
 
-  await addConstraintIfNotExists('fk_validatorsgroup1', 'ConsensusState', `
+    await addConstraintIfNotExists('fk_validatorsgroup1', 'ConsensusState', `
     ALTER TABLE "ConsensusState" ADD CONSTRAINT fk_validatorsgroup1
     FOREIGN KEY ("validatorsGroupId") REFERENCES "ValidatorsGroup"("id") ON DELETE CASCADE;
   `);
-  
-  await addConstraintIfNotExists('fk_validatorsgroup2', 'ConsensusState', `
+
+    await addConstraintIfNotExists('fk_validatorsgroup2', 'ConsensusState', `
     ALTER TABLE "ConsensusState" ADD CONSTRAINT fk_validatorsgroup2
     FOREIGN KEY ("lastValidatorsGroupId") REFERENCES "ValidatorsGroup"("id") ON DELETE CASCADE;
   `);

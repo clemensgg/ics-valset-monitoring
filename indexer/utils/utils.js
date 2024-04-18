@@ -9,6 +9,7 @@ import { interchain_security } from 'interchain-security';
 import { ConsumerChainInfo, ProviderChainInfo, SovereignChainInfo } from '../../src/models/ChainInfo.js';
 import { ConsensusState } from '../../src/models/ConsensusState.js';
 import { StakingValidators } from '../../src/models/StakingValidators.js';
+import { CCVParams } from '../../src/models/CCVParams.js';
 
 function sleep (ms) {
   return new Promise(resolve => setTimeout(resolve,
@@ -294,6 +295,38 @@ async function fetchConsumerSigningKeys (stakingValidators, providerRpcEndpoint,
   return new StakingValidators(stakingValidators);
 }
 
+async function getCCVParams (chainId, consumerRpcEndpoint) {
+  try {
+    const icsClient = await interchain_security.ClientFactory.createRPCQueryClient({
+      rpcEndpoint: consumerRpcEndpoint
+    });
+    const response = await icsClient.interchain_security.ccv.consumer.v1.queryParams({
+      chainId
+    });
+
+    let ccvParams = new CCVParams({
+      enabled: response.params.enabled,
+      blocksPerDistributionTransmission: response.params.blocksPerDistributionTransmission,
+      distributionTransmissionChannel: response.params.distributionTransmissionChannel,
+      providerFeePoolAddrStr: response.params.providerFeePoolAddrStr,
+      ccvTimeoutPeriod: response.params.ccvTimeoutPeriod,
+      transferTimeoutPeriod: response.params.transferTimeoutPeriod,
+      consumerRedistributionFraction: response.params.consumerRedistributionFraction,
+      historicalEntries: response.params.historicalEntries,
+      unbondingPeriod: response.params.unbondingPeriod,
+      softOptOutThreshold: response.params.softOptOutThreshold,
+      rewardDenoms: response.params.rewardDenoms,
+      providerRewardDenoms: response.params.providerRewardDenoms
+    });
+    console.log("Params from getCCVParams:", ccvParams);
+    return ccvParams;
+  } catch (error) {
+    console.error(`Error fetching params on chain ${chainId}: ${error.message}`);
+    return null;
+  }
+}
+
+
 export {
   decodeVoteData,
   getConsensusState,
@@ -306,5 +339,6 @@ export {
   pubKeyToValcons,
   matchConsensusValidators,
   matchConsensusLastValidators,
+  getCCVParams,
   sleep
 };
