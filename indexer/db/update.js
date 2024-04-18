@@ -14,7 +14,8 @@ import {
   getProviderChainInfos,
   getStakingValidators,
   validateConsumerRpcs,
-  getCCVParams
+  getCCVParams,
+  getConsumerRpcbyChainId
 } from '../utils/utils.js';
 
 import {
@@ -1399,39 +1400,40 @@ const updateChainMetrics = async (params) => {
 
 const updateCCVParams = async (params) => {
   const chainId = params.chainId;
-  const consumerRpc = "http://148.251.183.254:2102";
-  if (chainId === "neutron-1") {
+  const consumerRpc = await getConsumerRpcbyChainId(chainId)
+  
+  if (consumerRpc) {
     let ccvParams = await getCCVParams(chainId, consumerRpc);
 
-    console.log("CCV Params:", ccvParams);
-    console.log("Type of chainId:", typeof chainId);
-    console.log("Type of enabled:", typeof ccvParams.enabled);
-    console.log("Type of blocksPerDistributionTransmission:", typeof ccvParams.blocksPerDistributionTransmission);
-    console.log("Type of distributionTransmissionChannel:", typeof ccvParams.distributionTransmissionChannel);
-    console.log("Type of providerFeePoolAddrStr:", typeof ccvParams.providerFeePoolAddrStr);
-    console.log("Type of ccvTimeoutPeriod:", typeof ccvParams.ccvTimeoutPeriod);
-    console.log("Type of transferTimeoutPeriod:", typeof ccvParams.transferTimeoutPeriod);
-    console.log("Type of consumerRedistributionFraction:", typeof ccvParams.consumerRedistributionFraction);
-    console.log("Type of historicalEntries:", typeof ccvParams.historicalEntries);
-    console.log("Type of unbondingPeriod:", typeof ccvParams.unbondingPeriod);
-    console.log("Type of softOptOutThreshold:", typeof ccvParams.softOptOutThreshold);
-    console.log("Type of rewardDenoms:", typeof ccvParams.rewardDenoms); // Note: this should be 'object' if it's an array
-    console.log("Type of providerRewardDenoms:", typeof ccvParams.providerRewardDenoms); // Similarly, expect 'object' for an array
+    // console.log("CCV Params:", ccvParams);
+    // console.log("Type of chainId:", typeof chainId);
+    // console.log("Type of enabled:", typeof ccvParams.enabled);
+    // console.log("Type of blocksPerDistributionTransmission:", typeof ccvParams.blocksPerDistributionTransmission);
+    // console.log("Type of distributionTransmissionChannel:", typeof ccvParams.distributionTransmissionChannel);
+    // console.log("Type of providerFeePoolAddrStr:", typeof ccvParams.providerFeePoolAddrStr);
+    // console.log("Type of ccvTimeoutPeriod:", typeof ccvParams.ccvTimeoutPeriod);
+    // console.log("Type of transferTimeoutPeriod:", typeof ccvParams.transferTimeoutPeriod);
+    // console.log("Type of consumerRedistributionFraction:", typeof ccvParams.consumerRedistributionFraction);
+    // console.log("Type of historicalEntries:", typeof ccvParams.historicalEntries);
+    // console.log("Type of unbondingPeriod:", typeof ccvParams.unbondingPeriod);
+    // console.log("Type of softOptOutThreshold:", typeof ccvParams.softOptOutThreshold);
+    // console.log("Type of rewardDenoms:", typeof ccvParams.rewardDenoms); // Note: this should be 'object' if it's an array
+    // console.log("Type of providerRewardDenoms:", typeof ccvParams.providerRewardDenoms); // Similarly, expect 'object' for an array
 
-    console.log("CCV INFO enabled: %s", ccvParams.enabled);
-    console.log("CCV INFO threshold: %s", ccvParams.softOptOutThreshold);
-    console.log("CCV INFO transmission: %s", ccvParams.blocksPerDistributionTransmission);
-    console.log("CCV INFO transmissionchannel: %s", ccvParams.distributionTransmissionChannel);
-    console.log("CCV INFO historicalentries: %s", ccvParams.historicalEntries);
+    // console.log("CCV INFO enabled: %s", ccvParams.enabled);
+    // console.log("CCV INFO threshold: %s", ccvParams.softOptOutThreshold);
+    // console.log("CCV INFO transmission: %s", ccvParams.blocksPerDistributionTransmission);
+    // console.log("CCV INFO transmissionchannel: %s", ccvParams.distributionTransmissionChannel);
+    // console.log("CCV INFO historicalentries: %s", ccvParams.historicalEntries);
 
     let blocksString = ccvParams.blocksPerDistributionTransmission ? ccvParams.blocksPerDistributionTransmission.toString() : "default_value";
     let historicalString = ccvParams.historicalEntries ? ccvParams.historicalEntries.toString() : "default_value";
 
-    console.log("String BigInt 1: %s", blocksString);
-    console.log("String BigInt 2: %s", historicalString);
+    // console.log("String BigInt 1: %s", blocksString);
+    // console.log("String BigInt 2: %s", historicalString);
 
-    console.log("Type of blocksString:", typeof blocksString);
-    console.log("Type of historicalString:", typeof historicalString);
+    // console.log("Type of blocksString:", typeof blocksString);
+    // console.log("Type of historicalString:", typeof historicalString);
 
     // Insert into CCVParams
     const insertQuery = `

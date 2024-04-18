@@ -48,10 +48,10 @@ const initializeTriggerClient = async () => {
   client.on('notification', async (msg) => {
     const payload = JSON.parse(msg.payload);
     console.log('Received Consensus notification:', payload);
-    updatePreVoteMetrics(payload.chainId);
-    updatePreCommitMetrics(payload.chainId);
-    updateChainMetrics(payload);
-    updateCCVParams(payload);
+    await updatePreVoteMetrics(payload.chainId);
+    await updatePreCommitMetrics(payload.chainId);
+    await updateChainMetrics(payload);
+    await updateCCVParams(payload);
   });
 };
 
@@ -133,11 +133,11 @@ const createTables = async () => {
         "blocksPerDistributionTransmission" TEXT,
         "distributionTransmissionChannel" TEXT,
         "providerFeePoolAddrStr" TEXT,
-        "ccvTimeoutPeriod"  INTERVAL,
-        "transferTimeoutPeriod" INTERVAL,
+        "ccvTimeoutPeriod"  TEXT,
+        "transferTimeoutPeriod" TEXT,
         "consumerRedistributionFraction" TEXT,
         "historicalEntries" TEXT,
-        "unbondingPeriod" INTERVAL,
+        "unbondingPeriod" TEXT,
         "softOptOutThreshold" TEXT,
         "rewardDenoms" TEXT[],
         "providerRewardDenoms" TEXT[]

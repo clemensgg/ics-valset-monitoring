@@ -309,11 +309,11 @@ async function getCCVParams (chainId, consumerRpcEndpoint) {
       blocksPerDistributionTransmission: response.params.blocksPerDistributionTransmission,
       distributionTransmissionChannel: response.params.distributionTransmissionChannel,
       providerFeePoolAddrStr: response.params.providerFeePoolAddrStr,
-      ccvTimeoutPeriod: response.params.ccvTimeoutPeriod,
-      transferTimeoutPeriod: response.params.transferTimeoutPeriod,
+      ccvTimeoutPeriod: serializeTimePeriod(response.params.ccvTimeoutPeriod),
+      transferTimeoutPeriod: serializeTimePeriod(response.params.transferTimeoutPeriod),
       consumerRedistributionFraction: response.params.consumerRedistributionFraction,
       historicalEntries: response.params.historicalEntries,
-      unbondingPeriod: response.params.unbondingPeriod,
+      unbondingPeriod: serializeTimePeriod(response.params.unbondingPeriod),
       softOptOutThreshold: response.params.softOptOutThreshold,
       rewardDenoms: response.params.rewardDenoms,
       providerRewardDenoms: response.params.providerRewardDenoms
@@ -325,6 +325,30 @@ async function getCCVParams (chainId, consumerRpcEndpoint) {
     return null;
   }
 }
+
+function serializeTimePeriod(timePeriod) {
+  let nanos = timePeriod.nanos.toString().padStart(9, '0');
+  return timePeriod.seconds.toString() + '.' + nanos;
+}
+
+async function getConsumerRpcbyChainId(chainId) {
+  for (const consumerRpc of global.CONFIG.CONSUMER_RPCS) {
+      try {
+          const statusUrl = `${consumerRpc}/status`;
+          const response = await axios.get(statusUrl);
+          const currentChainId = response.data.result.node_info.network; 
+
+          if (currentChainId === chainId) {
+              return consumerRpc;
+          }
+      } catch (err) {
+          console.error(`Error fetching status from ${consumerRpc}:`, err);
+      }
+  }
+  console.log('No matching RPC found for chainId: %s', chainId);
+  return null;
+}
+
 
 
 export {
@@ -340,5 +364,6 @@ export {
   matchConsensusValidators,
   matchConsensusLastValidators,
   getCCVParams,
+  getConsumerRpcbyChainId,
   sleep
 };
