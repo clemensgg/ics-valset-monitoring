@@ -19,7 +19,7 @@ function sleep (ms) {
 async function getConsensusState (rpcUrl, chainId) {
   try {
     const url = `${rpcUrl}/dump_consensus_state`;
-    const response = await axios.get(url);
+    const response = await axios.get(url, { timeout: 5000 });
 
     if (response.data && response.data.result && response.data.result.round_state) {
       return new ConsensusState(response.data.result.round_state, chainId);
@@ -54,7 +54,7 @@ async function getStakingValidators (restUrl) {
   try {
     do {
       const url = `${restUrl}/cosmos/staking/v1beta1/validators?limit=100${nextKey ? `&pagination.key=${encodeURIComponent(nextKey)}` : ''}`;
-      const response = await axios.get(url);
+      const response = await axios.get(url, { timeout: 5000 });
       const stakingValidators = new StakingValidators(response.data.validators);
       validators = validators.concat(stakingValidators.validators);
       if (response.data.pagination && response.data.pagination.next_key) {
@@ -216,7 +216,7 @@ async function matchConsensusLastValidators (stakingValidators, consensusState, 
 
 async function getChainIdFromRpc (rpcEndpoint) {
   try {
-    const response = await axios.get(`${rpcEndpoint}/status`);
+    const response = await axios.get(`${rpcEndpoint}/status`, { timeout: 5000 });
     return response.data.result.node_info.network;
   } catch (error) {
     console.error(`Error fetching status from ${rpcEndpoint}: ${error.message}`);
