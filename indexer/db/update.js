@@ -15,7 +15,9 @@ import {
   getStakingValidators,
   validateConsumerRpcs,
   getCCVParams,
-  getConsumerRpcbyChainId
+  getConsumerRpcbyChainId,
+  calculateLowestOptedInVotingPower,
+  getBech32Prefix
 } from '../utils/utils.js';
 
 import {
@@ -86,6 +88,7 @@ async function validateEndpointsAndSaveChains() {
     console.log('Updated ChainInfos for consumer chains.');
   }
 
+
   return [providerChainInfos, consumerChainInfos];
 }
 
@@ -95,15 +98,15 @@ async function saveChainInfos(chainInfo) {
     console.log(`Saving ${type} ChainInfo to DB:`, JSON.stringify(chainInfo));
 
     const insertQuery = `
-      INSERT INTO "ChainInfo" ("chainId", "rpcEndpoint", "type", "clientIds") 
-      VALUES ($1, $2, $3, $4)
+      INSERT INTO "ChainInfo" ("chainId", "rpcEndpoint", "type", "clientIds", "prefix") 
+      VALUES ($1, $2, $3, $4, $5)
       ON CONFLICT ("chainId") 
-      DO UPDATE SET "rpcEndpoint" = EXCLUDED."rpcEndpoint", "type" = EXCLUDED."type", "clientIds" = EXCLUDED."clientIds"
+      DO UPDATE SET "rpcEndpoint" = EXCLUDED."rpcEndpoint", "type" = EXCLUDED."type", "clientIds" = EXCLUDED."clientIds", "prefix" = EXCLUDED."prefix"
       RETURNING "id";
     `;
 
     const clientIdsString = JSON.stringify(chainInfo.clientIds);
-    const params = [chainInfo.chainId, chainInfo.rpcEndpoint, type, clientIdsString];
+    const params = [chainInfo.chainId, chainInfo.rpcEndpoint, type, clientIdsString, chainInfo.prefix];
 
     await runDatabaseQuery(insertQuery, params, 'run');
 
@@ -362,98 +365,120 @@ async function updateValidatorsGroupWithProposerId(validatorsGroupId, proposerId
 async function saveValidatorsAndVotes(consensusState, consensusStateId, type) {
   let validatorsGroupId;
   let proposer;
+  let prefix;
 
-  if (type === 'current') {
-    // Identify the proposer but don't save yet
-    for (let i = 0; i < consensusState.validators.validators.length; i++) {
-      const validator = consensusState.validators.validators[i];
-      if (validator.address === consensusState.validators.proposer.address) {
-        proposer = validator;
+  let providerChainInfos = await getChainInfosFromDB('provider');
+  let consumerChainInfos = await getChainInfosFromDB('consumer');
+
+
+  if (providerChainInfos.length > 0) {
+    providerChainInfos.forEach((pchain) => {
+      if (consensusState.chainId == pchain.chainId) {
+        prefix = pchain.prefix;
       }
-    }
-
-    // Save the validators group without the proposerId
-    validatorsGroupId = await saveValidatorsGroup(consensusStateId, null, 'current');
-
-    // Now, save the proposer with the correct validators group ID
-    const proposerId = await saveValidator(proposer, validatorsGroupId);
-
-    // Update the validators group with the correct proposerId
-    await updateValidatorsGroupWithProposerId(validatorsGroupId, proposerId);
-
-    // Save Rounds Group
-    const roundsGroupId = await saveRoundsGroup(consensusStateId, 'current');
-
-    for (let f = 0; f < consensusState.votes.length; f++) {
-
-      // Save Round with roundsGroupId reference
-      const roundId = await saveRound(roundsGroupId, f);
-
-      // Continue with the rest of the logic for saving other validators and votes.
-      // Votes reference validatorId and roundId
-      for (let i = 0; i < consensusState.validators.validators.length; i++) {
-        const validator = consensusState.validators.validators[i];
-        let validatorId;
-        if (validator.address !== consensusState.validators.proposer.address) {
-          validatorId = await saveValidator(validator, validatorsGroupId);
-        } else {
-          validatorId = proposerId;
-        }
-
-        const votes = consensusState.votes[f];
-        await saveVote(votes.prevotes[i], 'prevote', validatorId, roundId);
-        await saveVote(votes.precommits[i], 'precommit', validatorId, roundId);
+    });
+    consumerChainInfos.forEach((cchain) => {
+      if (consensusState.chainId == cchain.chainId) {
+        prefix = cchain.prefix;
+        console.log(prefix);
       }
+    });
+  }
+  
+
+
+if (type === 'current') {
+  // Identify the proposer but don't save yet
+  for (let i = 0; i < consensusState.validators.validators.length; i++) {
+    const validator = consensusState.validators.validators[i];
+    if (validator.address === consensusState.validators.proposer.address) {
+      proposer = validator;
     }
   }
 
-  if (type === 'last') {
-    // Identify the last proposer but don't save yet
-    for (let i = 0; i < consensusState.last_validators.validators.length; i++) {
-      const validator = consensusState.last_validators.validators[i];
-      if (validator.address === consensusState.last_validators.proposer.address) {
-        proposer = validator;
-      }
-    }
+  // Save the validators group without the proposerId
+  validatorsGroupId = await saveValidatorsGroup(consensusStateId, null, 'current');
 
-    // Save the last validators group without the proposerId
-    validatorsGroupId = await saveValidatorsGroup(consensusStateId, null, 'last');
+  // Now, save the proposer with the correct validators group ID
+  const proposerId = await saveValidator(proposer, validatorsGroupId);
 
-    // Now, save the last proposer with the correct validators group ID
-    const proposerId = await saveValidator(proposer, validatorsGroupId);
+  // Update the validators group with the correct proposerId
+  await updateValidatorsGroupWithProposerId(validatorsGroupId, proposerId);
 
-    // Update the last validators group with the correct proposerId
-    await updateValidatorsGroupWithProposerId(validatorsGroupId, proposerId);
+  // Save Rounds Group
+  const roundsGroupId = await saveRoundsGroup(consensusStateId, 'current');
 
-    // Save finalized RoundsGroup and one Round
-    const roundsGroupId = await saveRoundsGroup(consensusStateId, 'last');
-    const roundId = await saveRound(roundsGroupId, -1);
+  for (let f = 0; f < consensusState.votes.length; f++) {
 
-    // Continue with the rest of the logic for saving other validators and last_commit votes
-    for (let i = 0; i < consensusState.last_validators.validators.length; i++) {
-      const validator = consensusState.last_validators.validators[i];
+    // Save Round with roundsGroupId reference
+    const roundId = await saveRound(roundsGroupId, f);
+
+    // Continue with the rest of the logic for saving other validators and votes.
+    // Votes reference validatorId and roundId
+    for (let i = 0; i < consensusState.validators.validators.length; i++) {
+      const validator = consensusState.validators.validators[i];
       let validatorId;
-      if (validator.address !== consensusState.last_validators.proposer.address) {
+      if (validator.address !== consensusState.validators.proposer.address) {
         validatorId = await saveValidator(validator, validatorsGroupId);
-      } else if (validator.address === consensusState.last_validators.proposer.address) {
+      } else {
         validatorId = proposerId;
       }
 
-      // Save the vote
-      const vote = consensusState.last_commit.votes[i];
-      await saveVote(vote, 'lastcommit', validatorId, roundId);
+      const votes = consensusState.votes[f];
+      await saveVote(votes.prevotes[i], 'prevote', validatorId, roundId);
+      await saveVote(votes.precommits[i], 'precommit', validatorId, roundId);
+    }
+  }
+}
 
-      // Determine if the validator signed the last commit
-      const signed = vote != 'nil-Vote';
-
-      // Update the HistoricSignatures table with the signing information
-      // console.log("Consensus State Debug: %s", consensusState);
-      let valconsAddress = pubKeyToValcons(validator.pub_key.value, "cosmos"); //cosmos hardcode
-      await updateHistoricSignature(valconsAddress, consensusState.chainId, consensusState.height, signed);
+if (type === 'last') {
+  // Identify the last proposer but don't save yet
+  for (let i = 0; i < consensusState.last_validators.validators.length; i++) {
+    const validator = consensusState.last_validators.validators[i];
+    if (validator.address === consensusState.last_validators.proposer.address) {
+      proposer = validator;
     }
   }
 
-  return validatorsGroupId;
+  // Save the last validators group without the proposerId
+  validatorsGroupId = await saveValidatorsGroup(consensusStateId, null, 'last');
+
+  // Now, save the last proposer with the correct validators group ID
+  const proposerId = await saveValidator(proposer, validatorsGroupId);
+
+  // Update the last validators group with the correct proposerId
+  await updateValidatorsGroupWithProposerId(validatorsGroupId, proposerId);
+
+  // Save finalized RoundsGroup and one Round
+  const roundsGroupId = await saveRoundsGroup(consensusStateId, 'last');
+  const roundId = await saveRound(roundsGroupId, -1);
+
+
+  // Continue with the rest of the logic for saving other validators and last_commit votes
+  for (let i = 0; i < consensusState.last_validators.validators.length; i++) {
+    const validator = consensusState.last_validators.validators[i];
+    let validatorId;
+    if (validator.address !== consensusState.last_validators.proposer.address) {
+      validatorId = await saveValidator(validator, validatorsGroupId);
+    } else if (validator.address === consensusState.last_validators.proposer.address) {
+      validatorId = proposerId;
+    }
+
+    // Save the vote
+    const vote = consensusState.last_commit.votes[i];
+    await saveVote(vote, 'lastcommit', validatorId, roundId);
+
+    // Determine if the validator signed the last commit
+    const signed = vote != 'nil-Vote';
+
+    // Update the HistoricSignatures table with the signing information
+
+    let valconsAddress = await pubKeyToValcons(validator.pub_key.value, prefix); //cosmos hardcode
+    await updateHistoricSignature(valconsAddress, consensusState.chainId, consensusState.height, signed);
+  }
+}
+
+return validatorsGroupId;
 }
 
 async function saveConsensusState(consensusState) {
@@ -700,10 +725,9 @@ async function pruneHistoricSignatures(chainId) {
           SELECT "id"
           FROM "HistoricSignatures"
           ORDER BY "timestamp" DESC
-          LIMIT 10000
+          LIMIT 1000000
       ) AS subquery
   );
-  
   `;
 
   await runDatabaseQuery(query, []);
@@ -1104,7 +1128,6 @@ BEGIN
         ELSE 3
     END AS "voteStatus"
 
-
 FROM "Validator" "V"
 JOIN "LatestValidatorsGroupId" "LVG" ON "V"."validatorsGroupId" = "LVG"."validatorsGroupId"
 JOIN "ValidatorsGroup" "VG" ON "V"."validatorsGroupId" = "VG"."id"
@@ -1122,6 +1145,54 @@ $$ LANGUAGE plpgsql;
 
   return await runDatabaseQuery(query, [], 'get');
 }
+
+async function createUpTime() {
+  const query = `
+  CREATE OR REPLACE FUNCTION get_uptime(blocks INT, consensus_address TEXT, chain_id TEXT)
+  RETURNS NUMERIC AS $$
+  DECLARE
+    latest_height INT;
+    lowest_height INT;
+    signed_total INT;
+    signed_true INT;
+    uptime NUMERIC;
+BEGIN
+    SELECT "height" INTO latest_height
+    FROM "HistoricSignatures"
+    WHERE "chainId" = chain_id
+    ORDER BY "height" DESC
+    LIMIT 1;
+
+    lowest_height := latest_height - blocks;
+
+    SELECT COUNT(*) INTO signed_total
+    FROM "HistoricSignatures"
+    WHERE "validatorAddress" = consensus_address 
+      AND "chainId" = chain_id 
+      AND ("signed" = 't' OR "signed" = 'f')
+      AND "height" >= lowest_height;
+
+    SELECT COUNT(*) INTO signed_true
+    FROM "HistoricSignatures"
+    WHERE "validatorAddress" = consensus_address 
+    AND "chainId" = chain_id 
+    AND "signed" = 't'
+    AND "height" >= lowest_height;
+
+    IF signed_total > 0 THEN
+      uptime := (signed_true::NUMERIC / signed_total::NUMERIC);
+    ELSE
+      uptime := 0;
+    END IF;
+    RETURN uptime;
+
+END;
+$$ LANGUAGE plpgsql;
+`
+
+  return await runDatabaseQuery(query, [], 'get');
+}
+
 
 async function getCurrentRound(chainId) {
   const query = `
@@ -1338,8 +1409,16 @@ const updateChainMetrics = async (params) => {
 
   // Insert into ChainMetrics
   const insertQuery = `
-        INSERT INTO "ChainMetrics" ("chainId", "step", "startTime", "commitTime" ,"blockDuration", "stepDuration", "totalValidators")
-        VALUES ($1, $2, $3, $4, $5, $6, $7);
+        INSERT INTO "ChainMetrics" (
+          "chainId", 
+          "step", 
+          "startTime", 
+          "commitTime",
+          "blockDuration", 
+          "stepDuration", 
+          "totalValidators",
+          "lowestOptedInVotingPower"
+        )VALUES ($1, $2, $3, $4, $5, $6, $7, $8);
       `;
 
   // Update ChainMetrics
@@ -1354,7 +1433,6 @@ const updateChainMetrics = async (params) => {
   }
 
   if (result) {
-    //console.log("Fetched Result: %s", result)
     if (step > result.step) {
       let timeDiffStep = Math.round(result.stepDuration / step);
 
@@ -1369,19 +1447,22 @@ const updateChainMetrics = async (params) => {
 
       let timeDiffBlock = calculateTimeDifference(result.commitTime, commitTime);
       let timeDiffStep = calculateTimeDifference(result.startTime, startTime);
+
       let totalValidators;
+
 
       try {
         const vresult = await runDatabaseQuery(fetchTotalValidatorsQuery, [chainId], 'get')
-        //console.log("Validator function result: %s", vresult);
         totalValidators = vresult.count;
       } catch (err) {
         console.error('Error fetching total validators', err);
         throw err;
       }
 
+      let lowestOptedInVotingPower = await getLowestOptedInVotingPower(chainId, totalValidators);
+
       try {
-        await runDatabaseQuery(insertQuery, [chainId, step, startTime, commitTime, timeDiffBlock, timeDiffStep, totalValidators], 'run');
+        await runDatabaseQuery(insertQuery, [chainId, step, startTime, commitTime, timeDiffBlock, timeDiffStep, totalValidators, lowestOptedInVotingPower], 'run');
       } catch (err) {
         console.error('Error updating ChainMetrics:', err);
         throw err;
@@ -1390,7 +1471,7 @@ const updateChainMetrics = async (params) => {
   }
   else {
     try {
-      await runDatabaseQuery(insertQuery, [chainId, step, startTime, commitTime, "0", "0", 0], 'run');
+      await runDatabaseQuery(insertQuery, [chainId, step, startTime, commitTime, "0", "0", 0, 0], 'run');
     } catch (err) {
       console.error('Error updating ChainMetrics:', err);
       throw err;
@@ -1398,42 +1479,46 @@ const updateChainMetrics = async (params) => {
   }
 };
 
+async function getLowestOptedInVotingPower(chainId, totalValidators) {
+
+  const fetchOptOutThreshold = 'SELECT "softOptOutThreshold" FROM "CCVParams" WHERE "chainId" = $1';
+  const fetchVotingPowerListQuery = 'SELECT "votingpower" FROM get_current_validators_provider($1) ORDER BY "votingpower" ASC';
+  const fetchTotalVotingPowerQuery = 'SELECT SUM("votingpower") FROM get_current_validators_provider($1)';
+
+  try {
+    let resultOptOutThreshold = await runDatabaseQuery(fetchOptOutThreshold, [chainId], 'get');
+    let resultVotingPowerList = await runDatabaseQuery(fetchVotingPowerListQuery, [chainId], 'all');
+    let resultTotalVotingPower = await runDatabaseQuery(fetchTotalVotingPowerQuery, [chainId], 'get');
+    let totalVotingPower = Number(resultTotalVotingPower.sum);
+    let votingPowerList = resultVotingPowerList.map(item => Number(item.votingpower));
+
+    if (resultOptOutThreshold) {
+      let optOutThreshold = Number(resultOptOutThreshold.softOptOutThreshold);
+      let lowestOptedInVotingPower = await calculateLowestOptedInVotingPower(totalVotingPower, votingPowerList, optOutThreshold);
+      return lowestOptedInVotingPower;
+    } else {
+      return null;
+    }
+  } catch (err) {
+    console.error('Error fetching voting powers:', err);
+    throw err;
+  }
+
+
+
+
+
+}
+
 const updateCCVParams = async (params) => {
   const chainId = params.chainId;
   const consumerRpc = await getConsumerRpcbyChainId(chainId)
-  
+
   if (consumerRpc) {
+
     let ccvParams = await getCCVParams(chainId, consumerRpc);
-
-    // console.log("CCV Params:", ccvParams);
-    // console.log("Type of chainId:", typeof chainId);
-    // console.log("Type of enabled:", typeof ccvParams.enabled);
-    // console.log("Type of blocksPerDistributionTransmission:", typeof ccvParams.blocksPerDistributionTransmission);
-    // console.log("Type of distributionTransmissionChannel:", typeof ccvParams.distributionTransmissionChannel);
-    // console.log("Type of providerFeePoolAddrStr:", typeof ccvParams.providerFeePoolAddrStr);
-    // console.log("Type of ccvTimeoutPeriod:", typeof ccvParams.ccvTimeoutPeriod);
-    // console.log("Type of transferTimeoutPeriod:", typeof ccvParams.transferTimeoutPeriod);
-    // console.log("Type of consumerRedistributionFraction:", typeof ccvParams.consumerRedistributionFraction);
-    // console.log("Type of historicalEntries:", typeof ccvParams.historicalEntries);
-    // console.log("Type of unbondingPeriod:", typeof ccvParams.unbondingPeriod);
-    // console.log("Type of softOptOutThreshold:", typeof ccvParams.softOptOutThreshold);
-    // console.log("Type of rewardDenoms:", typeof ccvParams.rewardDenoms); // Note: this should be 'object' if it's an array
-    // console.log("Type of providerRewardDenoms:", typeof ccvParams.providerRewardDenoms); // Similarly, expect 'object' for an array
-
-    // console.log("CCV INFO enabled: %s", ccvParams.enabled);
-    // console.log("CCV INFO threshold: %s", ccvParams.softOptOutThreshold);
-    // console.log("CCV INFO transmission: %s", ccvParams.blocksPerDistributionTransmission);
-    // console.log("CCV INFO transmissionchannel: %s", ccvParams.distributionTransmissionChannel);
-    // console.log("CCV INFO historicalentries: %s", ccvParams.historicalEntries);
-
     let blocksString = ccvParams.blocksPerDistributionTransmission ? ccvParams.blocksPerDistributionTransmission.toString() : "default_value";
     let historicalString = ccvParams.historicalEntries ? ccvParams.historicalEntries.toString() : "default_value";
-
-    // console.log("String BigInt 1: %s", blocksString);
-    // console.log("String BigInt 2: %s", historicalString);
-
-    // console.log("Type of blocksString:", typeof blocksString);
-    // console.log("Type of historicalString:", typeof historicalString);
 
     // Insert into CCVParams
     const insertQuery = `
@@ -1453,7 +1538,19 @@ const updateCCVParams = async (params) => {
         "providerRewardDenoms"
         ) VALUES (
           $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13
-        );
+        ) ON CONFLICT ("chainId") DO UPDATE SET
+        "enabled" = EXCLUDED.enabled,
+        "blocksPerDistributionTransmission" = EXCLUDED."blocksPerDistributionTransmission",
+        "distributionTransmissionChannel" = EXCLUDED."distributionTransmissionChannel",
+        "providerFeePoolAddrStr" = EXCLUDED."providerFeePoolAddrStr",
+        "ccvTimeoutPeriod" = EXCLUDED."ccvTimeoutPeriod",
+        "transferTimeoutPeriod" = EXCLUDED."transferTimeoutPeriod",
+        "consumerRedistributionFraction" = EXCLUDED."consumerRedistributionFraction",
+        "historicalEntries" = EXCLUDED."historicalEntries",
+        "unbondingPeriod" = EXCLUDED."unbondingPeriod",
+        "softOptOutThreshold" = EXCLUDED."softOptOutThreshold",
+        "rewardDenoms" = EXCLUDED."rewardDenoms",
+        "providerRewardDenoms" = EXCLUDED."providerRewardDenoms";
       `;
 
     try {
@@ -1522,6 +1619,7 @@ export {
   createCurrentRound,
   createCurrentValidatorsProvider,
   createCurrentValidatorsConsumer,
+  createUpTime,
   createRoundView,
   updateChainMetrics,
   updateCCVParams

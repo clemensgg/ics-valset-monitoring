@@ -105,7 +105,8 @@ const createTables = async () => {
         "chainId" TEXT UNIQUE NOT NULL,
         "rpcEndpoint" TEXT NOT NULL,
         "type" TEXT CHECK("type" IN ('provider', 'consumer', NULL)),
-        "clientIds" TEXT
+        "clientIds" TEXT,
+        "prefix" TEXT
       );
     `);
 
@@ -127,8 +128,7 @@ const createTables = async () => {
     // CCVParams Table
     await runDatabaseQuery(`
       CREATE TABLE IF NOT EXISTS "CCVParams" (
-        "id" SERIAL PRIMARY KEY,
-        "chainId" TEXT NOT NULL,
+        "chainId" TEXT PRIMARY KEY,
         "enabled" BOOLEAN,
         "blocksPerDistributionTransmission" TEXT,
         "distributionTransmissionChannel" TEXT,

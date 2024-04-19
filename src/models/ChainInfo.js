@@ -6,6 +6,7 @@ class ChainInfo {
     this.clientIds = [];
     this.rpcEndpoint = '';
     this.type = type; // Add the type attribute
+    this.prefix = chain.prefix
   }
 }
 
@@ -15,6 +16,7 @@ export class ConsumerChainInfo extends ChainInfo {
       'consumer'); // Set type as 'consumer'
     this.clientIds = [chain.clientId];
     this.rpcEndpoint = chain.rpcEndpoint;
+    this.prefix = chain.prefix;
   }
 }
 
@@ -24,6 +26,7 @@ export class ProviderChainInfo extends ChainInfo {
       'provider'); // Set type as 'provider'
     this.clientIds = chain.clientIds || [];
     this.rpcEndpoint = chain.rpcEndpoint;
+    this.prefix = chain.prefix;
   }
 }
 
@@ -33,5 +36,6 @@ export class SovereignChainInfo extends ChainInfo {
       'sovereign'); // Set type as 'provider'
     this.clientIds = chain.clientIds || [];
     this.rpcEndpoint = chain.rpcEndpoint;
+    this.prefix = chain.prefix;
   }
 }

@@ -9,6 +9,7 @@ import {
   createCurrentRound,
   createCurrentValidatorsProvider,
   createCurrentValidatorsConsumer,
+  createUpTime,
   createLastCommit
 } from './db/update.js';
 import { initializeDb, initializeTriggerClient } from './db/db.js';
@@ -78,6 +79,8 @@ async function main() {
   await createCurrentValidatorsProvider();
   await createCurrentValidatorsConsumer();
   console.log("Validator functions successfully created.");
+  await createUpTime();
+  console.log("Uptime function successfully created");
   await createLastCommit();
   console.log("Last Commit function successfully created.");
   
