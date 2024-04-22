@@ -371,114 +371,116 @@ async function saveValidatorsAndVotes(consensusState, consensusStateId, type) {
   let consumerChainInfos = await getChainInfosFromDB('consumer');
 
 
+  // Find chainId match for provider and consumer chains 
+  // and assign the corresponding prefix
   if (providerChainInfos.length > 0) {
-    providerChainInfos.forEach((pchain) => {
-      if (consensusState.chainId == pchain.chainId) {
-        prefix = pchain.prefix;
-      }
-    });
-    consumerChainInfos.forEach((cchain) => {
-      if (consensusState.chainId == cchain.chainId) {
-        prefix = cchain.prefix;
-        console.log(prefix);
-      }
-    });
-  }
-  
-
-
-if (type === 'current') {
-  // Identify the proposer but don't save yet
-  for (let i = 0; i < consensusState.validators.validators.length; i++) {
-    const validator = consensusState.validators.validators[i];
-    if (validator.address === consensusState.validators.proposer.address) {
-      proposer = validator;
+    const pchain = providerChainInfos[0];
+    if (consensusState.chainId === pchain.chainId) {
+      prefix = pchain.prefix;
     }
   }
 
-  // Save the validators group without the proposerId
-  validatorsGroupId = await saveValidatorsGroup(consensusStateId, null, 'current');
+  for (const cchain of consumerChainInfos) {
+    if (consensusState.chainId === cchain.chainId) {
+      prefix = cchain.prefix;
+      console.log(prefix);
+      break;
+    }
+  }
 
-  // Now, save the proposer with the correct validators group ID
-  const proposerId = await saveValidator(proposer, validatorsGroupId);
 
-  // Update the validators group with the correct proposerId
-  await updateValidatorsGroupWithProposerId(validatorsGroupId, proposerId);
 
-  // Save Rounds Group
-  const roundsGroupId = await saveRoundsGroup(consensusStateId, 'current');
-
-  for (let f = 0; f < consensusState.votes.length; f++) {
-
-    // Save Round with roundsGroupId reference
-    const roundId = await saveRound(roundsGroupId, f);
-
-    // Continue with the rest of the logic for saving other validators and votes.
-    // Votes reference validatorId and roundId
+  if (type === 'current') {
+    // Identify the proposer but don't save yet
     for (let i = 0; i < consensusState.validators.validators.length; i++) {
       const validator = consensusState.validators.validators[i];
+      if (validator.address === consensusState.validators.proposer.address) {
+        proposer = validator;
+      }
+    }
+
+    // Save the validators group without the proposerId
+    validatorsGroupId = await saveValidatorsGroup(consensusStateId, null, 'current');
+
+    // Now, save the proposer with the correct validators group ID
+    const proposerId = await saveValidator(proposer, validatorsGroupId);
+
+    // Update the validators group with the correct proposerId
+    await updateValidatorsGroupWithProposerId(validatorsGroupId, proposerId);
+
+    // Save Rounds Group
+    const roundsGroupId = await saveRoundsGroup(consensusStateId, 'current');
+
+    for (let f = 0; f < consensusState.votes.length; f++) {
+
+      // Save Round with roundsGroupId reference
+      const roundId = await saveRound(roundsGroupId, f);
+
+      // Continue with the rest of the logic for saving other validators and votes.
+      // Votes reference validatorId and roundId
+      for (let i = 0; i < consensusState.validators.validators.length; i++) {
+        const validator = consensusState.validators.validators[i];
+        let validatorId;
+        if (validator.address !== consensusState.validators.proposer.address) {
+          validatorId = await saveValidator(validator, validatorsGroupId);
+        } else {
+          validatorId = proposerId;
+        }
+
+        const votes = consensusState.votes[f];
+        await saveVote(votes.prevotes[i], 'prevote', validatorId, roundId);
+        await saveVote(votes.precommits[i], 'precommit', validatorId, roundId);
+      }
+    }
+  }
+
+  if (type === 'last') {
+    // Identify the last proposer but don't save yet
+    for (let i = 0; i < consensusState.last_validators.validators.length; i++) {
+      const validator = consensusState.last_validators.validators[i];
+      if (validator.address === consensusState.last_validators.proposer.address) {
+        proposer = validator;
+      }
+    }
+
+    // Save the last validators group without the proposerId
+    validatorsGroupId = await saveValidatorsGroup(consensusStateId, null, 'last');
+
+    // Now, save the last proposer with the correct validators group ID
+    const proposerId = await saveValidator(proposer, validatorsGroupId);
+
+    // Update the last validators group with the correct proposerId
+    await updateValidatorsGroupWithProposerId(validatorsGroupId, proposerId);
+
+    // Save finalized RoundsGroup and one Round
+    const roundsGroupId = await saveRoundsGroup(consensusStateId, 'last');
+    const roundId = await saveRound(roundsGroupId, -1);
+
+
+    // Continue with the rest of the logic for saving other validators and last_commit votes
+    for (let i = 0; i < consensusState.last_validators.validators.length; i++) {
+      const validator = consensusState.last_validators.validators[i];
       let validatorId;
-      if (validator.address !== consensusState.validators.proposer.address) {
+      if (validator.address !== consensusState.last_validators.proposer.address) {
         validatorId = await saveValidator(validator, validatorsGroupId);
-      } else {
+      } else if (validator.address === consensusState.last_validators.proposer.address) {
         validatorId = proposerId;
       }
 
-      const votes = consensusState.votes[f];
-      await saveVote(votes.prevotes[i], 'prevote', validatorId, roundId);
-      await saveVote(votes.precommits[i], 'precommit', validatorId, roundId);
-    }
-  }
-}
+      // Save the vote
+      const vote = consensusState.last_commit.votes[i];
+      await saveVote(vote, 'lastcommit', validatorId, roundId);
 
-if (type === 'last') {
-  // Identify the last proposer but don't save yet
-  for (let i = 0; i < consensusState.last_validators.validators.length; i++) {
-    const validator = consensusState.last_validators.validators[i];
-    if (validator.address === consensusState.last_validators.proposer.address) {
-      proposer = validator;
+      // Determine if the validator signed the last commit
+      const signed = vote != 'nil-Vote';
+
+      // Update the HistoricSignatures table with the signing information
+      let valconsAddress = await pubKeyToValcons(validator.pub_key.value, prefix); //cosmos hardcode
+      await updateHistoricSignature(valconsAddress, consensusState.chainId, consensusState.height, signed);
     }
   }
 
-  // Save the last validators group without the proposerId
-  validatorsGroupId = await saveValidatorsGroup(consensusStateId, null, 'last');
-
-  // Now, save the last proposer with the correct validators group ID
-  const proposerId = await saveValidator(proposer, validatorsGroupId);
-
-  // Update the last validators group with the correct proposerId
-  await updateValidatorsGroupWithProposerId(validatorsGroupId, proposerId);
-
-  // Save finalized RoundsGroup and one Round
-  const roundsGroupId = await saveRoundsGroup(consensusStateId, 'last');
-  const roundId = await saveRound(roundsGroupId, -1);
-
-
-  // Continue with the rest of the logic for saving other validators and last_commit votes
-  for (let i = 0; i < consensusState.last_validators.validators.length; i++) {
-    const validator = consensusState.last_validators.validators[i];
-    let validatorId;
-    if (validator.address !== consensusState.last_validators.proposer.address) {
-      validatorId = await saveValidator(validator, validatorsGroupId);
-    } else if (validator.address === consensusState.last_validators.proposer.address) {
-      validatorId = proposerId;
-    }
-
-    // Save the vote
-    const vote = consensusState.last_commit.votes[i];
-    await saveVote(vote, 'lastcommit', validatorId, roundId);
-
-    // Determine if the validator signed the last commit
-    const signed = vote != 'nil-Vote';
-
-    // Update the HistoricSignatures table with the signing information
-
-    let valconsAddress = await pubKeyToValcons(validator.pub_key.value, prefix); //cosmos hardcode
-    await updateHistoricSignature(valconsAddress, consensusState.chainId, consensusState.height, signed);
-  }
-}
-
-return validatorsGroupId;
+  return validatorsGroupId;
 }
 
 async function saveConsensusState(consensusState) {
@@ -979,7 +981,8 @@ RETURNS TABLE (
     proposerPrevote TEXT,
     proposerPrecommit TEXT,
     consumerSigningKey TEXT,
-    votestatus INT
+    votestatus INT,
+    uptime NUMERIC
 )
 AS $$
 BEGIN
@@ -1030,13 +1033,16 @@ BEGIN
         WHEN (SELECT MAX("vote") FROM "Votes" WHERE "validatorId" = "V"."id" AND "type" = 'prevote' AND "roundId" = (SELECT "latestRoundId" FROM "LatestRound")) = 
              (SELECT MAX("vote") FROM "Votes" WHERE "validatorId" = "VG"."proposerId" AND "type" = 'prevote' AND "roundId" = (SELECT "latestRoundId" FROM "LatestRound")) THEN 2
         ELSE 3
-    END AS "voteStatus"
+      END AS "voteStatus",
+      "UP"."uptime"
   FROM
       "Validator" "V"
   JOIN
       "LatestValidatorsGroupId" "LVG" ON "V"."validatorsGroupId" = "LVG"."validatorsGroupId"
   JOIN 
       "ValidatorsGroup" "VG" ON "V"."validatorsGroupId" = "VG"."id"
+  JOIN 
+      "Uptime" "UP" ON "V"."consensusAddress" = "UP"."consensusAddress"
   LEFT JOIN
       "StakingValidator" "SV" ON ("SV"."consumer_signing_keys"::json)->>p_chain_id::text = "V"."consensusAddress"
   WHERE
@@ -1046,7 +1052,7 @@ BEGIN
           WHERE "type" = 'prevote' AND "roundId" = (SELECT "latestRoundId" FROM "LatestRound")
       )
   GROUP BY
-      "V"."id", "SV"."id", "SV"."stakingValidatorsMetaId", "SV"."operator_address", "VG"."proposerId"
+      "V"."id", "SV"."id", "SV"."stakingValidatorsMetaId", "SV"."operator_address", "VG"."proposerId", "UP"."uptime"
   ORDER BY 
       "V"."voting_power" DESC;
   
@@ -1076,7 +1082,8 @@ RETURNS TABLE (
     proposerPrevote TEXT,
     proposerPrecommit TEXT,
     consensusPubkey TEXT,
-    voteStatus INT
+    voteStatus INT,
+    uptime NUMERIC
 )
 AS $$
 BEGIN
@@ -1126,18 +1133,20 @@ BEGIN
         WHEN (SELECT MAX("vote") FROM "Votes" WHERE "validatorId" = "V"."id" AND "type" = 'prevote' AND "roundId" = (SELECT "latestRoundId" FROM "LatestRound")) = 
              (SELECT MAX("vote") FROM "Votes" WHERE "validatorId" = "VG"."proposerId" AND "type" = 'prevote' AND "roundId" = (SELECT "latestRoundId" FROM "LatestRound")) THEN 2
         ELSE 3
-    END AS "voteStatus"
+    END AS "voteStatus",
+    "UP"."uptime"
 
 FROM "Validator" "V"
 JOIN "LatestValidatorsGroupId" "LVG" ON "V"."validatorsGroupId" = "LVG"."validatorsGroupId"
 JOIN "ValidatorsGroup" "VG" ON "V"."validatorsGroupId" = "VG"."id"
+JOIN "Uptime" "UP" ON "V"."consensusAddress" = "UP"."consensusAddress"
 LEFT JOIN "StakingValidator" "SV" ON "SV"."consensus_pubkey_key" = ("V"."pub_key"::json)->>'value'
 WHERE "V"."id" IN (
     SELECT DISTINCT "validatorId"
     FROM "Votes"
     WHERE "type" = 'prevote' AND "roundId" = (SELECT "latestRoundId" FROM "LatestRound")
 )
-GROUP BY "V"."id", "SV"."id", "SV"."stakingValidatorsMetaId", "SV"."operator_address", "VG"."proposerId"
+GROUP BY "V"."id", "SV"."id", "SV"."stakingValidatorsMetaId", "SV"."operator_address", "VG"."proposerId", "UP"."uptime"
 ORDER BY "V"."voting_power" DESC;
 END;
 $$ LANGUAGE plpgsql;
@@ -1149,14 +1158,14 @@ $$ LANGUAGE plpgsql;
 async function createUpTime() {
   const query = `
   CREATE OR REPLACE FUNCTION get_uptime(blocks INT, consensus_address TEXT, chain_id TEXT)
-  RETURNS NUMERIC AS $$
+  RETURNS VOID AS $$
   DECLARE
     latest_height INT;
     lowest_height INT;
     signed_total INT;
     signed_true INT;
     uptime NUMERIC;
-BEGIN
+  BEGIN
     SELECT "height" INTO latest_height
     FROM "HistoricSignatures"
     WHERE "chainId" = chain_id
@@ -1184,15 +1193,18 @@ BEGIN
     ELSE
       uptime := 0;
     END IF;
-    RETURN uptime;
+    
+    INSERT INTO "Uptime" ("consensusAddress", "chainId", "uptime")
+    VALUES (consensus_address, chain_id, uptime)
+    ON CONFLICT ("consensusAddress", "chainId") DO UPDATE
+    SET "uptime" = EXCLUDED.uptime;
 
-END;
-$$ LANGUAGE plpgsql;
-`
+  END;
+  $$ LANGUAGE plpgsql;
+  `
 
   return await runDatabaseQuery(query, [], 'get');
 }
-
 
 async function getCurrentRound(chainId) {
   const query = `

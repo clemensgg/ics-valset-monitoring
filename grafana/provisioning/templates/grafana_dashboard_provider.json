@@ -827,7 +827,7 @@
           "editorMode": "code",
           "format": "table",
           "rawQuery": true,
-          "rawSql": "SELECT moniker, votingpower FROM get_current_validators('$chainId') ORDER BY votingpower DESC;",
+          "rawSql": "SELECT moniker, votingpower FROM get_current_validators_provider('$chainId') ORDER BY votingpower DESC;",
           "refId": "A",
           "sql": {
             "columns": [
@@ -1462,7 +1462,7 @@
           "editorMode": "code",
           "format": "table",
           "rawQuery": true,
-          "rawSql": "SELECT votingpower, prevote, precommit, moniker, operatoraddress, consensuspubkey FROM get_current_validators('$chainId') ORDER BY votingpower DESC;",
+          "rawSql": "SELECT votingpower, prevote, precommit, moniker, operatoraddress, consensuspubkey, uptime FROM get_current_validators_provider('$chainId') ORDER BY votingpower DESC;",
           "refId": "A",
           "sql": {
             "columns": [
@@ -1495,7 +1495,8 @@
                 "precommit",
                 "moniker",
                 "operatoraddress",
-                "consensuspubkey"
+                "consensuspubkey",
+                "uptime"
               ]
             }
           }
@@ -1525,6 +1526,7 @@
               "precommitDotColor": "Precommit",
               "prevote": "Prevote",
               "prevoteDotColor": "Prevote",
+              "uptime": "Uptime",
               "voting_power": "Voting Power",
               "votingpower": "Voting Power"
             }
@@ -1587,6 +1589,6 @@
   "timezone": "",
   "title": "ics-consensus-provider",
   "uid": "ae2d1868-c009-472b-b094-55b69a70cda0-pvd",
-  "version": 145,
+  "version": 51,
   "weekStart": ""
 }

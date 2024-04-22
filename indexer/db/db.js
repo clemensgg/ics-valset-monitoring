@@ -3,7 +3,8 @@ import {
   updatePreCommitMetrics,
   updatePreVoteMetrics,
   updateChainMetrics,
-  updateCCVParams
+  updateCCVParams,
+  createUpTime
 } from './update.js';
 let client;
 
@@ -242,17 +243,15 @@ const createTables = async () => {
       );
     `);
 
-    // // Uptime Table (Temporary)
-    // await runDatabaseQuery(`
-    //   CREATE TABLE IF NOT EXISTS "Uptime" (
-    //     "id" SERIAL PRIMARY KEY,
-    //     "validatorId" BIGINT,
-    //     "chainId" TEXT,
-    //     "height" BIGINT,
-    //     "signed" BOOLEAN,
-    //     "timestamp" TIMESTAMP
-    //   );
-    // `);
+    // Uptime Table (Temporary)
+    await runDatabaseQuery(`
+      CREATE TABLE IF NOT EXISTS "Uptime" (
+        "consensusAddress" TEXT,
+        "chainId" TEXT,
+        "uptime" NUMERIC,
+        PRIMARY KEY ("consensusAddress", "chainId")
+      );
+    `);
 
     // StakingValidator Table
     await runDatabaseQuery(`
@@ -353,6 +352,30 @@ const createFunctionAndTrigger = async () => {
       $$ LANGUAGE plpgsql;
     `;
 
+    const createCheckAndUpdateUptimeFunction = `
+      CREATE OR REPLACE FUNCTION check_and_update_uptime()
+      RETURNS TRIGGER AS $$
+      DECLARE
+          last_height INT;
+      BEGIN
+          SELECT MAX(height) INTO last_height
+          FROM "HistoricSignatures"
+          WHERE "chainId" = NEW."chainId";
+          
+          IF last_height IS NULL OR NEW."height" >= last_height THEN
+              RAISE NOTICE 'Calling get_uptime with %, %, %', 100, NEW."validatorAddress", NEW."chainId";
+              PERFORM get_uptime(100, NEW."validatorAddress", NEW."chainId");
+          ELSE
+              RAISE NOTICE 'Not calling get_uptime. Last height: %, New height: %', last_height, NEW."height";
+          END IF;
+
+          RETURN NEW;
+      END;
+      $$ LANGUAGE plpgsql;`
+    
+
+    await createUpTime();
+
     // SQL to create a trigger that calls the notify_change function after an insert operation
     const createTriggerSQL = `
       DROP TRIGGER IF EXISTS ConsensusState_after_insert ON "ConsensusState";
@@ -361,13 +384,22 @@ const createFunctionAndTrigger = async () => {
       FOR EACH ROW EXECUTE FUNCTION notify_change();
     `;
 
+    const createUptimeTriggerSQL = `
+      DROP TRIGGER IF EXISTS trigger_on_height_change ON "HistoricSignatures";
+      CREATE TRIGGER trigger_on_height_change
+      BEFORE INSERT ON "HistoricSignatures"
+      FOR EACH ROW EXECUTE FUNCTION check_and_update_uptime();
+      `;
+
     // Execute the SQL to create the function
     await client.query(createFunctionSQL);
-    console.log('Function created successfully.');
+    await client.query(createCheckAndUpdateUptimeFunction);
+    console.log('Functions created successfully.');
 
     // Execute the SQL to create the trigger
     await client.query(createTriggerSQL);
-    console.log('Trigger created successfully.');
+    await client.query(createUptimeTriggerSQL);
+    console.log('Triggers created successfully.');
   } catch (err) {
     console.error('Error creating function and trigger:', err);
   }

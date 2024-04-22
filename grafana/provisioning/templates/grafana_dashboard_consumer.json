@@ -870,13 +870,6 @@
                 }
               }
             ]
-          },
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "IBC Client"
-            },
-            "properties": []
           }
         ]
       },
@@ -1637,7 +1630,7 @@
           "editorMode": "code",
           "format": "table",
           "rawQuery": true,
-          "rawSql": "SELECT votingpower, prevote, precommit, moniker, operatoraddress, consumersigningkey FROM get_current_validators_consumer('$chainId') ORDER BY votingpower DESC;",
+          "rawSql": "SELECT votingpower, prevote, precommit, moniker, operatoraddress, consumersigningkey, uptime FROM get_current_validators_consumer('$chainId') ORDER BY votingpower DESC;",
           "refId": "A",
           "sql": {
             "columns": [
@@ -1670,7 +1663,8 @@
                 "precommit",
                 "moniker",
                 "operatoraddress",
-                "consumersigningkey"
+                "consumersigningkey",
+                "uptime"
               ]
             }
           }
@@ -1700,6 +1694,7 @@
               "precommitDotColor": "Precommit",
               "prevote": "Prevote",
               "prevoteDotColor": "Prevote",
+              "uptime": "Uptime",
               "voting_power": "Voting Power",
               "votingpower": "Voting Power"
             }
@@ -1716,7 +1711,7 @@
     "list": [
       {
         "current": {
-          "selected": true,
+          "selected": false,
           "text": "stride-1",
           "value": "stride-1"
         },
@@ -1762,6 +1757,6 @@
   "timezone": "",
   "title": "ics-consensus-consumer",
   "uid": "ae2d1868-c009-472b-b094-55b69a70cda0",
-  "version": 3,
+  "version": 1,
   "weekStart": ""
 }
