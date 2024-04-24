@@ -11,6 +11,7 @@ const CONFIGSchema = Joi.object({
     NUM_WORKERS: Joi.number().allow('', null),
     RETAIN_STATES: Joi.number().required(),
     PREFIX: Joi.string().required(),
+    UPTIME_BLOCK_WINDOW: Joi.number().required(),
     pg: Joi.object({
         host: Joi.string().required(),
         port: Joi.number().required(),
