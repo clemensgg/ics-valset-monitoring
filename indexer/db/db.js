@@ -353,18 +353,22 @@ const createFunctionAndTrigger = async () => {
     `;
 
     const createCheckAndUpdateUptimeFunction = `
-      CREATE OR REPLACE FUNCTION check_and_update_uptime()
+      DROP FUNCTION IF EXISTS check_and_update_uptime() CASCADE;
+      CREATE FUNCTION check_and_update_uptime()
       RETURNS TRIGGER AS $$
       DECLARE
           last_height INT;
+          block_window INT;
       BEGIN
+          block_window := TG_ARGV[0]::INT;
+
           SELECT MAX(height) INTO last_height
           FROM "HistoricSignatures"
           WHERE "chainId" = NEW."chainId";
           
           IF last_height IS NULL OR NEW."height" >= last_height THEN
-              RAISE NOTICE 'Calling get_uptime with %, %, %', 100, NEW."validatorAddress", NEW."chainId";
-              PERFORM get_uptime(100, NEW."validatorAddress", NEW."chainId");
+              RAISE NOTICE 'Calling get_uptime with %, %, %', block_window, NEW."validatorAddress", NEW."chainId";
+              PERFORM get_uptime(block_window, NEW."validatorAddress", NEW."chainId");
           ELSE
               RAISE NOTICE 'Not calling get_uptime. Last height: %, New height: %', last_height, NEW."height";
           END IF;
@@ -384,11 +388,12 @@ const createFunctionAndTrigger = async () => {
       FOR EACH ROW EXECUTE FUNCTION notify_change();
     `;
 
+    let blockWindow = global.CONFIG.UPTIME_BLOCK_WINDOW;
     const createUptimeTriggerSQL = `
       DROP TRIGGER IF EXISTS trigger_on_height_change ON "HistoricSignatures";
       CREATE TRIGGER trigger_on_height_change
       BEFORE INSERT ON "HistoricSignatures"
-      FOR EACH ROW EXECUTE FUNCTION check_and_update_uptime();
+      FOR EACH ROW EXECUTE FUNCTION check_and_update_uptime(${blockWindow});
       `;
 
     // Execute the SQL to create the function
