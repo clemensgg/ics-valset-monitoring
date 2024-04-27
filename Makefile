@@ -5,7 +5,9 @@ NODE := $(shell command -v node 2> /dev/null)
 API_URL="http://localhost:3000"
 
 create-dirs:
-	@echo "Creating required directories..."
+	@echo "Clearing & creating new data folder..."
+	sudo rm -rf data/.icsValsetMonitoring_data || true
+	sudo rm -rf data/.grafana_data || true
 	sudo mkdir -p data/.icsValsetMonitoring_data || true
 	sudo mkdir -p data/.grafana_data/data/alerting || true
 	sudo mkdir -p data/.grafana_data/data/csv || true
