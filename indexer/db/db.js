@@ -57,6 +57,9 @@ const initializeTriggerClient = async () => {
 };
 
 const runDatabaseQuery = async (query, params = [], type = 'get') => {
+  // we need to do this because of some race conditions after completing the StakingValidators update
+  // Database query failed: TypeError: Cannot read properties of undefined (reading 'query')
+  // TODO: fix properly
   if (!client) {
     await initializeClient();
   }
