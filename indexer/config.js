@@ -9,7 +9,7 @@ export const CONFIG = {
     NUM_WORKERS: parseInt(process.env.NUM_WORKERS ?? "1"),
     RETAIN_STATES: 0,
     PREFIX: 'cosmos',
-    UPTIME_BLOCK_WINDOW: 100,
+    UPTIME_BLOCK_WINDOW: parseInt(process.env.UPTIME_BLOCK_WINDOW ?? "100"),
     pg: {
         host: process.env.PG_HOST,
         port: parseInt(process.env.PG_PORT),

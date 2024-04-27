@@ -9,6 +9,7 @@ export const CONFIG = {
     NUM_WORKERS: 1,
     RETAIN_STATES: 0,
     PREFIX: 'cosmos',
+    UPTIME_BLOCK_WINDOW: 100,
     pg: {
         host: 'localhost',
         port: 5432,
