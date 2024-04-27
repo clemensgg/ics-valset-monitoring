@@ -57,6 +57,10 @@ const initializeTriggerClient = async () => {
 };
 
 const runDatabaseQuery = async (query, params = [], type = 'get') => {
+  if (!client) {
+    await initializeClient();
+  }
+
   try {
     const result = await client.query(query, params);
 
